@@ -1,36 +1,60 @@
-import { useState, useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Filter, Package, AlertCircle, CheckCircle, Truck } from 'lucide-react';
-import { mockProducts, categories, brands } from '@/data/mockData';
+import { useState, useMemo } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Search,
+  Filter,
+  Package,
+  AlertCircle,
+  CheckCircle,
+  Truck,
+} from "lucide-react";
+import { mockProducts, categories, brands } from "@/data/mockData";
 
 export default function Products() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [selectedBrand, setSelectedBrand] = useState('All');
-  const [sortBy, setSortBy] = useState('name');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedBrand, setSelectedBrand] = useState("All");
+  const [sortBy, setSortBy] = useState("name");
 
   const filteredProducts = useMemo(() => {
-    let filtered = mockProducts.filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           product.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
-      const matchesBrand = selectedBrand === 'All' || product.brand === selectedBrand;
-      
-      return matchesSearch && matchesCategory && matchesBrand && product.isActive;
+    let filtered = mockProducts.filter((product) => {
+      const matchesSearch =
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory =
+        selectedCategory === "All" || product.category === selectedCategory;
+      const matchesBrand =
+        selectedBrand === "All" || product.brand === selectedBrand;
+
+      return (
+        matchesSearch && matchesCategory && matchesBrand && product.isActive
+      );
     });
 
     // Sort products
     filtered.sort((a, b) => {
       switch (sortBy) {
-        case 'price-low':
+        case "price-low":
           return a.price - b.price;
-        case 'price-high':
+        case "price-high":
           return b.price - a.price;
-        case 'stock':
+        case "stock":
           return b.stock - a.stock;
         default:
           return a.name.localeCompare(b.name);
@@ -41,9 +65,23 @@ export default function Products() {
   }, [searchTerm, selectedCategory, selectedBrand, sortBy]);
 
   const getStockStatus = (stock: number) => {
-    if (stock === 0) return { status: 'Out of Stock', variant: 'destructive' as const, icon: AlertCircle };
-    if (stock <= 10) return { status: 'Low Stock', variant: 'destructive' as const, icon: AlertCircle };
-    return { status: 'In Stock', variant: 'default' as const, icon: CheckCircle };
+    if (stock === 0)
+      return {
+        status: "Out of Stock",
+        variant: "destructive" as const,
+        icon: AlertCircle,
+      };
+    if (stock <= 10)
+      return {
+        status: "Low Stock",
+        variant: "destructive" as const,
+        icon: AlertCircle,
+      };
+    return {
+      status: "In Stock",
+      variant: "default" as const,
+      icon: CheckCircle,
+    };
   };
 
   return (
@@ -67,7 +105,7 @@ export default function Products() {
             className="pl-10"
           />
         </div>
-        
+
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
           <SelectTrigger>
             <SelectValue placeholder="Category" />
@@ -110,7 +148,8 @@ export default function Products() {
       {/* Results count */}
       <div className="flex items-center justify-between mb-6">
         <p className="text-muted-foreground">
-          Showing {filteredProducts.length} of {mockProducts.filter(p => p.isActive).length} products
+          Showing {filteredProducts.length} of{" "}
+          {mockProducts.filter((p) => p.isActive).length} products
         </p>
         <Button variant="outline" size="sm">
           <Filter className="h-4 w-4 mr-2" />
@@ -121,79 +160,93 @@ export default function Products() {
       {/* Products Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProducts.map((product) => {
-  const stockInfo = getStockStatus(product.stock);
-  const StockIcon = stockInfo.icon;
+          const stockInfo = getStockStatus(product.stock);
+          const StockIcon = stockInfo.icon;
 
-  return (
-    <Card key={product.id} className="relative overflow-hidden hover:shadow-lg transition-shadow">
-      {/* Background image with blur and low opacity */}
-      <div
-        className="absolute inset-0 bg-center bg-cover opacity-50 blur-sm pointer-events-none"
-        style={{ backgroundImage: `url(${product.imageUrl})` }}
-        aria-hidden="true"
-      />
+          return (
+            <Card
+              key={product.id}
+              className="relative overflow-hidden hover:shadow-lg transition-shadow"
+            >
+              {/* Background image with blur and low opacity */}
+              <div
+                className="absolute top-10 bottom-10 left-10 right-10 bg-center bg-cover opacity-40 pointer-events-none rounded-md"
+                style={{ backgroundImage: `url(${product.imageUrl})` }}
+                aria-hidden="true"
+              />
 
-      <CardHeader className="relative z-10">
-        <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <CardTitle className="text-lg mb-1">{product.name}</CardTitle>
-            <CardDescription className="text-sm">
-              {product.brand} • {product.category}
-            </CardDescription>
-          </div>
-          <Badge variant={stockInfo.variant} className="ml-2">
-            <StockIcon className="h-3 w-3 mr-1" />
-            {stockInfo.status}
-          </Badge>
-        </div>
-      </CardHeader>
+              <CardHeader className="relative z-10">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <CardTitle className="text-lg mb-1">
+                      {product.name}
+                    </CardTitle>
+                    <CardDescription className="text-sm">
+                      {product.brand} • {product.category}
+                    </CardDescription>
+                  </div>
+                  <Badge variant={stockInfo.variant} className="ml-2 -mr-4 -mt-4">
+                    <StockIcon className="h-3 w-3 mr-1" />
+                    {stockInfo.status}
+                  </Badge>
+                </div>
+              </CardHeader>
 
-      <CardContent className="relative z-10 space-y-4">
-        <p className="text-sm text-muted-foreground line-clamp-2">{product.description}</p>
+              <CardContent className="relative z-10 space-y-4">
+                <p className="text-sm text-muted-foreground line-clamp-2">
+                  {product.description}
+                </p>
 
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">Price:</span>
-            <span className="text-lg font-bold text-primary">
-              ₹{product.price.toLocaleString()}
-              <span className="text-sm font-normal text-muted-foreground">/{product.unit}</span>
-            </span>
-          </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">
+                      Price:
+                    </span>
+                    <span className="text-lg font-bold text-primary">
+                      ₹{product.price.toLocaleString()}
+                      <span className="text-sm font-normal text-muted-foreground">
+                        /{product.unit}
+                      </span>
+                    </span>
+                  </div>
 
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">Available:</span>
-            <span className="font-medium">
-              {product.stock} {product.unit}
-            </span>
-          </div>
-        </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">
+                      Available:
+                    </span>
+                    <span className="font-medium">
+                      {product.stock} {product.unit}
+                    </span>
+                  </div>
+                </div>
 
-        {product.usageInstructions && (
-          <div className="p-3 bg-accent/10 rounded-md">
-            <p className="text-xs text-muted-foreground">
-              <strong>Usage:</strong> {product.usageInstructions}
-            </p>
-          </div>
-        )}
+                {product.usageInstructions && (
+                  <div className="p-3 bg-accent/10 rounded-md">
+                    <p className="text-xs text-muted-foreground">
+                      <strong>Usage:</strong> {product.usageInstructions}
+                    </p>
+                  </div>
+                )}
 
-        <div className="flex items-center justify-between pt-2">
-          <div className="flex items-center text-success text-sm">
-            <CheckCircle className="h-4 w-4 mr-1" />
-            Quality Assured
-          </div>
-          <Button
-            disabled={product.stock === 0}
-            variant={product.stock === 0 ? 'secondary' : 'default'}
-          >
-            <Package className="h-4 w-4 mr-2" />
-            {product.stock === 0 ? 'Out of Stock' : 'Contact for Purchase'}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-})}
-
+                <div className="flex items-center justify-between pt-2">
+                  <div className="flex items-center text-success text-sm -mb-10">
+                    <CheckCircle className="h-4 w-4 mr-1" />
+                    Quality Assured
+                  </div>
+                  <Button
+                    disabled={product.stock === 0}
+                    variant={product.stock === 0 ? "secondary" : "default"}
+                  >
+                    <Package className="h-4 w-4 mr-2" />
+                    {product.stock === 0
+                      ? "Out of Stock"
+                      : "Contact for Purchase"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* No results */}
@@ -204,11 +257,14 @@ export default function Products() {
           <p className="text-muted-foreground mb-4">
             Try adjusting your search criteria or browse our categories
           </p>
-          <Button variant="outline" onClick={() => {
-            setSearchTerm('');
-            setSelectedCategory('All');
-            setSelectedBrand('All');
-          }}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSearchTerm("");
+              setSelectedCategory("All");
+              setSelectedBrand("All");
+            }}
+          >
             Clear All Filters
           </Button>
         </div>
