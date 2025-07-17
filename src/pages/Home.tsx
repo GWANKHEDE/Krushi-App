@@ -11,7 +11,7 @@ import { Link } from "react-router-dom";
 import {
   Sprout,
   Shield,
-  Truck,
+  Recycle,
   Users,
   Leaf,
   Zap,
@@ -41,9 +41,9 @@ export default function Home() {
       description: "Authentic products from certified manufacturers",
     },
     {
-      icon: Truck,
-      title: "Fast Delivery",
-      description: "Quick delivery to your farm within 24 hours",
+      icon: Recycle,
+      title: "Eco-Friendly Products",
+      description: "Sustainable and environmentally friendly farming solutions",
     },
     {
       icon: Users,
@@ -141,17 +141,22 @@ export default function Home() {
               return (
                 <Card
                   key={index}
-                  className="text-center hover:shadow-lg transition-shadow"
+                  className="flex items-center space-x-6 p-5 bg-green-200 rounded-2xl shadow-xl hover:shadow-2xl transition-shadow cursor-pointer"
                 >
-                  <CardHeader>
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                      <Icon className="h-6 w-6 text-primary" />
-                    </div>
-                    <CardTitle className="text-lg">{feature.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription>{feature.description}</CardDescription>
-                  </CardContent>
+                  {/* Icon with colored background circle */}
+                  <div className="flex-shrink-0 bg-green-600 rounded-full p-4 shadow-lg">
+                    <Icon className="h-8 w-8 text-white" />
+                  </div>
+
+                  {/* Text Content */}
+                  <div className="flex flex-col">
+                    <CardTitle className="text-xl font-semibold text-gray-900 mb-1">
+                      {feature.title}
+                    </CardTitle>
+                    <CardDescription className="text-gray-600 max-w-md leading-relaxed">
+                      {feature.description}
+                    </CardDescription>
+                  </div>
                 </Card>
               );
             })}
@@ -172,48 +177,61 @@ export default function Home() {
             {featuredProducts.map((product) => (
               <Card
                 key={product.id}
-                className="hover:shadow-lg transition-shadow"
+                className="relative overflow-hidden hover:shadow-lg transition-shadow"
               >
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-lg">{product.name}</CardTitle>
-                      <CardDescription>{product.brand}</CardDescription>
+                {/* Background image with opacity and blur */}
+                <div
+                  className="absolute inset-4 bg-center bg-cover opacity-30 rounded-md pointer-events-none"
+                  style={{ backgroundImage: `url(${product.imageUrl})` }}
+                  aria-hidden="true"
+                />
+
+                {/* Card content */}
+                <div className="relative z-10">
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="text-lg text-primary">
+                          {product.name}
+                        </CardTitle>
+                        <CardDescription>{product.brand}</CardDescription>
+                      </div>
+                      <Badge
+                        variant={product.stock > 10 ? "default" : "destructive"}
+                      >
+                        {product.stock > 10 ? "In Stock" : "Low Stock"}
+                      </Badge>
                     </div>
-                    <Badge
-                      variant={product.stock > 10 ? "default" : "destructive"}
-                    >
-                      {product.stock > 10 ? "In Stock" : "Low Stock"}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        Price:
-                      </span>
-                      <span className="font-semibold">
-                        ₹{product.price}/{product.unit}
-                      </span>
+                  </CardHeader>
+
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          Price:
+                        </span>
+                        <span className="font-semibold">
+                          ₹{product.price}/{product.unit}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          Available:
+                        </span>
+                        <span>
+                          {product.stock} {product.unit}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {product.description}
+                      </p>
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <CheckCircle className="h-4 w-4 text-success mr-2" />
+                        Authentic & Quality Assured
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        Available:
-                      </span>
-                      <span>
-                        {product.stock} {product.unit}
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {product.description}
-                    </p>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <CheckCircle className="h-4 w-4 text-success mr-2" />
-                      Authentic & Quality Assured
-                    </div>
-                  </div>
-                </CardContent>
+                  </CardContent>
+                </div>
               </Card>
             ))}
           </div>
@@ -241,7 +259,7 @@ export default function Home() {
             {services.map((service, index) => {
               const Icon = service.icon;
               return (
-                <Card key={index} className="hover:shadow-lg transition-shadow">
+                <Card key={index} className="hover:shadow-lg transition-shadow bg-green-200 rounded-2xl">
                   <CardHeader>
                     <div className="flex items-center space-x-4">
                       <div
