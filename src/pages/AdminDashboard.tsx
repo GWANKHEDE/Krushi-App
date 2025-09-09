@@ -1,12 +1,19 @@
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { StatsCard } from '@/components/ui/stats-card';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Package, 
-  TrendingUp, 
-  AlertTriangle, 
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { StatsCard } from "@/components/ui/stats-card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Package,
+  TrendingUp,
+  AlertTriangle,
   ShoppingCart,
   BarChart3,
   Download,
@@ -14,93 +21,143 @@ import {
   Search,
   IndianRupee,
   Activity,
-} from 'lucide-react';
-import { mockProducts, mockDashboardStats, mockBills } from '@/data/mockData';
+} from "lucide-react";
+import { mockProducts, mockDashboardStats, mockBills } from "@/data/mockData";
 
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend
-} from 'recharts';
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from "recharts";
 
 export default function AdminDashboard() {
-  const [timeRange, setTimeRange] = useState('today');
+  const [timeRange, setTimeRange] = useState("today");
+  const navigate = useNavigate();
 
-  const lowStockProducts = mockProducts.filter(p => p.stock <= 10);
+  const lowStockProducts = mockProducts.filter((p) => p.stock <= 10);
   const recentBills = mockBills.slice(0, 5);
 
   const statsCards = [
     {
-      title: 'Total Products',
+      title: "Total Products",
       value: mockDashboardStats.totalProducts,
-      description: 'Active products in inventory',
+      description: "Active products in inventory",
       icon: Package,
-      variant: 'default' as const
+      variant: "default" as const,
     },
     {
       title: "Today's Sales",
       value: `₹${mockDashboardStats.todaySales.toLocaleString()}`,
-      description: 'Revenue generated today',
+      description: "Revenue generated today",
       icon: TrendingUp,
-      variant: 'success' as const,
-      trend: 'up' as const,
-      trendValue: '+12%'
+      variant: "success" as const,
+      trend: "up" as const,
+      trendValue: "+12%",
     },
     {
-      title: 'Low Stock Items',
+      title: "Low Stock Items",
       value: mockDashboardStats.lowStockProducts,
-      description: 'Products need restocking',
+      description: "Products need restocking",
       icon: AlertTriangle,
-      variant: 'warning' as const
+      variant: "warning" as const,
     },
     {
-      title: 'Monthly Profit',
+      title: "Monthly Profit",
       value: `₹${mockDashboardStats.monthlyProfit.toLocaleString()}`,
-      description: 'Profit this month',
+      description: "Profit this month",
       icon: IndianRupee,
-      variant: 'info' as const,
-      trend: 'up' as const,
-      trendValue: '+8%'
-    }
+      variant: "info" as const,
+      trend: "up" as const,
+      trendValue: "+8%",
+    },
   ];
 
-  // Data for charts
   const salesTrendData = [
-    { date: 'Jul 1', sales: 1200 },
-    { date: 'Jul 2', sales: 1800 },
-    { date: 'Jul 3', sales: 1400 },
-    { date: 'Jul 4', sales: 2200 },
-    { date: 'Jul 5', sales: 2000 },
-    { date: 'Jul 6', sales: 2500 },
-    { date: 'Jul 7', sales: 2800 },
+    { date: "Jul 1", sales: 1200 },
+    { date: "Jul 2", sales: 1800 },
+    { date: "Jul 3", sales: 1400 },
+    { date: "Jul 4", sales: 2200 },
+    { date: "Jul 5", sales: 2000 },
+    { date: "Jul 6", sales: 2500 },
+    { date: "Jul 7", sales: 2800 },
   ];
 
   const productCategoryData = [
-    { name: 'Fertilizer', value: 12 },
-    { name: 'Seeds', value: 8 },
-    { name: 'Tools', value: 5 },
-    { name: 'Pesticide', value: 3 },
+    { name: "Fertilizer", value: 12 },
+    { name: "Seeds", value: 8 },
+    { name: "Tools", value: 5 },
+    { name: "Pesticide", value: 3 },
   ];
 
-  const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7f50'];
+  const quickActions = [
+    { icon: Plus, label: "Add Product", path: "/admin/products" },
+    { icon: ShoppingCart, label: "Create Bill", path: "/admin/billing" },
+    { icon: Package, label: "Stock Entry", path: "/admin/purchases" },
+    { icon: BarChart3, label: "View Reports", path: "/admin/reports" },
+  ];
+
+  const COLORS = ["#4f46e5", "#22c55e", "#facc15", "#ef4444"];
+  const ownerName = "Wankhede";
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 bg-gradient-to-br from-green-50 via-white to-lime-100 min-h-screen">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back! Here's what's happening at your store.</p>
+          <p className="text-muted-foreground">
+            Welcome back{" "}
+            <span className="font-semibold text-green-700">{ownerName}</span>!
+            Here's what's happening at your store.
+          </p>
         </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export Report
-          </Button>
-          <Button size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            New Product
-          </Button>
-        </div>
+      </div>
+
+      {/* Quick Actions as Tab Bar */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 w-full mb-6">
+        {quickActions.map((action, idx) => {
+          const Icon = action.icon;
+          return (
+            <Button
+              key={idx}
+              variant="ghost"
+              onClick={() => navigate(action.path)}
+              className="w-full flex items-center justify-center px-4 py-2 rounded-full border border-green-500 text-green-700 hover:bg-gradient-to-r hover:from-lime-100 hover:to-green-100 hover:shadow-md transition-all"
+            >
+              <Icon className="h-5 w-5 mr-0 ml-0 text-green-600" />
+              <span className="font-medium">{action.label}</span>
+            </Button>
+          );
+        })}
+
+        {/* Export Report Button */}
+        <Button
+          variant="ghost"
+          onClick={() => {
+            // Handle export logic
+          }}
+          className="w-full flex items-center justify-center px-4 py-2 rounded-full border border-green-500 text-green-700 hover:bg-gradient-to-r hover:from-lime-100 hover:to-green-100 hover:shadow-md transition-all"
+        >
+          <Download className="h-5 w-5 mr-0 ml-0 text-green-600" />
+          <span className="font-medium">Export Report</span>
+        </Button>
+
+        {/* New Product Button */}
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/admin/products")}
+          className="w-full flex items-center justify-center px-4 py-2 rounded-full border border-green-500 text-green-700 hover:bg-gradient-to-r hover:from-lime-100 hover:to-green-100 hover:shadow-md transition-all"
+        >
+          <Plus className="h-5 w-5 mr-0 ml-0 text-green-600" />
+          <span className="font-medium">New Product</span>
+        </Button>
       </div>
 
       {/* Stats Grid */}
@@ -112,12 +169,12 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Sales */}
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="flex items-center space-x-2">
-                  <ShoppingCart className="h-5 w-5" />
+                  <ShoppingCart className="h-5 w-5 text-green-600" />
                   <span>Recent Sales</span>
                 </CardTitle>
                 <CardDescription>Latest customer transactions</CardDescription>
@@ -131,33 +188,35 @@ export default function AdminDashboard() {
           <CardContent>
             <div className="space-y-4">
               {recentBills.map((bill) => (
-                <div key={bill.id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div
+                  key={bill.id}
+                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-lime-50 transition-colors"
+                >
                   <div>
                     <p className="font-medium">{bill.customerName}</p>
                     <p className="text-sm text-muted-foreground">
-                      {bill.items.length} items • {bill.createdAt.toLocaleDateString()}
+                      {bill.items.length} items •{" "}
+                      {bill.createdAt.toLocaleDateString()}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold">₹{bill.total.toLocaleString()}</p>
-                    <Badge variant={bill.status === 'paid' ? 'default' : 'secondary'}>
+                    <p className="font-semibold text-green-700">
+                      ₹{bill.total.toLocaleString()}
+                    </p>
+                    <Badge
+                      variant={bill.status === "paid" ? "default" : "secondary"}
+                    >
                       {bill.status}
                     </Badge>
                   </div>
                 </div>
               ))}
-              {recentBills.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <ShoppingCart className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p>No recent sales</p>
-                </div>
-              )}
             </div>
           </CardContent>
         </Card>
 
         {/* Low Stock Alert */}
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -167,72 +226,45 @@ export default function AdminDashboard() {
                 </CardTitle>
                 <CardDescription>Products that need restocking</CardDescription>
               </div>
-              <Badge variant="destructive" className="px-2 py-1">
+              <Badge
+                variant="destructive"
+                className="px-2 py-1 text-white font-bold"
+              >
                 {lowStockProducts.length}
               </Badge>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {lowStockProducts.map((product) => (
-                <div key={product.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <p className="font-medium">{product.name}</p>
-                    <p className="text-sm text-muted-foreground">{product.category}</p>
-                  </div>
-                  <div className="text-right">
-                    <Badge variant={product.stock === 0 ? 'destructive' : 'secondary'}>
-                      {product.stock} {product.unit}
-                    </Badge>
-                  </div>
+
+          {/* 👇 Added max-h + scroll */}
+          <CardContent className="space-y-3 max-h-60 overflow-y-auto">
+            {lowStockProducts.map((product) => (
+              <div
+                key={product.id}
+                className="flex items-center justify-between p-3 border rounded-lg hover:bg-red-50 transition-colors"
+              >
+                <div>
+                  <p className="font-medium">{product.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {product.category}
+                  </p>
                 </div>
-              ))}
-              {lowStockProducts.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p>All products are well stocked</p>
+                <div className="text-right">
+                  <Badge
+                    variant={product.stock === 0 ? "destructive" : "secondary"}
+                  >
+                    {product.stock} {product.unit}
+                  </Badge>
                 </div>
-              )}
-            </div>
+              </div>
+            ))}
           </CardContent>
         </Card>
       </div>
 
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Activity className="h-5 w-5" />
-            <span>Quick Actions</span>
-          </CardTitle>
-          <CardDescription>Common tasks and shortcuts</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button variant="outline" className="h-20 flex-col space-y-2">
-              <Plus className="h-6 w-6" />
-              <span className="text-sm">Add Product</span>
-            </Button>
-            <Button variant="outline" className="h-20 flex-col space-y-2">
-              <ShoppingCart className="h-6 w-6" />
-              <span className="text-sm">Create Bill</span>
-            </Button>
-            <Button variant="outline" className="h-20 flex-col space-y-2">
-              <Package className="h-6 w-6" />
-              <span className="text-sm">Stock Entry</span>
-            </Button>
-            <Button variant="outline" className="h-20 flex-col space-y-2">
-              <BarChart3 className="h-6 w-6" />
-              <span className="text-sm">View Reports</span>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Sales Trend Chart */}
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle>Sales Trend</CardTitle>
             <CardDescription>Daily sales for the past 7 days</CardDescription>
@@ -244,17 +276,35 @@ export default function AdminDashboard() {
                 <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="sales" fill="#4f46e5" radius={[5, 5, 0, 0]} />
+                <Bar
+                  dataKey="sales"
+                  fill="url(#gradientSales)"
+                  radius={[6, 6, 0, 0]}
+                />
+                <defs>
+                  <linearGradient
+                    id="gradientSales"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.9} />
+                    <stop offset="95%" stopColor="#4f46e5" stopOpacity={0.6} />
+                  </linearGradient>
+                </defs>
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
         {/* Product Categories Donut Chart */}
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle>Product Categories</CardTitle>
-            <CardDescription>Distribution of products by category</CardDescription>
+            <CardDescription>
+              Distribution of products by category
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
@@ -266,12 +316,14 @@ export default function AdminDashboard() {
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
-                  outerRadius={80}
-                  fill="#8884d8"
+                  outerRadius={85}
                   label
                 >
                   {productCategoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
                   ))}
                 </Pie>
                 <Tooltip />
