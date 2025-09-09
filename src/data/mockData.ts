@@ -110,7 +110,7 @@ export const mockTransactions: Transaction[] = [
     type: "sale",
     amount: 2537,
     method: "cash",
-    customerName: "Rajesh Kumar",
+    customerName: "Deepak",
     date: new Date("2024-01-20"),
     referenceId: "B001", // linked to bill
   },
@@ -148,7 +148,7 @@ export const mockBills: Bill[] = [
     id: "B001",
     billNumber: "KSK/2024/001",
     customerId: "C001",
-    customerName: "Rajesh Kumar",
+    customerName: "Deepak",
     customerPhone: "+91 9876543210",
     items: [
       {

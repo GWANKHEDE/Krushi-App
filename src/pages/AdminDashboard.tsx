@@ -105,18 +105,18 @@ export default function AdminDashboard() {
   ];
 
   const COLORS = ["#4f46e5", "#22c55e", "#facc15", "#ef4444"];
-  const ownerName = "Wankhede";
+  const ownerName = "Wankhede Patil ";
 
   return (
     <div className="p-6 space-y-6 bg-gradient-to-br from-green-50 via-white to-lime-100 min-h-screen">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <p className="text-muted-foreground">
+          <h1 className="text-muted-foreground">
             Welcome back{" "}
-            <span className="font-semibold text-green-700">{ownerName}</span>!
+            <span className="font-bold text-green-700">{ownerName}</span>!
             Here's what's happening at your store.
-          </p>
+          </h1>
         </div>
       </div>
 
@@ -129,7 +129,7 @@ export default function AdminDashboard() {
               key={idx}
               variant="ghost"
               onClick={() => navigate(action.path)}
-              className="w-full flex items-center justify-center px-4 py-2 rounded-full border border-green-500 text-green-700 hover:bg-gradient-to-r hover:from-lime-100 hover:to-green-100 hover:shadow-md transition-all"
+              className="w-full flex items-center justify-center px-4 py-2 rounded-full border border-green-500 text-green-700 bg-gradient-to-r from-lime-100 to-green-100 hover:shadow-md transition-all"
             >
               <Icon className="h-5 w-5 mr-0 ml-0 text-green-600" />
               <span className="font-medium">{action.label}</span>
@@ -143,7 +143,7 @@ export default function AdminDashboard() {
           onClick={() => {
             // Handle export logic
           }}
-          className="w-full flex items-center justify-center px-4 py-2 rounded-full border border-green-500 text-green-700 hover:bg-gradient-to-r hover:from-lime-100 hover:to-green-100 hover:shadow-md transition-all"
+          className="w-full flex items-center justify-center px-4 py-2 rounded-full border border-green-500 text-green-700 bg-gradient-to-r from-lime-100 to-green-100 hover:shadow-md transition-all"
         >
           <Download className="h-5 w-5 mr-0 ml-0 text-green-600" />
           <span className="font-medium">Export Report</span>
@@ -153,7 +153,7 @@ export default function AdminDashboard() {
         <Button
           variant="ghost"
           onClick={() => navigate("/admin/products")}
-          className="w-full flex items-center justify-center px-4 py-2 rounded-full border border-green-500 text-green-700 hover:bg-gradient-to-r hover:from-lime-100 hover:to-green-100 hover:shadow-md transition-all"
+          className="w-full flex items-center justify-center px-4 py-2 rounded-full border border-green-500 text-green-700 bg-gradient-to-r from-lime-100 to-green-100 hover:shadow-md transition-all"
         >
           <Plus className="h-5 w-5 mr-0 ml-0 text-green-600" />
           <span className="font-medium">New Product</span>
@@ -169,7 +169,7 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Sales */}
-        <Card className="hover:shadow-lg transition-shadow">
+        <Card className="hover:shadow-lg bg-gradient-to-r from-lime-100 to-green-100 transition-shadow">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -216,7 +216,7 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Low Stock Alert */}
-        <Card className="hover:shadow-lg transition-shadow">
+        <Card className="hover:shadow-lg bg-gradient-to-r from-lime-100 to-green-100 transition-shadow">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -249,7 +249,7 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <Badge
+                  <Badge className="bg-red-100 text-red-600 font-semibold"
                     variant={product.stock === 0 ? "destructive" : "secondary"}
                   >
                     {product.stock} {product.unit}
