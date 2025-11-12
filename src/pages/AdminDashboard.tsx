@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Card,
@@ -22,7 +22,6 @@ import {
   IndianRupee,
   Activity,
 } from "lucide-react";
-import { mockProducts, mockDashboardStats, mockBills } from "@/data/mockData";
 
 import {
   BarChart,
@@ -37,25 +36,64 @@ import {
   Cell,
   Legend,
 } from "recharts";
+import { dashboardAPI, DashboardData, User } from "@/services/api";
+import { useToast } from "@/hooks/use-toast";
+
+interface QuickAction {
+  icon: React.ComponentType<any>;
+  label: string;
+  path: string;
+}
+
 
 export default function AdminDashboard() {
-  const [timeRange, setTimeRange] = useState("today");
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
   const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const lowStockProducts = mockProducts.filter((p) => p.stock <= 10);
-  const recentBills = mockBills.slice(0, 5);
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setIsLoading(true);
+      const response = await dashboardAPI.getDashboardData();
+      
+      if (response.data.success) {
+        setDashboardData(response.data.data);
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Failed to fetch dashboard data';
+      setError(errorMessage);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: errorMessage,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Get user from localStorage
+  const user: User = JSON.parse(localStorage.getItem('user') || '{}');
+  const ownerName = user.name || 'Admin';
 
   const statsCards = [
     {
       title: "Total Products",
-      value: mockDashboardStats.totalProducts,
+      value: dashboardData?.totals.totalProducts || 0,
       description: "Active products in inventory",
       icon: Package,
       variant: "default" as const,
     },
     {
       title: "Today's Sales",
-      value: `₹${mockDashboardStats.todaySales.toLocaleString()}`,
+      value: `₹${(dashboardData?.totals.todaysSales || 0).toLocaleString()}`,
       description: "Revenue generated today",
       icon: TrendingUp,
       variant: "success" as const,
@@ -64,14 +102,14 @@ export default function AdminDashboard() {
     },
     {
       title: "Low Stock Items",
-      value: mockDashboardStats.lowStockProducts,
+      value: dashboardData?.totals.lowStockItems || 0,
       description: "Products need restocking",
       icon: AlertTriangle,
       variant: "warning" as const,
     },
     {
       title: "Monthly Profit",
-      value: `₹${mockDashboardStats.monthlyProfit.toLocaleString()}`,
+      value: `₹${(dashboardData?.totals.monthlyProfit || 0).toLocaleString()}`,
       description: "Profit this month",
       icon: IndianRupee,
       variant: "info" as const,
@@ -80,47 +118,66 @@ export default function AdminDashboard() {
     },
   ];
 
-  const salesTrendData = [
-    { date: "Jul 1", sales: 1200 },
-    { date: "Jul 2", sales: 1800 },
-    { date: "Jul 3", sales: 1400 },
-    { date: "Jul 4", sales: 2200 },
-    { date: "Jul 5", sales: 2000 },
-    { date: "Jul 6", sales: 2500 },
-    { date: "Jul 7", sales: 2800 },
-  ];
-
-  const productCategoryData = [
-    { name: "Fertilizer", value: 12 },
-    { name: "Seeds", value: 8 },
-    { name: "Tools", value: 5 },
-    { name: "Pesticide", value: 3 },
-  ];
-
-  const quickActions = [
+  const quickActions: QuickAction[] = [
     { icon: Plus, label: "Add Product", path: "/admin/products" },
     { icon: ShoppingCart, label: "Create Bill", path: "/admin/billing" },
     { icon: Package, label: "Stock Entry", path: "/admin/purchases" },
     { icon: BarChart3, label: "View Reports", path: "/admin/reports" },
   ];
 
-  const COLORS = ["#4f46e5", "#22c55e", "#facc15", "#ef4444"];
-  const ownerName = "Wankhede Patil ";
+  const COLORS = ["#4f46e5", "#22c55e", "#facc15", "#ef4444", "#8b5cf6"];
+
+  if (isLoading) {
+    return (
+      <div className="p-6 space-y-6 bg-gradient-to-br from-green-50 via-white to-lime-100 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading dashboard data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !dashboardData) {
+    return (
+      <div className="p-6 space-y-6 bg-gradient-to-br from-green-50 via-white to-lime-100 min-h-screen flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6 text-center">
+            <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Failed to load dashboard</h3>
+            <p className="text-muted-foreground mb-4">{error}</p>
+            <Button onClick={fetchDashboardData}>Try Again</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6 bg-gradient-to-br from-green-50 via-white to-lime-100 min-h-screen">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-muted-foreground">
-            Welcome back{" "}
-            <span className="font-bold text-green-700">{ownerName}</span>!
-            Here's what's happening at your store.
+          <h1 className="text-3xl font-bold text-green-800 mb-2">
+            Welcome back, {ownerName}!
           </h1>
+          <p className="text-muted-foreground">
+            Here's what's happening at your store today.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="text-sm">
+            {new Date().toLocaleDateString('en-IN', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}
+          </Badge>
         </div>
       </div>
 
-      {/* Quick Actions as Tab Bar */}
+      {/* Quick Actions */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 w-full mb-6">
         {quickActions.map((action, idx) => {
           const Icon = action.icon;
@@ -179,7 +236,7 @@ export default function AdminDashboard() {
                 </CardTitle>
                 <CardDescription>Latest customer transactions</CardDescription>
               </div>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => navigate('/admin/reports')}>
                 <Search className="h-4 w-4 mr-2" />
                 View All
               </Button>
@@ -187,30 +244,33 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentBills.map((bill) => (
+              {dashboardData?.recentSales?.map((sale) => (
                 <div
-                  key={bill.id}
+                  key={sale.id}
                   className="flex items-center justify-between p-3 border rounded-lg hover:bg-lime-50 transition-colors"
                 >
                   <div>
-                    <p className="font-medium">{bill.customerName}</p>
+                    <p className="font-medium">{sale.customerName}</p>
                     <p className="text-sm text-muted-foreground">
-                      {bill.items.length} items •{" "}
-                      {bill.createdAt.toLocaleDateString()}
+                      {sale.items} items • {new Date(sale.saleDate).toLocaleDateString()}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-green-700">
-                      ₹{bill.total.toLocaleString()}
+                      ₹{sale.totalAmount.toLocaleString()}
                     </p>
                     <Badge
-                      variant={bill.status === "paid" ? "default" : "secondary"}
+                      variant={sale.paymentStatus === "PAID" ? "default" : "secondary"}
+                      className="capitalize"
                     >
-                      {bill.status}
+                      {sale.paymentStatus.toLowerCase()}
                     </Badge>
                   </div>
                 </div>
               ))}
+              {(!dashboardData?.recentSales || dashboardData.recentSales.length === 0) && (
+                <p className="text-center text-muted-foreground py-4">No recent sales</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -230,14 +290,12 @@ export default function AdminDashboard() {
                 variant="destructive"
                 className="px-2 py-1 text-white font-bold"
               >
-                {lowStockProducts.length}
+                {dashboardData?.totals.lowStockItems || 0}
               </Badge>
             </div>
           </CardHeader>
-
-          {/* 👇 Added max-h + scroll */}
           <CardContent className="space-y-3 max-h-60 overflow-y-auto">
-            {lowStockProducts.map((product) => (
+            {dashboardData?.lowStockAlerts?.map((product) => (
               <div
                 key={product.id}
                 className="flex items-center justify-between p-3 border rounded-lg hover:bg-red-50 transition-colors"
@@ -249,14 +307,18 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <Badge className="bg-red-100 text-red-600 font-semibold"
-                    variant={product.stock === 0 ? "destructive" : "secondary"}
+                  <Badge 
+                    className="bg-red-100 text-red-600 font-semibold"
+                    variant={product.currentStock === 0 ? "destructive" : "secondary"}
                   >
-                    {product.stock} {product.unit}
+                    {product.currentStock} units
                   </Badge>
                 </div>
               </div>
             ))}
+            {(!dashboardData?.lowStockAlerts || dashboardData.lowStockAlerts.length === 0) && (
+              <p className="text-center text-muted-foreground py-4">No low stock items</p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -267,17 +329,20 @@ export default function AdminDashboard() {
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle>Sales Trend</CardTitle>
-            <CardDescription>Daily sales for the past 7 days</CardDescription>
+            <CardDescription>Sales for the past 7 days</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={salesTrendData}>
+              <BarChart data={dashboardData?.salesTrend || []}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
                 <YAxis />
-                <Tooltip />
+                <Tooltip 
+                  formatter={(value: any) => [`₹${value}`, 'Sales']}
+                  labelFormatter={(label: any) => `Date: ${new Date(label).toLocaleDateString()}`}
+                />
                 <Bar
-                  dataKey="sales"
+                  dataKey="totalSales"
                   fill="url(#gradientSales)"
                   radius={[6, 6, 0, 0]}
                 />
@@ -310,16 +375,16 @@ export default function AdminDashboard() {
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
-                  data={productCategoryData}
-                  dataKey="value"
+                  data={dashboardData?.productCategories || []}
+                  dataKey="productCount"
                   nameKey="name"
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
                   outerRadius={85}
-                  label
+                  label={({ name, productCount }: { name: string; productCount: number }) => `${name}: ${productCount}`}
                 >
-                  {productCategoryData.map((entry, index) => (
+                  {(dashboardData?.productCategories || []).map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={COLORS[index % COLORS.length]}

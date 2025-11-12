@@ -15,10 +15,17 @@ import {
   AlertCircle 
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { authAPI, LoginCredentials } from '@/services/api';
+
+interface FormData {
+  email: string;
+  password: string;
+  rememberMe: boolean;
+}
 
 export default function AdminLogin() {
-  const [formData, setFormData] = useState({
-    username: '',
+  const [formData, setFormData] = useState<FormData>({
+    email: '',
     password: '',
     rememberMe: false
   });
@@ -30,11 +37,12 @@ export default function AdminLogin() {
   const { toast } = useToast();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [name]: type === 'checkbox' ? checked : value
     }));
-    setError(''); // Clear error when user types
+    setError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,20 +50,41 @@ export default function AdminLogin() {
     setIsLoading(true);
     setError('');
 
-    // Simulate login (in real app, this would be an API call)
-    setTimeout(() => {
-      if (formData.username === 'admin' && formData.password === 'admin123') {
+    try {
+      const credentials: LoginCredentials = {
+        email: formData.email,
+        password: formData.password
+      };
+
+      const response = await authAPI.login(credentials);
+
+      if (response.data.success) {
+        const { token, user } = response.data.data;
+        
+        // Store token and user info
+        localStorage.setItem('token', token);
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('user', JSON.stringify(user));
+        
         toast({
           title: "Login Successful",
-          description: "Welcome to Krushi Seva Kendra Admin Panel",
+          description: `Welcome to Krushi Seva Kendra Admin Panel, ${user.name}!`,
         });
-        localStorage.setItem('isAuthenticated', 'true');
+        
         navigate('/admin/dashboard');
-      } else {
-        setError('Invalid username or password. Please try again.');
       }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
+      setError(errorMessage);
+      
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: errorMessage,
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -96,19 +125,20 @@ export default function AdminLogin() {
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
                   <strong>Demo Credentials:</strong><br />
-                  Username: admin<br />
-                  Password: admin123
+                  Email: admin@krushi.com<br />
+                  Password: password123
                 </AlertDescription>
               </Alert>
 
-              {/* Username */}
+              {/* Email */}
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="username"
-                  name="username"
-                  placeholder="Enter your username"
-                  value={formData.username}
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={formData.email}
                   onChange={handleInputChange}
                   required
                 />
@@ -147,9 +177,10 @@ export default function AdminLogin() {
               <div className="flex items-center space-x-2">
                 <Checkbox 
                   id="rememberMe"
+                  name="rememberMe"
                   checked={formData.rememberMe}
-                  onCheckedChange={(checked) => 
-                    setFormData(prev => ({ ...prev, rememberMe: checked as boolean }))
+                  onCheckedChange={(checked: boolean) => 
+                    setFormData(prev => ({ ...prev, rememberMe: checked }))
                   }
                 />
                 <Label htmlFor="rememberMe" className="text-sm">

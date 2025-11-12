@@ -1,0 +1,254 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// generator client {
+//   provider = "prisma-client"
+//   output   = "../generated/prisma"
+// }
+
+// datasource db {
+//   provider = "postgresql"
+//   url      = env("DATABASE_URL")
+// }
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String
+  role          UserRole  @default(OWNER)
+  business      Business?
+  auditLogs     AuditLog[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("users")
+}
+
+model Business {
+  id              String       @id @default(cuid())
+  name            String
+  address         String?
+  contactNumber   String?
+  email           String?
+  gstin           String?
+  logo            String?
+  ownerId         String       @unique
+  owner           User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  products        Product[]
+  categories      Category[]
+  suppliers       Supplier[]
+  customers       Customer[]
+  purchases       Purchase[]
+  sales           Sale[]
+  settings        BusinessSettings?
+  auditLogs       AuditLog[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@map("businesses")
+}
+
+model Product {
+  id              String      @id @default(cuid())
+  name            String
+  description     String?
+  sku             String      @unique
+  categoryId      String
+  category        Category    @relation(fields: [categoryId], references: [id])
+  costPrice       Float
+  sellingPrice    Float
+  currentStock    Int
+  lowStockAlert   Int         @default(10)
+  unit            String      @default("kg")
+  isActive        Boolean     @default(true)
+  businessId      String
+  business        Business    @relation(fields: [businessId], references: [id])
+  saleItems       SaleItem[]
+  purchaseItems   PurchaseItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@map("products")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  businessId  String
+  business    Business  @relation(fields: [businessId], references: [id])
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([name, businessId])
+  @@map("categories")
+}
+
+model Supplier {
+  id            String    @id @default(cuid())
+  name          String
+  contactPerson String?
+  email         String?
+  phone         String?
+  address       String?
+  gstin         String?
+  businessId    String
+  business      Business  @relation(fields: [businessId], references: [id])
+  purchases     Purchase[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([name, businessId])
+  @@map("suppliers")
+}
+
+model Customer {
+  id          String    @id @default(cuid())
+  name        String
+  email       String?
+  phone       String?
+  address     String?
+  gstin       String?
+  businessId  String
+  business    Business  @relation(fields: [businessId], references: [id])
+  sales       Sale[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("customers")
+}
+
+model Sale {
+  id            String      @id @default(cuid())
+  invoiceNumber String      @unique
+  customerId    String?
+  customer      Customer?   @relation(fields: [customerId], references: [id])
+  businessId    String
+  business      Business    @relation(fields: [businessId], references: [id])
+  saleItems     SaleItem[]
+  subtotal      Float
+  taxAmount     Float       @default(0)
+  discount      Float       @default(0)
+  totalAmount   Float
+  paymentMethod PaymentMethod @default(CASH)
+  paymentStatus PaymentStatus @default(PAID)
+  saleDate      DateTime    @default(now())
+  notes         String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@map("sales")
+}
+
+model SaleItem {
+  id          String   @id @default(cuid())
+  saleId      String
+  sale        Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  quantity    Int
+  unitPrice   Float
+  totalPrice  Float
+  createdAt   DateTime @default(now())
+
+  @@map("sale_items")
+}
+
+model Purchase {
+  id            String         @id @default(cuid())
+  supplierId    String
+  supplier      Supplier       @relation(fields: [supplierId], references: [id])
+  businessId    String
+  business      Business       @relation(fields: [businessId], references: [id])
+  purchaseItems PurchaseItem[]
+  totalAmount   Float
+  purchaseDate  DateTime       @default(now())
+  notes         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@map("purchases")
+}
+
+model PurchaseItem {
+  id          String   @id @default(cuid())
+  purchaseId  String
+  purchase    Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  quantity    Int
+  costPrice   Float
+  totalCost   Float
+  createdAt   DateTime @default(now())
+
+  @@map("purchase_items")
+}
+
+model BusinessSettings {
+  id                String   @id @default(cuid())
+  businessId        String   @unique
+  business          Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  lowStockAlert     Boolean  @default(true)
+  gstReminder       Boolean  @default(true)
+  gstRate           Float    @default(18)
+  invoicePrefix     String   @default("INV")
+  nextInvoiceNumber Int      @default(1)
+  pdfTemplate       String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("business_settings")
+}
+
+model AuditLog {
+  id          String      @id @default(cuid())
+  businessId  String
+  business    Business    @relation(fields: [businessId], references: [id])
+  action      String
+  entityType  String
+  entityId    String?
+  description String?
+  oldData     Json?
+  newData     Json?
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  createdAt   DateTime    @default(now())
+
+  @@map("audit_logs")
+}
+
+enum UserRole {
+  OWNER
+  MANAGER
+  STAFF
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  UPI
+  BANK_TRANSFER
+  CHEQUE
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  PARTIALLY_PAID
+  FAILED
+}

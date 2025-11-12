@@ -17,6 +17,13 @@ import {
   Search
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { User } from '@/services/api';
+
+interface NavigationItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<any>;
+}
 
 export function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -31,7 +38,7 @@ export function AdminLayout() {
     }
   }, [navigate]);
 
-  const navigation = [
+  const navigation: NavigationItem[] = [
     { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
     { name: 'Products', href: '/admin/products', icon: Package },
     { name: 'Billing', href: '/admin/billing', icon: ShoppingCart },
@@ -44,12 +51,16 @@ export function AdminLayout() {
 
   const handleLogout = () => {
     localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
     toast({
       title: "Logged Out",
       description: "You have been successfully logged out.",
     });
     navigate('/admin/login');
   };
+
+  const user: User = JSON.parse(localStorage.getItem('user') || '{}');
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
@@ -94,11 +105,13 @@ export function AdminLayout() {
       <div className="p-4 border-t">
         <div className="flex items-center space-x-3 mb-3">
           <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-primary text-primary-foreground text-sm">A</AvatarFallback>
+            <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+              {user.name ? user.name.charAt(0).toUpperCase() : 'A'}
+            </AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <p className="text-sm font-medium">Admin User</p>
-            <p className="text-xs text-muted-foreground">admin@ksk.com</p>
+            <p className="text-sm font-medium">{user.name || 'Admin User'}</p>
+            <p className="text-xs text-muted-foreground">{user.email || 'admin@ksk.com'}</p>
           </div>
         </div>
         <Button 
@@ -162,7 +175,9 @@ export function AdminLayout() {
             </Button>
             
             <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-primary text-primary-foreground">A</AvatarFallback>
+              <AvatarFallback className="bg-primary text-primary-foreground">
+                {user.name ? user.name.charAt(0).toUpperCase() : 'A'}
+              </AvatarFallback>
             </Avatar>
           </div>
         </header>
