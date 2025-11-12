@@ -4,5 +4,4 @@ JWT_SECRET="your-super-secret-jwt-key"
 
 PORT=5000
 
-NODE_ENV=""
-
+NODE_ENV=development
