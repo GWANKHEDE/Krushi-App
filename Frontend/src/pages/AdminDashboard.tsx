@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { StatsCard } from "@/components/ui/stats-card";
 import { Badge } from "@/components/ui/badge";
+import Loader from "@/services/Loader";
 import {
   Package,
   TrendingUp,
@@ -39,7 +40,13 @@ import {
   LineChart,
   Line,
 } from "recharts";
-import { dashboardAPI, salesAPI, productsAPI, DashboardData, User } from "@/services/api";
+import {
+  dashboardAPI,
+  salesAPI,
+  productsAPI,
+  DashboardData,
+  User,
+} from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 
 interface QuickAction {
@@ -72,13 +79,17 @@ interface ProductCategoryData {
 }
 
 export default function AdminDashboard() {
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
+    null
+  );
   const [salesTrend, setSalesTrend] = useState<SalesTrendData[]>([]);
-  const [productCategories, setProductCategories] = useState<ProductCategoryData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [productCategories, setProductCategories] = useState<
+    ProductCategoryData[]
+  >([]);
+  const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -88,24 +99,26 @@ export default function AdminDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      setIsLoading(true);
-      const [dashboardResponse, salesResponse, categoriesResponse] = await Promise.all([
-        dashboardAPI.getDashboardData(),
-        salesAPI.getAllSales({ limit: 100 }),
-        productsAPI.getAllProducts({ limit: 1000 })
-      ]);
-      
+      setLoading(true);
+      const [dashboardResponse, salesResponse, categoriesResponse] =
+        await Promise.all([
+          dashboardAPI.getDashboardData(),
+          salesAPI.getAllSales({ limit: 100 }),
+          productsAPI.getAllProducts({ limit: 1000 }),
+        ]);
+
       if (dashboardResponse.data.success) {
         setDashboardData(dashboardResponse.data.data);
-        
+
         // Process sales data for trend chart
         processSalesTrend(salesResponse.data.data.sales || []);
-        
+
         // Process product categories data
         processProductCategories(categoriesResponse.data.data.products || []);
       }
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Failed to fetch dashboard data';
+      const errorMessage =
+        error.response?.data?.message || "Failed to fetch dashboard data";
       setError(errorMessage);
       toast({
         variant: "destructive",
@@ -113,7 +126,7 @@ export default function AdminDashboard() {
         description: errorMessage,
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -141,41 +154,44 @@ export default function AdminDashboard() {
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - i);
-      return date.toISOString().split('T')[0];
+      return date.toISOString().split("T")[0];
     }).reverse();
 
     const salesByDate = sales.reduce((acc: any, sale: any) => {
-      const saleDate = new Date(sale.saleDate).toISOString().split('T')[0];
+      const saleDate = new Date(sale.saleDate).toISOString().split("T")[0];
       if (acc[saleDate]) {
         acc[saleDate].totalSales += sale.totalAmount;
         acc[saleDate].transactionCount += 1;
       } else {
         acc[saleDate] = {
           totalSales: sale.totalAmount,
-          transactionCount: 1
+          transactionCount: 1,
         };
       }
       return acc;
     }, {});
 
-    const trendData = last7Days.map(date => {
-      const salesData = salesByDate[date] || { totalSales: 0, transactionCount: 0 };
+    const trendData = last7Days.map((date) => {
+      const salesData = salesByDate[date] || {
+        totalSales: 0,
+        transactionCount: 0,
+      };
       return {
-        date: new Date(date).toLocaleDateString('en-IN', { 
-          month: 'short', 
-          day: 'numeric' 
+        date: new Date(date).toLocaleDateString("en-IN", {
+          month: "short",
+          day: "numeric",
         }),
         fullDate: date,
         sales: salesData.totalSales,
         transactions: salesData.transactionCount,
         totalSales: salesData.totalSales,
         transactionCount: salesData.transactionCount,
-        formattedSales: `₹${salesData.totalSales.toLocaleString('en-IN')}`,
-        formattedDate: new Date(date).toLocaleDateString('en-IN', {
-          weekday: 'short',
-          month: 'short',
-          day: 'numeric'
-        })
+        formattedSales: `₹${salesData.totalSales.toLocaleString("en-IN")}`,
+        formattedDate: new Date(date).toLocaleDateString("en-IN", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+        }),
       };
     });
 
@@ -185,7 +201,7 @@ export default function AdminDashboard() {
   const processProductCategories = (products: any[]) => {
     // Group products by category
     const categoriesMap = products.reduce((acc: any, product: any) => {
-      const categoryName = product.category?.name || 'Uncategorized';
+      const categoryName = product.category?.name || "Uncategorized";
       if (acc[categoryName]) {
         acc[categoryName] += 1;
       } else {
@@ -194,19 +210,21 @@ export default function AdminDashboard() {
       return acc;
     }, {});
 
-    const categoriesData = Object.entries(categoriesMap).map(([name, count]) => ({
-      id: name.toLowerCase().replace(/\s+/g, '-'),
-      name,
-      productCount: count as number,
-      value: count as number
-    }));
+    const categoriesData = Object.entries(categoriesMap).map(
+      ([name, count]) => ({
+        id: name.toLowerCase().replace(/\s+/g, "-"),
+        name,
+        productCount: count as number,
+        value: count as number,
+      })
+    );
 
     setProductCategories(categoriesData);
   };
 
   // Get user from localStorage
-  const user: User = JSON.parse(localStorage.getItem('user') || '{}');
-  const ownerName = user.name || 'Admin';
+  const user: User = JSON.parse(localStorage.getItem("user") || "{}");
+  const ownerName = user.name || "Admin";
 
   const statsCards = [
     {
@@ -251,24 +269,32 @@ export default function AdminDashboard() {
   ];
 
   const COLORS = [
-    "#4f46e5", "#22c55e", "#facc15", "#ef4444", "#8b5cf6", 
-    "#06b6d4", "#84cc16", "#f97316", "#ec4899", "#14b8a6",
-    "#a855f7", "#3b82f6", "#eab308", "#84cc16", "#10b981"
+    "#4f46e5",
+    "#22c55e",
+    "#facc15",
+    "#ef4444",
+    "#8b5cf6",
+    "#06b6d4",
+    "#84cc16",
+    "#f97316",
+    "#ec4899",
+    "#14b8a6",
+    "#a855f7",
+    "#3b82f6",
+    "#eab308",
+    "#84cc16",
+    "#10b981",
   ];
 
   // Calculate total sales from trend data
   const totalSales = salesTrend.reduce((sum, day) => sum + day.sales, 0);
-  const totalTransactions = salesTrend.reduce((sum, day) => sum + day.transactions, 0);
+  const totalTransactions = salesTrend.reduce(
+    (sum, day) => sum + day.transactions,
+    0
+  );
 
-  if (isLoading) {
-    return (
-      <div className="p-6 space-y-6 bg-gradient-to-br from-green-50 via-white to-lime-100 min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading dashboard data...</p>
-        </div>
-      </div>
-    );
+   if (loading) {
+    return <Loader message="Please wait..." />;
   }
 
   if (error && !dashboardData) {
@@ -277,7 +303,9 @@ export default function AdminDashboard() {
         <Card className="w-full max-w-md">
           <CardContent className="pt-6 text-center">
             <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Failed to load dashboard</h3>
+            <h3 className="text-lg font-semibold mb-2">
+              Failed to load dashboard
+            </h3>
             <p className="text-muted-foreground mb-4">{error}</p>
             <Button onClick={fetchDashboardData}>Try Again</Button>
           </CardContent>
@@ -300,11 +328,11 @@ export default function AdminDashboard() {
         </div>
         <div className="flex items-center gap-3">
           <Badge variant="secondary" className="text-sm">
-            {new Date().toLocaleDateString('en-IN', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
+            {new Date().toLocaleDateString("en-IN", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
             })}
           </Badge>
           <Button
@@ -314,7 +342,9 @@ export default function AdminDashboard() {
             disabled={isRefreshing}
             className="flex items-center gap-2"
           >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+            />
             Refresh
           </Button>
         </div>
@@ -379,7 +409,11 @@ export default function AdminDashboard() {
                 </CardTitle>
                 <CardDescription>Latest customer transactions</CardDescription>
               </div>
-              <Button variant="outline" size="sm" onClick={() => navigate('/admin/reports')}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/admin/reports")}
+              >
                 <Search className="h-4 w-4 mr-2" />
                 View All
               </Button>
@@ -395,7 +429,8 @@ export default function AdminDashboard() {
                   <div>
                     <p className="font-medium">{sale.customerName}</p>
                     <p className="text-sm text-muted-foreground">
-                      {sale.items} items • {new Date(sale.saleDate).toLocaleDateString()}
+                      {sale.items} items •{" "}
+                      {new Date(sale.saleDate).toLocaleDateString()}
                     </p>
                   </div>
                   <div className="text-right">
@@ -403,7 +438,9 @@ export default function AdminDashboard() {
                       ₹{sale.totalAmount.toLocaleString()}
                     </p>
                     <Badge
-                      variant={sale.paymentStatus === "PAID" ? "default" : "secondary"}
+                      variant={
+                        sale.paymentStatus === "PAID" ? "default" : "secondary"
+                      }
                       className="capitalize"
                     >
                       {sale.paymentStatus.toLowerCase()}
@@ -411,8 +448,11 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               ))}
-              {(!dashboardData?.recentSales || dashboardData.recentSales.length === 0) && (
-                <p className="text-center text-muted-foreground py-4">No recent sales</p>
+              {(!dashboardData?.recentSales ||
+                dashboardData.recentSales.length === 0) && (
+                <p className="text-center text-muted-foreground py-4">
+                  No recent sales
+                </p>
               )}
             </div>
           </CardContent>
@@ -450,9 +490,11 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <Badge 
+                  <Badge
                     className="bg-red-100 text-red-600 font-semibold"
-                    variant={product.currentStock === 0 ? "destructive" : "secondary"}
+                    variant={
+                      product.currentStock === 0 ? "destructive" : "secondary"
+                    }
                   >
                     {product.currentStock} units
                   </Badge>
@@ -462,8 +504,11 @@ export default function AdminDashboard() {
                 </div>
               </div>
             ))}
-            {(!dashboardData?.lowStockAlerts || dashboardData.lowStockAlerts.length === 0) && (
-              <p className="text-center text-muted-foreground py-4">No low stock items</p>
+            {(!dashboardData?.lowStockAlerts ||
+              dashboardData.lowStockAlerts.length === 0) && (
+              <p className="text-center text-muted-foreground py-4">
+                No low stock items
+              </p>
             )}
           </CardContent>
         </Card>
@@ -484,7 +529,7 @@ export default function AdminDashboard() {
               </div>
               <div className="text-right">
                 <p className="text-sm font-semibold text-green-600">
-                  Total: ₹{totalSales.toLocaleString('en-IN')}
+                  Total: ₹{totalSales.toLocaleString("en-IN")}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {totalTransactions} transactions
@@ -496,24 +541,27 @@ export default function AdminDashboard() {
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={salesTrend}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis 
-                  dataKey="date" 
+                <XAxis
+                  dataKey="date"
                   tick={{ fontSize: 12 }}
                   axisLine={false}
                   tickLine={false}
                 />
-                <YAxis 
+                <YAxis
                   tick={{ fontSize: 12 }}
                   axisLine={false}
                   tickLine={false}
                   tickFormatter={(value) => `₹${value / 1000}k`}
                 />
-                <Tooltip 
+                <Tooltip
                   formatter={(value: any, name: string) => {
-                    if (name === 'sales') {
-                      return [`₹${Number(value).toLocaleString('en-IN')}`, 'Sales Amount'];
+                    if (name === "sales") {
+                      return [
+                        `₹${Number(value).toLocaleString("en-IN")}`,
+                        "Sales Amount",
+                      ];
                     }
-                    return [value, 'Transactions'];
+                    return [value, "Transactions"];
                   }}
                   labelFormatter={(label, payload) => {
                     if (payload && payload[0]) {
@@ -522,10 +570,10 @@ export default function AdminDashboard() {
                     return `Date: ${label}`;
                   }}
                   contentStyle={{
-                    backgroundColor: 'white',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                    backgroundColor: "white",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                   }}
                 />
                 <Bar
@@ -539,14 +587,20 @@ export default function AdminDashboard() {
                   dataKey="transactions"
                   stroke="#8b5cf6"
                   strokeWidth={2}
-                  dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 4 }}
+                  dot={{ fill: "#8b5cf6", strokeWidth: 2, r: 4 }}
                   name="Transactions"
                 />
                 <Legend />
                 <defs>
-                  <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#4f46e5" stopOpacity={0.8}/>
-                    <stop offset="100%" stopColor="#4f46e5" stopOpacity={0.2}/>
+                  <linearGradient
+                    id="salesGradient"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop offset="0%" stopColor="#4f46e5" stopOpacity={0.8} />
+                    <stop offset="100%" stopColor="#4f46e5" stopOpacity={0.2} />
                   </linearGradient>
                 </defs>
               </BarChart>
@@ -566,7 +620,12 @@ export default function AdminDashboard() {
               </div>
               <div className="text-right">
                 <p className="text-sm font-semibold text-blue-600">
-                  Total: {productCategories.reduce((sum, cat) => sum + cat.productCount, 0)} products
+                  Total:{" "}
+                  {productCategories.reduce(
+                    (sum, cat) => sum + cat.productCount,
+                    0
+                  )}{" "}
+                  products
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {productCategories.length} categories
@@ -588,8 +647,10 @@ export default function AdminDashboard() {
                       innerRadius={70}
                       outerRadius={100}
                       paddingAngle={2}
-                      label={({ name, productCount, percent }) => 
-                        `${name}: ${productCount} (${(percent * 100).toFixed(1)}%)`
+                      label={({ name, productCount, percent }) =>
+                        `${name}: ${productCount} (${(percent * 100).toFixed(
+                          1
+                        )}%)`
                       }
                       labelLine={false}
                     >
@@ -602,32 +663,44 @@ export default function AdminDashboard() {
                         />
                       ))}
                     </Pie>
-                    <Tooltip 
+                    <Tooltip
                       formatter={(value: any, name: string, props: any) => {
-                        const total = productCategories.reduce((sum, cat) => sum + cat.productCount, 0);
+                        const total = productCategories.reduce(
+                          (sum, cat) => sum + cat.productCount,
+                          0
+                        );
                         const percentage = ((value / total) * 100).toFixed(1);
                         return [
                           `${value} products (${percentage}%)`,
-                          props.payload.name
+                          props.payload.name,
                         ];
                       }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
-                
+
                 {/* Category Legend */}
                 <div className="space-y-2 min-w-[200px]">
                   <h4 className="font-semibold text-sm mb-3">Categories</h4>
                   {productCategories.map((category, index) => (
-                    <div key={category.id} className="flex items-center justify-between text-sm">
+                    <div
+                      key={category.id}
+                      className="flex items-center justify-between text-sm"
+                    >
                       <div className="flex items-center gap-2">
-                        <div 
+                        <div
                           className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                          style={{
+                            backgroundColor: COLORS[index % COLORS.length],
+                          }}
                         />
-                        <span className="truncate max-w-[120px]">{category.name}</span>
+                        <span className="truncate max-w-[120px]">
+                          {category.name}
+                        </span>
                       </div>
-                      <span className="font-medium">{category.productCount}</span>
+                      <span className="font-medium">
+                        {category.productCount}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -636,11 +709,11 @@ export default function AdminDashboard() {
               <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
                 <Package className="h-12 w-12 mb-4 opacity-50" />
                 <p>No product categories data available</p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="mt-2"
-                  onClick={() => navigate('/admin/products')}
+                  onClick={() => navigate("/admin/products")}
                 >
                   Add Products
                 </Button>

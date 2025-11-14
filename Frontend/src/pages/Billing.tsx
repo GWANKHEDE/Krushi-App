@@ -1,60 +1,79 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/components/ui/use-toast';
-import { useBilling } from '@/hooks/useBilling';
-import { Product, Customer, CreateSaleData } from '@/services/api';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/use-toast";
+import { useBilling } from "@/hooks/useBilling";
+import Loader from "@/services/Loader";
+import { Product, Customer, CreateSaleData } from "@/services/api";
 
 interface SelectedProduct extends Product {
   quantity: number;
 }
 
 export default function Billing() {
-  const { products, customers, loading, error, createSale, createCustomer } = useBilling();
+  const { products, customers, loading, error, createSale, createCustomer } =
+    useBilling();
   const { toast } = useToast();
-  
-  const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
-  const [customerName, setCustomerName] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState<string>('');
+
+  const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>(
+    []
+  );
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState<string>("");
   const [billPreview, setBillPreview] = useState<any | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CARD' | 'UPI'>('CASH');
+  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "CARD" | "UPI">(
+    "CASH"
+  );
   const [isProcessing, setIsProcessing] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Filter active products with stock and search
-  const availableProducts = products.filter(product => 
-    product.isActive && 
-    product.currentStock > 0 &&
-    (product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     product.sku.toLowerCase().includes(searchTerm.toLowerCase()))
+  const availableProducts = products.filter(
+    (product) =>
+      product.isActive &&
+      product.currentStock > 0 &&
+      (product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.sku.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handleAddProduct = (product: Product) => {
     setSelectedProducts((prev) => {
       const existing = prev.find((item) => item.id === product.id);
-      
+
       if (existing) {
         if (existing.quantity >= product.currentStock) {
           toast({
             title: "Insufficient Stock",
             description: `Only ${product.currentStock} units available`,
-            variant: "destructive"
+            variant: "destructive",
           });
           return prev;
         }
-        return prev.map(item =>
-          item.id === product.id 
+        return prev.map((item) =>
+          item.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       }
-      
+
       return [...prev, { ...product, quantity: 1 }];
     });
   };
@@ -63,12 +82,12 @@ export default function Billing() {
     setSelectedProducts((prev) =>
       prev.map((item) => {
         if (item.id === id) {
-          const product = products.find(p => p.id === id);
+          const product = products.find((p) => p.id === id);
           if (product && item.quantity >= product.currentStock) {
             toast({
               title: "Insufficient Stock",
               description: `Only ${product.currentStock} units available`,
-              variant: "destructive"
+              variant: "destructive",
             });
             return item;
           }
@@ -83,7 +102,9 @@ export default function Billing() {
     setSelectedProducts((prev) =>
       prev
         .map((item) =>
-          item.id === id ? { ...item, quantity: Math.max(1, item.quantity - 1) } : item
+          item.id === id
+            ? { ...item, quantity: Math.max(1, item.quantity - 1) }
+            : item
         )
         .filter((item) => item.quantity > 0)
     );
@@ -91,16 +112,16 @@ export default function Billing() {
 
   const handleQuantityChange = (id: string, quantity: number) => {
     if (quantity < 1) return;
-    
+
     setSelectedProducts((prev) =>
       prev.map((item) => {
         if (item.id === id) {
-          const product = products.find(p => p.id === id);
+          const product = products.find((p) => p.id === id);
           if (product && quantity > product.currentStock) {
             toast({
               title: "Insufficient Stock",
               description: `Only ${product.currentStock} units available`,
-              variant: "destructive"
+              variant: "destructive",
             });
             return { ...item, quantity: product.currentStock };
           }
@@ -126,7 +147,7 @@ export default function Billing() {
       toast({
         title: "Customer Information Required",
         description: "Please select a customer or enter customer name",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -136,22 +157,27 @@ export default function Billing() {
     const total = subtotal + tax;
 
     const bill = {
-      customerName: selectedCustomer ? 
-        customers.find(c => c.id === selectedCustomer)?.name : customerName,
-      customerPhone: selectedCustomer ? 
-        customers.find(c => c.id === selectedCustomer)?.phone : customerPhone,
-      customerId: selectedCustomer && selectedCustomer !== 'new' ? selectedCustomer : undefined,
+      customerName: selectedCustomer
+        ? customers.find((c) => c.id === selectedCustomer)?.name
+        : customerName,
+      customerPhone: selectedCustomer
+        ? customers.find((c) => c.id === selectedCustomer)?.phone
+        : customerPhone,
+      customerId:
+        selectedCustomer && selectedCustomer !== "new"
+          ? selectedCustomer
+          : undefined,
       items: selectedProducts,
       subtotal,
       tax,
       total,
       paymentMethod,
-      createdAt: new Date().toLocaleString('en-IN', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+      createdAt: new Date().toLocaleString("en-IN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       }),
     };
     setBillPreview(bill);
@@ -167,22 +193,22 @@ export default function Billing() {
         customerId: billPreview.customerId,
         customerName: billPreview.customerName,
         customerPhone: billPreview.customerPhone,
-        saleItems: selectedProducts.map(item => ({
+        saleItems: selectedProducts.map((item) => ({
           productId: item.id,
           quantity: item.quantity,
           unitPrice: item.sellingPrice,
-          totalPrice: item.quantity * item.sellingPrice
+          totalPrice: item.quantity * item.sellingPrice,
         })),
         subtotal: billPreview.subtotal,
         taxAmount: billPreview.tax,
         totalAmount: billPreview.total,
         paymentMethod: paymentMethod,
-        paymentStatus: 'PAID',
-        notes: `Bill generated on ${new Date().toLocaleString()}`
+        paymentStatus: "PAID",
+        notes: `Bill generated on ${new Date().toLocaleString()}`,
       };
 
       const result = await createSale(saleData);
-      
+
       toast({
         title: "Bill Generated Successfully",
         description: `Invoice #${result.data.invoiceNumber} created`,
@@ -190,18 +216,17 @@ export default function Billing() {
 
       // Reset form
       setSelectedProducts([]);
-      setCustomerName('');
-      setCustomerPhone('');
-      setSelectedCustomer('');
-      setSearchTerm('');
+      setCustomerName("");
+      setCustomerPhone("");
+      setSelectedCustomer("");
+      setSearchTerm("");
       setShowModal(false);
       setBillPreview(null);
-
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsProcessing(false);
@@ -209,7 +234,7 @@ export default function Billing() {
   };
 
   const removeProduct = (id: string) => {
-    setSelectedProducts(prev => prev.filter(item => item.id !== id));
+    setSelectedProducts((prev) => prev.filter((item) => item.id !== id));
   };
 
   const getTotalItems = () => {
@@ -217,17 +242,8 @@ export default function Billing() {
   };
 
   if (loading) {
-    return (
-      <div className="container py-8">
-        <div className="flex justify-center items-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-            <p>Loading products and customers...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+      return <Loader message="Please wait..." />;
+    }
 
   if (error) {
     return (
@@ -235,9 +251,7 @@ export default function Billing() {
         <div className="flex justify-center items-center h-64">
           <div className="text-center">
             <p className="text-red-500 text-lg mb-4">Error: {error}</p>
-            <Button onClick={() => window.location.reload()}>
-              Try Again
-            </Button>
+            <Button onClick={() => window.location.reload()}>Try Again</Button>
           </div>
         </div>
       </div>
@@ -260,8 +274,13 @@ export default function Billing() {
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Select Existing Customer</label>
-            <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
+            <label className="text-sm font-medium">
+              Select Existing Customer
+            </label>
+            <Select
+              value={selectedCustomer}
+              onValueChange={setSelectedCustomer}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Choose customer" />
               </SelectTrigger>
@@ -269,14 +288,15 @@ export default function Billing() {
                 <SelectItem value="new">+ New Customer</SelectItem>
                 {customers.map((customer) => (
                   <SelectItem key={customer.id} value={customer.id}>
-                    {customer.name} {customer.phone ? `(${customer.phone})` : ''}
+                    {customer.name}{" "}
+                    {customer.phone ? `(${customer.phone})` : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {(selectedCustomer === 'new' || !selectedCustomer) && (
+          {(selectedCustomer === "new" || !selectedCustomer) && (
             <>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Customer Name *</label>
@@ -320,9 +340,7 @@ export default function Billing() {
         <CardHeader>
           <CardTitle className="flex justify-between items-center">
             <span>Available Products ({availableProducts.length})</span>
-            <Badge variant="outline">
-              {availableProducts.length} products
-            </Badge>
+            <Badge variant="outline">{availableProducts.length} products</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -330,9 +348,9 @@ export default function Billing() {
             <div className="text-center py-8">
               <p className="text-muted-foreground">No products found</p>
               {searchTerm && (
-                <Button 
-                  variant="outline" 
-                  onClick={() => setSearchTerm('')}
+                <Button
+                  variant="outline"
+                  onClick={() => setSearchTerm("")}
                   className="mt-2"
                 >
                   Clear Search
@@ -342,10 +360,22 @@ export default function Billing() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {availableProducts.map((product) => (
-                <div key={product.id} className="border p-4 rounded-lg hover:shadow-md transition-shadow">
+                <div
+                  key={product.id}
+                  className="border p-4 rounded-lg hover:shadow-md transition-shadow"
+                >
                   <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-medium text-sm leading-tight">{product.name}</h4>
-                    <Badge variant={product.currentStock <= product.lowStockAlert ? "destructive" : "secondary"} className="text-xs">
+                    <h4 className="font-medium text-sm leading-tight">
+                      {product.name}
+                    </h4>
+                    <Badge
+                      variant={
+                        product.currentStock <= product.lowStockAlert
+                          ? "destructive"
+                          : "secondary"
+                      }
+                      className="text-xs"
+                    >
                       Stock: {product.currentStock}
                     </Badge>
                   </div>
@@ -357,8 +387,8 @@ export default function Billing() {
                   </p>
                   {selectedProducts.find((p) => p.id === product.id) ? (
                     <div className="flex items-center justify-between">
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         variant="outline"
                         onClick={() => handleDecrement(product.id)}
                         className="h-8 w-8 p-0"
@@ -366,10 +396,13 @@ export default function Billing() {
                         -
                       </Button>
                       <span className="font-medium text-sm">
-                        {selectedProducts.find((p) => p.id === product.id)?.quantity}
+                        {
+                          selectedProducts.find((p) => p.id === product.id)
+                            ?.quantity
+                        }
                       </span>
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         variant="outline"
                         onClick={() => handleIncrement(product.id)}
                         className="h-8 w-8 p-0"
@@ -378,13 +411,15 @@ export default function Billing() {
                       </Button>
                     </div>
                   ) : (
-                    <Button 
-                      onClick={() => handleAddProduct(product)} 
+                    <Button
+                      onClick={() => handleAddProduct(product)}
                       className="w-full text-sm"
                       disabled={product.currentStock === 0}
                       size="sm"
                     >
-                      {product.currentStock === 0 ? 'Out of Stock' : 'Add to Bill'}
+                      {product.currentStock === 0
+                        ? "Out of Stock"
+                        : "Add to Bill"}
                     </Button>
                   )}
                 </div>
@@ -414,7 +449,8 @@ export default function Billing() {
                 <div className="flex-1">
                   <p className="font-medium">{item.name}</p>
                   <p className="text-sm text-muted-foreground">
-                    ₹{item.sellingPrice}/{item.unit} | Stock: {item.currentStock}
+                    ₹{item.sellingPrice}/{item.unit} | Stock:{" "}
+                    {item.currentStock}
                   </p>
                 </div>
                 <div className="flex items-center gap-4">
@@ -460,19 +496,25 @@ export default function Billing() {
                 </div>
               </div>
             ))}
-            
+
             <div className="border-t pt-4 space-y-3">
               <div className="flex justify-between text-sm">
                 <span>Subtotal:</span>
-                <span className="font-medium">₹{calculateSubtotal().toFixed(2)}</span>
+                <span className="font-medium">
+                  ₹{calculateSubtotal().toFixed(2)}
+                </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>GST (18%):</span>
-                <span className="font-medium">₹{(calculateSubtotal() * taxRate).toFixed(2)}</span>
+                <span className="font-medium">
+                  ₹{(calculateSubtotal() * taxRate).toFixed(2)}
+                </span>
               </div>
               <div className="flex justify-between text-lg font-bold border-t pt-2">
                 <span>Grand Total:</span>
-                <span className="text-green-600">₹{(calculateSubtotal() * (1 + taxRate)).toFixed(2)}</span>
+                <span className="text-green-600">
+                  ₹{(calculateSubtotal() * (1 + taxRate)).toFixed(2)}
+                </span>
               </div>
             </div>
 
@@ -480,7 +522,7 @@ export default function Billing() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Payment Method</label>
               <div className="flex gap-2">
-                {(['CASH', 'CARD', 'UPI'] as const).map((method) => (
+                {(["CASH", "CARD", "UPI"] as const).map((method) => (
                   <Button
                     key={method}
                     type="button"
@@ -494,13 +536,18 @@ export default function Billing() {
               </div>
             </div>
 
-            <Button 
-              onClick={handleGenerateBill} 
+            <Button
+              onClick={handleGenerateBill}
               className="w-full"
               size="lg"
               disabled={!customerName && !selectedCustomer}
             >
-              {!customerName && !selectedCustomer ? 'Enter Customer Details' : `Generate Bill - ₹${(calculateSubtotal() * (1 + taxRate)).toFixed(2)}`}
+              {!customerName && !selectedCustomer
+                ? "Enter Customer Details"
+                : `Generate Bill - ₹${(
+                    calculateSubtotal() *
+                    (1 + taxRate)
+                  ).toFixed(2)}`}
             </Button>
           </CardContent>
         </Card>
@@ -510,32 +557,50 @@ export default function Billing() {
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-center">🧾 Bill Preview</DialogTitle>
+            <DialogTitle className="text-2xl font-bold text-center">
+              🧾 Bill Preview
+            </DialogTitle>
           </DialogHeader>
           {billPreview && (
             <div className="space-y-6">
               {/* Header */}
               <div className="text-center space-y-2 border-b pb-4">
                 <h2 className="text-2xl font-bold">Krushi Seva Kendra</h2>
-                <p className="text-muted-foreground">Gandhi Chowk, Nanded, Maharashtra - 431601</p>
+                <p className="text-muted-foreground">
+                  Gandhi Chowk, Nanded, Maharashtra - 431601
+                </p>
                 <p className="text-sm">GSTIN: 27ABCDE1234F1Z5</p>
-                <p className="text-sm text-muted-foreground">{billPreview.createdAt}</p>
+                <p className="text-sm text-muted-foreground">
+                  {billPreview.createdAt}
+                </p>
               </div>
-              
+
               {/* Customer & Payment Info */}
               <div className="grid grid-cols-2 gap-6 text-sm">
                 <div>
                   <h3 className="font-semibold mb-2">Customer Information</h3>
-                  <p><strong>Name:</strong> {billPreview.customerName || 'Walk-in Customer'}</p>
-                  <p><strong>Phone:</strong> {billPreview.customerPhone || 'N/A'}</p>
+                  <p>
+                    <strong>Name:</strong>{" "}
+                    {billPreview.customerName || "Walk-in Customer"}
+                  </p>
+                  <p>
+                    <strong>Phone:</strong> {billPreview.customerPhone || "N/A"}
+                  </p>
                 </div>
                 <div>
                   <h3 className="font-semibold mb-2">Payment Information</h3>
-                  <p><strong>Method:</strong> {billPreview.paymentMethod}</p>
-                  <p><strong>Status:</strong> <span className="text-green-600 font-semibold">To be Paid</span></p>
+                  <p>
+                    <strong>Method:</strong> {billPreview.paymentMethod}
+                  </p>
+                  <p>
+                    <strong>Status:</strong>{" "}
+                    <span className="text-green-600 font-semibold">
+                      To be Paid
+                    </span>
+                  </p>
                 </div>
               </div>
-              
+
               {/* Items Table */}
               <div className="border rounded-lg overflow-hidden">
                 <table className="w-full text-sm">
@@ -549,24 +614,34 @@ export default function Billing() {
                     </tr>
                   </thead>
                   <tbody>
-                    {billPreview.items.map((item: SelectedProduct, idx: number) => (
-                      <tr key={idx} className="border-t">
-                        <td className="p-3">{idx + 1}</td>
-                        <td className="p-3">
-                          <div>
-                            <p className="font-medium">{item.name}</p>
-                            <p className="text-xs text-muted-foreground">{item.sku}</p>
-                          </div>
-                        </td>
-                        <td className="p-3">{item.quantity} {item.unit}</td>
-                        <td className="p-3">₹{item.sellingPrice.toFixed(2)}</td>
-                        <td className="p-3 font-medium">₹{(item.quantity * item.sellingPrice).toFixed(2)}</td>
-                      </tr>
-                    ))}
+                    {billPreview.items.map(
+                      (item: SelectedProduct, idx: number) => (
+                        <tr key={idx} className="border-t">
+                          <td className="p-3">{idx + 1}</td>
+                          <td className="p-3">
+                            <div>
+                              <p className="font-medium">{item.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {item.sku}
+                              </p>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            {item.quantity} {item.unit}
+                          </td>
+                          <td className="p-3">
+                            ₹{item.sellingPrice.toFixed(2)}
+                          </td>
+                          <td className="p-3 font-medium">
+                            ₹{(item.quantity * item.sellingPrice).toFixed(2)}
+                          </td>
+                        </tr>
+                      )
+                    )}
                   </tbody>
                 </table>
               </div>
-              
+
               {/* Totals */}
               <div className="border-t pt-4 space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -579,7 +654,9 @@ export default function Billing() {
                 </div>
                 <div className="flex justify-between text-lg font-bold border-t pt-2">
                   <span>Grand Total:</span>
-                  <span className="text-green-600">₹{billPreview.total.toFixed(2)}</span>
+                  <span className="text-green-600">
+                    ₹{billPreview.total.toFixed(2)}
+                  </span>
                 </div>
               </div>
 
@@ -604,7 +681,7 @@ export default function Billing() {
                       Processing...
                     </>
                   ) : (
-                    'Confirm & Print Bill'
+                    "Confirm & Print Bill"
                   )}
                 </Button>
               </div>

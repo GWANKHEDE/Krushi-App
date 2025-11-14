@@ -14,6 +14,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { purchasesAPI, suppliersAPI, productsAPI } from "@/services/api";
 import { Product, Supplier } from "@/services/api";
+import Loader from "@/services/Loader";
 
 interface PurchaseFormData {
   productId: string;
@@ -162,18 +163,7 @@ export default function Purchase() {
   };
 
   if (dataLoading) {
-    return (
-      <div className="container max-w-2xl py-10">
-        <Card>
-          <CardContent className="flex justify-center items-center h-32">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-2"></div>
-              <p>Loading products and suppliers...</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <Loader message="Please wait..." />;
   }
 
   const selectedProduct = products.find(p => p.id === form.productId);

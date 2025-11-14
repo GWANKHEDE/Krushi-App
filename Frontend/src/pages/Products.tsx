@@ -9,6 +9,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import Loader from "@/services/Loader";
 import {
   Select,
   SelectContent,
@@ -56,9 +57,9 @@ export default function Products() {
       setLoading(true);
       const [productsResponse, categoriesResponse] = await Promise.all([
         productsAPI.getAllProducts({ limit: 1000 }),
-        categoriesAPI.getAllCategories()
+        categoriesAPI.getAllCategories(),
       ]);
-      
+
       setProducts(productsResponse.data.data.products || []);
       setCategories(categoriesResponse.data.data.categories || []);
     } catch (error: any) {
@@ -78,17 +79,26 @@ export default function Products() {
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.description?.toLowerCase().includes(searchTerm.toLowerCase());
-      
+
       const matchesCategory =
-        selectedCategory === "All" || product.category?.name === selectedCategory;
-      
+        selectedCategory === "All" ||
+        product.category?.name === selectedCategory;
+
       const matchesStockStatus =
         selectedStockStatus === "All" ||
-        (selectedStockStatus === "In Stock" && product.currentStock > product.lowStockAlert) ||
-        (selectedStockStatus === "Low Stock" && product.currentStock <= product.lowStockAlert && product.currentStock > 0) ||
+        (selectedStockStatus === "In Stock" &&
+          product.currentStock > product.lowStockAlert) ||
+        (selectedStockStatus === "Low Stock" &&
+          product.currentStock <= product.lowStockAlert &&
+          product.currentStock > 0) ||
         (selectedStockStatus === "Out of Stock" && product.currentStock === 0);
 
-      return matchesSearch && matchesCategory && matchesStockStatus && product.isActive;
+      return (
+        matchesSearch &&
+        matchesCategory &&
+        matchesStockStatus &&
+        product.isActive
+      );
     });
 
     // Sort products
@@ -167,17 +177,8 @@ export default function Products() {
     setSortBy("name");
   };
 
-  if (loading) {
-    return (
-      <div className="container px-4 py-8">
-        <div className="flex justify-center items-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-            <p>Loading products...</p>
-          </div>
-        </div>
-      </div>
-    );
+   if (loading) {
+    return <Loader message="Please wait..." />;
   }
 
   return (
@@ -222,7 +223,10 @@ export default function Products() {
           </SelectContent>
         </Select>
 
-        <Select value={selectedStockStatus} onValueChange={setSelectedStockStatus}>
+        <Select
+          value={selectedStockStatus}
+          onValueChange={setSelectedStockStatus}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Stock Status" />
           </SelectTrigger>
@@ -260,13 +264,19 @@ export default function Products() {
         </p>
         <div className="flex gap-2 text-sm">
           <Badge variant="outline" className="bg-green-50 text-green-700">
-            In Stock: {products.filter(p => p.currentStock > p.lowStockAlert).length}
+            In Stock:{" "}
+            {products.filter((p) => p.currentStock > p.lowStockAlert).length}
           </Badge>
           <Badge variant="outline" className="bg-orange-50 text-orange-700">
-            Low Stock: {products.filter(p => p.currentStock <= p.lowStockAlert && p.currentStock > 0).length}
+            Low Stock:{" "}
+            {
+              products.filter(
+                (p) => p.currentStock <= p.lowStockAlert && p.currentStock > 0
+              ).length
+            }
           </Badge>
           <Badge variant="outline" className="bg-red-50 text-red-700">
-            Out of Stock: {products.filter(p => p.currentStock === 0).length}
+            Out of Stock: {products.filter((p) => p.currentStock === 0).length}
           </Badge>
         </div>
       </div>
@@ -340,7 +350,8 @@ export default function Products() {
                   {product.currentStock <= product.lowStockAlert && (
                     <div className="p-2 bg-orange-50 rounded-md">
                       <p className="text-xs text-orange-700">
-                        <strong>Low Stock Alert:</strong> Reorder when stock reaches {product.lowStockAlert} {product.unit}
+                        <strong>Low Stock Alert:</strong> Reorder when stock
+                        reaches {product.lowStockAlert} {product.unit}
                       </p>
                     </div>
                   )}
@@ -382,11 +393,7 @@ export default function Products() {
           <p className="text-muted-foreground mb-4">
             Try adjusting your search criteria or add a new product
           </p>
-          <Button
-            variant="outline"
-            onClick={clearFilters}
-            className="mr-2"
-          >
+          <Button variant="outline" onClick={clearFilters} className="mr-2">
             Clear All Filters
           </Button>
           <Button onClick={() => setIsAddDialogOpen(true)}>

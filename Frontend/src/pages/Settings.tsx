@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import Loader from '@/services/Loader';
 import { 
   Bell, 
   Lock, 
@@ -283,16 +284,7 @@ export default function SettingsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="container py-10">
-        <div className="flex justify-center items-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-            <p>Loading settings...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <Loader message="Please wait..." />;
   }
 
   return (
