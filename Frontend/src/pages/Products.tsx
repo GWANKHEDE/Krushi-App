@@ -292,7 +292,7 @@ export default function Products() {
               key={product.id}
               className="relative overflow-hidden hover:shadow-lg transition-shadow group"
             >
-              <CardHeader className="pb-3">
+              <CardHeader className="border-b border-border pb-2 mb-1">            
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <CardTitle className="text-lg mb-1 line-clamp-1">

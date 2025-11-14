@@ -26,13 +26,14 @@ import {
   EyeOff
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { dashboardAPI, productsAPI } from '@/services/api';
+import { dashboardAPI, productsAPI, settingsAPI } from '@/services/api';
 
 interface UserProfile {
   id: string;
   name: string;
   email: string;
   role: string;
+  phone?: string;
   business?: Business;
 }
 
@@ -86,6 +87,19 @@ export default function SettingsPage() {
     confirm: false
   });
   const { toast } = useToast();
+  const [profileForm, setProfileForm] = useState({
+    name: '',
+    email: '',
+    phone: ''
+  });
+
+  const [businessForm, setBusinessForm] = useState({
+    name: '',
+    address: '',
+    email: '',
+    gstin: '',
+    contactNumber: ''
+  });
 
   // Load user data and settings
   useEffect(() => {
@@ -102,11 +116,27 @@ export default function SettingsPage() {
       if (userData) {
         const userProfile = JSON.parse(userData);
         setUser(userProfile);
-        setBusiness(userProfile.business || null);
+        setProfileForm({
+          name: userProfile.name || '',
+          email: userProfile.email || '',
+          phone: userProfile.phone || userProfile.business?.contactNumber || ''
+        });
+
+        if (userProfile.business) {
+          setBusiness(userProfile.business);
+          setBusinessForm({
+            name: userProfile.business.name || '',
+            address: userProfile.business.address || '',
+            email: userProfile.business.email || '',
+            gstin: userProfile.business.gstin || '',
+            contactNumber: userProfile.business.contactNumber || ''
+          });
+        }
       }
 
       if (settingsData) {
-        setSettings(JSON.parse(settingsData));
+        const savedSettings = JSON.parse(settingsData);
+        setSettings(savedSettings);
       }
     } catch (error) {
       console.error('Error loading user data:', error);
@@ -143,9 +173,27 @@ export default function SettingsPage() {
     setSaving(true);
     
     try {
-      // Simulate API call - replace with actual API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await settingsAPI.updateProfile({
+        name: profileForm.name,
+        email: profileForm.email,
+        phone: profileForm.phone
+      });
+
+      // Update local storage with new data
+      const updatedUser = {
+        ...user,
+        name: profileForm.name,
+        email: profileForm.email,
+        phone: profileForm.phone,
+        business: {
+          ...user?.business,
+          contactNumber: profileForm.phone
+        }
+      };
       
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      setUser(updatedUser);
+
       toast({
         title: "Success",
         description: "Profile updated successfully",
@@ -166,9 +214,34 @@ export default function SettingsPage() {
     setSaving(true);
     
     try {
-      // Simulate API call - replace with actual API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await settingsAPI.updateBusiness({
+        name: businessForm.name,
+        address: businessForm.address,
+        email: businessForm.email,
+        gstin: businessForm.gstin,
+        contactNumber: businessForm.contactNumber
+      });
+
+      // Update local storage with new business data
+      const updatedBusiness = {
+        ...business,
+        name: businessForm.name,
+        address: businessForm.address,
+        email: businessForm.email,
+        gstin: businessForm.gstin,
+        contactNumber: businessForm.contactNumber
+      };
       
+      const updatedUser = {
+        ...user,
+        business: updatedBusiness
+      };
+      
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      localStorage.setItem('business', JSON.stringify(updatedBusiness));
+      setBusiness(updatedBusiness);
+      setUser(updatedUser);
+
       toast({
         title: "Success",
         description: "Business information updated successfully",
@@ -208,8 +281,10 @@ export default function SettingsPage() {
     setSaving(true);
     
     try {
-      // Simulate API call - replace with actual API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await settingsAPI.updatePassword({
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword
+      });
       
       toast({
         title: "Success",
@@ -240,13 +315,21 @@ export default function SettingsPage() {
     setSettings(updatedSettings);
     
     try {
-      // Simulate API call - replace with actual API
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await settingsAPI.updateSettings({
+        lowStockAlert: updatedSettings.lowStockAlert,
+        gstReminder: updatedSettings.gstReminder,
+        gstRate: updatedSettings.gstRate,
+        invoicePrefix: updatedSettings.invoicePrefix
+      });
+
       // Update local storage
       localStorage.setItem('settings', JSON.stringify(updatedSettings));
-    } catch (error) {
-      console.error('Error updating settings:', error);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to update settings",
+        variant: "destructive",
+      });
     }
   };
 
@@ -258,7 +341,15 @@ export default function SettingsPage() {
         description: "Creating sample bill document...",
       });
       
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await settingsAPI.generatePDF({
+        billData: {
+          // Sample bill data
+          invoiceNumber: 'INV-001',
+          customerName: 'Sample Customer',
+          items: [],
+          total: 0
+        }
+      });
       
       toast({
         title: "Success",
@@ -288,14 +379,14 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="container py-10 space-y-8">
-      <h2 className="text-2xl font-bold flex items-center gap-2">
+    <div className="container py-8 space-y-8">
+      {/* <h2 className="text-2xl font-bold flex items-center gap-2">
         <Settings className="h-6 w-6" /> Settings
-      </h2>
+      </h2> */}
 
       {/* Profile Section */}
       <Card>
-        <CardHeader>
+        <CardHeader className='border-b border-border border-green-500 mb-1 pb-2'>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" /> Profile Settings
           </CardTitle>
@@ -308,7 +399,11 @@ export default function SettingsPage() {
                 <Label htmlFor="name">Full Name</Label>
                 <Input
                   id="name"
-                  defaultValue={user?.name || ''}
+                  value={profileForm.name}
+                  onChange={(e) => setProfileForm(prev => ({
+                    ...prev,
+                    name: e.target.value
+                  }))}
                   placeholder="Enter your full name"
                 />
               </div>
@@ -317,16 +412,24 @@ export default function SettingsPage() {
                 <Input
                   id="email"
                   type="email"
-                  defaultValue={user?.email || ''}
+                  value={profileForm.email}
+                  onChange={(e) => setProfileForm(prev => ({
+                    ...prev,
+                    email: e.target.value
+                  }))}
                   placeholder="Enter your email"
                 />
               </div>
               <div>
-                <Label htmlFor="mobile">Mobile</Label>
+                <Label htmlFor="phone">Mobile</Label>
                 <Input
-                  id="mobile"
+                  id="phone"
                   type="tel"
-                  defaultValue={business?.contactNumber || ''}
+                  value={profileForm.phone}
+                  onChange={(e) => setProfileForm(prev => ({
+                    ...prev,
+                    phone: e.target.value
+                  }))}
                   placeholder="Enter your mobile number"
                 />
               </div>
@@ -352,7 +455,7 @@ export default function SettingsPage() {
 
       {/* Password Section */}
       <Card>
-        <CardHeader>
+        <CardHeader className='border-b border-border border-green-500 mb-1 pb-2'>
           <CardTitle className="flex items-center gap-2">
             <Lock className="h-5 w-5" /> Password Management
           </CardTitle>
@@ -455,7 +558,7 @@ export default function SettingsPage() {
 
       {/* Business Section */}
       <Card>
-        <CardHeader>
+        <CardHeader className='border-b border-border border-green-500 mb-1 pb-2'>
           <CardTitle className="flex items-center gap-2">
             <Building className="h-5 w-5" /> Business Details
           </CardTitle>
@@ -468,7 +571,11 @@ export default function SettingsPage() {
                 <Label htmlFor="businessName">Business Name</Label>
                 <Input
                   id="businessName"
-                  defaultValue={business?.name || ''}
+                  value={businessForm.name}
+                  onChange={(e) => setBusinessForm(prev => ({
+                    ...prev,
+                    name: e.target.value
+                  }))}
                   placeholder="Enter business name"
                 />
               </div>
@@ -476,7 +583,11 @@ export default function SettingsPage() {
                 <Label htmlFor="gstNumber">GST Number</Label>
                 <Input
                   id="gstNumber"
-                  defaultValue={business?.gstin || ''}
+                  value={businessForm.gstin}
+                  onChange={(e) => setBusinessForm(prev => ({
+                    ...prev,
+                    gstin: e.target.value
+                  }))}
                   placeholder="Enter GST number"
                 />
               </div>
@@ -484,18 +595,39 @@ export default function SettingsPage() {
                 <Label htmlFor="address">Business Address</Label>
                 <Textarea
                   id="address"
-                  defaultValue={business?.address || ''}
+                  value={businessForm.address}
+                  onChange={(e) => setBusinessForm(prev => ({
+                    ...prev,
+                    address: e.target.value
+                  }))}
                   placeholder="Enter business address"
                   rows={3}
                 />
               </div>
-              <div className="md:col-span-2">
+              <div>
                 <Label htmlFor="businessEmail">Business Email</Label>
                 <Input
                   id="businessEmail"
                   type="email"
-                  defaultValue={business?.email || ''}
+                  value={businessForm.email}
+                  onChange={(e) => setBusinessForm(prev => ({
+                    ...prev,
+                    email: e.target.value
+                  }))}
                   placeholder="Enter business email"
+                />
+              </div>
+              <div>
+                <Label htmlFor="contactNumber">Contact Number</Label>
+                <Input
+                  id="contactNumber"
+                  type="tel"
+                  value={businessForm.contactNumber}
+                  onChange={(e) => setBusinessForm(prev => ({
+                    ...prev,
+                    contactNumber: e.target.value
+                  }))}
+                  placeholder="Enter contact number"
                 />
               </div>
               <div className="md:col-span-2 text-right">
@@ -511,7 +643,7 @@ export default function SettingsPage() {
 
       {/* Notifications & Settings */}
       <Card>
-        <CardHeader>
+        <CardHeader className='border-b border-border border-green-500 mb-1 pb-2'>
           <CardTitle className="flex items-center gap-2">
             <Bell className="h-5 w-5" /> Notifications & Reminders
           </CardTitle>
@@ -583,7 +715,7 @@ export default function SettingsPage() {
 
       {/* PDF Generator */}
       <Card>
-        <CardHeader>
+        <CardHeader className='border-b border-border border-green-500 mb-3 pb-2'>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" /> PDF Bill Generator
           </CardTitle>
@@ -619,7 +751,7 @@ export default function SettingsPage() {
 
       {/* Inventory Overview */}
       <Card>
-        <CardHeader>
+        <CardHeader className="border-b border-border border-green-500 mb-3 pb-2">
           <CardTitle className="flex items-center gap-2">
             <Warehouse className="h-5 w-5" /> Inventory Status
           </CardTitle>

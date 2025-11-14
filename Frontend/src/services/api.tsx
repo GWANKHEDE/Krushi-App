@@ -45,6 +45,7 @@ export interface LoginCredentials {
 }
 
 export interface User {
+  phone: any;
   id: string;
   email: string;
   name: string;
@@ -116,6 +117,8 @@ export interface ProductCategory {
 }
 
 export interface ApiResponse<T> {
+  sales: any;
+  purchases: any;
   success: boolean;
   message: string;
   data: T;
@@ -200,6 +203,7 @@ export interface SaleItemWithProduct extends SaleItem {
 }
 
 export interface SalesResponse {
+  data: any;
   sales: Sale[];
   summary: {
     totalSales: number;
@@ -270,6 +274,7 @@ export interface PurchaseItemWithProduct extends PurchaseItem {
 }
 
 export interface PurchasesResponse {
+  data: any;
   purchases: Purchase[];
   summary: {
     totalPurchases: number;

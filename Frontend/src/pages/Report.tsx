@@ -18,7 +18,6 @@ import {
   Legend,
 } from "recharts";
 import {
-  DollarSign,
   IndianRupee,
   Percent,
   Receipt,
@@ -258,7 +257,7 @@ export default function Report() {
           <div className="relative p-4">
             <Users className="absolute top-4 right-4 h-5 w-5 text-purple-600" />
             <CardHeader className="p-0">
-              <CardTitle className="text-lg">Customers</CardTitle>
+              <CardTitle className="text-lg"> Customers </CardTitle>
             </CardHeader>
             <CardContent className="pt-8">
               <p className="text-2xl font-bold">
@@ -276,7 +275,7 @@ export default function Report() {
       <div className="grid md:grid-cols-2 gap-6">
         {/* Sales Chart */}
         <Card>
-          <CardHeader className="flex flex-row justify-between items-center">
+          <CardHeader className="flex flex-row justify-between items-center border-b border-border pt-2 pb-2 mb-1">
             <CardTitle>Sales Overview</CardTitle>
             <div className="flex gap-2">
               <button
@@ -311,7 +310,7 @@ export default function Report() {
               </button>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pl-1">
             <div className="h-[300px]">
               {chartType === "bar" ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -392,7 +391,7 @@ export default function Report() {
         <Card className="max-h-96 flex flex-col">
           {" "}
           {/* 96 = ~384px */}
-          <CardHeader>
+          <CardHeader className="border-b border-border mb-1">
             <CardTitle className="-mt-2 -mb-2">Recent Transactions</CardTitle>
           </CardHeader>
           <CardContent className="flex-1 overflow-y-auto space-y-3 pr-2 hide-scrollbar">
@@ -472,8 +471,8 @@ export default function Report() {
 
         <TabsContent value="billing">
           <Card className="max-h-96 flex flex-col">
-            <CardHeader>
-              <CardTitle>Recent Bills ({sales.length})</CardTitle>
+            <CardHeader className="border-b border-border border-green-500 mb-1 pb-2">
+              <CardTitle> Recent Bills ({sales.length})</CardTitle>
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto space-y-3 pr-2 hide-scrollbar">
               <div className="space-y-3">
@@ -523,7 +522,7 @@ export default function Report() {
 
         <TabsContent value="purchases">
           <Card className="max-h-96 flex flex-col">
-            <CardHeader>
+            <CardHeader className="border-b border-border border-green-500 mb-1 pb-2">
               <CardTitle>Purchase Entries ({purchases.length})</CardTitle>
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto space-y-3 pr-2 hide-scrollbar">
@@ -565,7 +564,7 @@ export default function Report() {
 
         <TabsContent value="gst">
           <Card>
-            <CardHeader>
+            <CardHeader className="border-b border-border border-green-500 mb-1 pb-2">
               <CardTitle>GST Summary</CardTitle>
             </CardHeader>
             <CardContent>
@@ -626,7 +625,7 @@ export default function Report() {
 
         <TabsContent value="transactions">
           <Card className="max-h-96 flex flex-col">
-            <CardHeader>
+            <CardHeader className="border-b border-border border-green-500 mb-1 pb-2">
               <CardTitle>
                 All Transactions ({recentTransactions.length})
               </CardTitle>

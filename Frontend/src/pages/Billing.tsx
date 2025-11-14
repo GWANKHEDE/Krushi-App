@@ -269,7 +269,7 @@ export default function Billing() {
 
       {/* Customer Info */}
       <Card className="mb-6">
-        <CardHeader>
+        <CardHeader className="border-b border-border pb-2 mb-1">
           <CardTitle>Customer Details</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -322,7 +322,7 @@ export default function Billing() {
 
       {/* Product Search */}
       <Card className="mb-6">
-        <CardHeader>
+        <CardHeader className="border-b border-border pb-2 mb-1">
           <CardTitle>Product Search</CardTitle>
         </CardHeader>
         <CardContent>
@@ -337,7 +337,7 @@ export default function Billing() {
 
       {/* Product Selection */}
       <Card className="mb-6">
-        <CardHeader>
+        <CardHeader className="border-b border-border pb-2 mb-1">
           <CardTitle className="flex justify-between items-center">
             <span>Available Products ({availableProducts.length})</span>
             <Badge variant="outline">{availableProducts.length} products</Badge>
@@ -364,8 +364,8 @@ export default function Billing() {
                   key={product.id}
                   className="border p-4 rounded-lg hover:shadow-md transition-shadow"
                 >
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-medium text-sm leading-tight">
+                  <div className="flex justify-between items-start mb-2 border-b border-border pb-2 border-green-200 ">
+                    <h4 className="font-medium text-sm leading-tight text-center">
                       {product.name}
                     </h4>
                     <Badge
@@ -413,7 +413,7 @@ export default function Billing() {
                   ) : (
                     <Button
                       onClick={() => handleAddProduct(product)}
-                      className="w-full text-sm"
+                      className="w-full text-sm "
                       disabled={product.currentStock === 0}
                       size="sm"
                     >
