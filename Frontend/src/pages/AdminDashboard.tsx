@@ -400,7 +400,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Sales */}
         <Card className="hover:shadow-lg bg-gradient-to-r from-lime-100 to-green-100 transition-shadow max-h-96 flex flex-col">
-          <CardHeader>
+          <CardHeader className="border-b border-border pb-2 mb-1">
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="flex items-center space-x-2">
@@ -460,7 +460,7 @@ export default function AdminDashboard() {
 
         {/* Low Stock Alert */}
         <Card className="hover:shadow-lg bg-gradient-to-r from-lime-100 to-green-100 transition-shadow hide-scrollbar">
-          <CardHeader>
+          <CardHeader className="border-b border-border pb-2 mb-1">
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="flex items-center space-x-2">
@@ -518,7 +518,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Sales Trend Chart */}
         <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
+          <CardHeader className="border-b border-border pb-2">
             <div className="flex justify-between items-center">
               <div>
                 <CardTitle className="flex items-center space-x-2">
@@ -537,7 +537,7 @@ export default function AdminDashboard() {
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="-ml-8">
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={salesTrend}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -610,7 +610,7 @@ export default function AdminDashboard() {
 
         {/* Product Categories Donut Chart */}
         <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
+          <CardHeader className="border-b border-border pb-2">
             <div className="flex justify-between items-center">
               <div>
                 <CardTitle>Product Categories</CardTitle>

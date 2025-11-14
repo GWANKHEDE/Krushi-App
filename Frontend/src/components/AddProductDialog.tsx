@@ -87,7 +87,7 @@ export default function AddProductDialog({
       });
 
       onProductAdded();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error",
         description: error.response?.data?.message || "Failed to add product",
