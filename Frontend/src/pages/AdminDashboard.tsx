@@ -21,6 +21,7 @@ import {
   Search,
   IndianRupee,
   Activity,
+  RefreshCw,
 } from "lucide-react";
 
 import {
@@ -35,8 +36,10 @@ import {
   Pie,
   Cell,
   Legend,
+  LineChart,
+  Line,
 } from "recharts";
-import { dashboardAPI, DashboardData, User } from "@/services/api";
+import { dashboardAPI, salesAPI, productsAPI, DashboardData, User } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 
 interface QuickAction {
@@ -45,10 +48,35 @@ interface QuickAction {
   path: string;
 }
 
+interface SalesTrendData {
+  sales: number;
+  transactions: number;
+  date: string;
+  totalSales: number;
+  transactionCount: number;
+  _sum?: {
+    totalAmount: number;
+  };
+  _count?: {
+    id: number;
+  };
+}
+
+interface ProductCategoryData {
+  id: string;
+  name: string;
+  productCount: number;
+  _count?: {
+    products: number;
+  };
+}
 
 export default function AdminDashboard() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [salesTrend, setSalesTrend] = useState<SalesTrendData[]>([]);
+  const [productCategories, setProductCategories] = useState<ProductCategoryData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   const navigate = useNavigate();
@@ -61,10 +89,20 @@ export default function AdminDashboard() {
   const fetchDashboardData = async () => {
     try {
       setIsLoading(true);
-      const response = await dashboardAPI.getDashboardData();
+      const [dashboardResponse, salesResponse, categoriesResponse] = await Promise.all([
+        dashboardAPI.getDashboardData(),
+        salesAPI.getAllSales({ limit: 100 }),
+        productsAPI.getAllProducts({ limit: 1000 })
+      ]);
       
-      if (response.data.success) {
-        setDashboardData(response.data.data);
+      if (dashboardResponse.data.success) {
+        setDashboardData(dashboardResponse.data.data);
+        
+        // Process sales data for trend chart
+        processSalesTrend(salesResponse.data.data.sales || []);
+        
+        // Process product categories data
+        processProductCategories(categoriesResponse.data.data.products || []);
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Failed to fetch dashboard data';
@@ -77,6 +115,93 @@ export default function AdminDashboard() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const refreshData = async () => {
+    try {
+      setIsRefreshing(true);
+      await fetchDashboardData();
+      toast({
+        title: "Success",
+        description: "Dashboard data refreshed successfully",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to refresh data",
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const processSalesTrend = (sales: any[]) => {
+    // Group sales by date for the last 7 days
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      return date.toISOString().split('T')[0];
+    }).reverse();
+
+    const salesByDate = sales.reduce((acc: any, sale: any) => {
+      const saleDate = new Date(sale.saleDate).toISOString().split('T')[0];
+      if (acc[saleDate]) {
+        acc[saleDate].totalSales += sale.totalAmount;
+        acc[saleDate].transactionCount += 1;
+      } else {
+        acc[saleDate] = {
+          totalSales: sale.totalAmount,
+          transactionCount: 1
+        };
+      }
+      return acc;
+    }, {});
+
+    const trendData = last7Days.map(date => {
+      const salesData = salesByDate[date] || { totalSales: 0, transactionCount: 0 };
+      return {
+        date: new Date(date).toLocaleDateString('en-IN', { 
+          month: 'short', 
+          day: 'numeric' 
+        }),
+        fullDate: date,
+        sales: salesData.totalSales,
+        transactions: salesData.transactionCount,
+        totalSales: salesData.totalSales,
+        transactionCount: salesData.transactionCount,
+        formattedSales: `₹${salesData.totalSales.toLocaleString('en-IN')}`,
+        formattedDate: new Date(date).toLocaleDateString('en-IN', {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric'
+        })
+      };
+    });
+
+    setSalesTrend(trendData);
+  };
+
+  const processProductCategories = (products: any[]) => {
+    // Group products by category
+    const categoriesMap = products.reduce((acc: any, product: any) => {
+      const categoryName = product.category?.name || 'Uncategorized';
+      if (acc[categoryName]) {
+        acc[categoryName] += 1;
+      } else {
+        acc[categoryName] = 1;
+      }
+      return acc;
+    }, {});
+
+    const categoriesData = Object.entries(categoriesMap).map(([name, count]) => ({
+      id: name.toLowerCase().replace(/\s+/g, '-'),
+      name,
+      productCount: count as number,
+      value: count as number
+    }));
+
+    setProductCategories(categoriesData);
   };
 
   // Get user from localStorage
@@ -125,7 +250,15 @@ export default function AdminDashboard() {
     { icon: BarChart3, label: "View Reports", path: "/admin/reports" },
   ];
 
-  const COLORS = ["#4f46e5", "#22c55e", "#facc15", "#ef4444", "#8b5cf6"];
+  const COLORS = [
+    "#4f46e5", "#22c55e", "#facc15", "#ef4444", "#8b5cf6", 
+    "#06b6d4", "#84cc16", "#f97316", "#ec4899", "#14b8a6",
+    "#a855f7", "#3b82f6", "#eab308", "#84cc16", "#10b981"
+  ];
+
+  // Calculate total sales from trend data
+  const totalSales = salesTrend.reduce((sum, day) => sum + day.sales, 0);
+  const totalTransactions = salesTrend.reduce((sum, day) => sum + day.transactions, 0);
 
   if (isLoading) {
     return (
@@ -165,7 +298,7 @@ export default function AdminDashboard() {
             Here's what's happening at your store today.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Badge variant="secondary" className="text-sm">
             {new Date().toLocaleDateString('en-IN', { 
               weekday: 'long', 
@@ -174,6 +307,16 @@ export default function AdminDashboard() {
               day: 'numeric' 
             })}
           </Badge>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refreshData}
+            disabled={isRefreshing}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
         </div>
       </div>
 
@@ -226,7 +369,7 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Sales */}
-        <Card className="hover:shadow-lg bg-gradient-to-r from-lime-100 to-green-100 transition-shadow">
+        <Card className="hover:shadow-lg bg-gradient-to-r from-lime-100 to-green-100 transition-shadow max-h-96 flex flex-col">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -242,8 +385,8 @@ export default function AdminDashboard() {
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
+          <CardContent className="flex-1 overflow-y-auto space-y-3 pr-2 hide-scrollbar">
+            <div className="space-y-2">
               {dashboardData?.recentSales?.map((sale) => (
                 <div
                   key={sale.id}
@@ -276,7 +419,7 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Low Stock Alert */}
-        <Card className="hover:shadow-lg bg-gradient-to-r from-lime-100 to-green-100 transition-shadow">
+        <Card className="hover:shadow-lg bg-gradient-to-r from-lime-100 to-green-100 transition-shadow hide-scrollbar">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -303,7 +446,7 @@ export default function AdminDashboard() {
                 <div>
                   <p className="font-medium">{product.name}</p>
                   <p className="text-sm text-muted-foreground">
-                    {product.category}
+                    SKU: {product.sku}
                   </p>
                 </div>
                 <div className="text-right">
@@ -313,6 +456,9 @@ export default function AdminDashboard() {
                   >
                     {product.currentStock} units
                   </Badge>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Alert at: {product.lowStockAlert}
+                  </p>
                 </div>
               </div>
             ))}
@@ -328,34 +474,79 @@ export default function AdminDashboard() {
         {/* Sales Trend Chart */}
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle>Sales Trend</CardTitle>
-            <CardDescription>Sales for the past 7 days</CardDescription>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="flex items-center space-x-2">
+                  <Activity className="h-5 w-5 text-blue-600" />
+                  <span>Sales Trend</span>
+                </CardTitle>
+                <CardDescription>Sales for the past 7 days</CardDescription>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-semibold text-green-600">
+                  Total: ₹{totalSales.toLocaleString('en-IN')}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {totalTransactions} transactions
+                </p>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={dashboardData?.salesTrend || []}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={salesTrend}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis 
+                  dataKey="date" 
+                  tick={{ fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis 
+                  tick={{ fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(value) => `₹${value / 1000}k`}
+                />
                 <Tooltip 
-                  formatter={(value: any) => [`₹${value}`, 'Sales']}
-                  labelFormatter={(label: any) => `Date: ${new Date(label).toLocaleDateString()}`}
+                  formatter={(value: any, name: string) => {
+                    if (name === 'sales') {
+                      return [`₹${Number(value).toLocaleString('en-IN')}`, 'Sales Amount'];
+                    }
+                    return [value, 'Transactions'];
+                  }}
+                  labelFormatter={(label, payload) => {
+                    if (payload && payload[0]) {
+                      return `Date: ${payload[0].payload.formattedDate}`;
+                    }
+                    return `Date: ${label}`;
+                  }}
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
                 />
                 <Bar
-                  dataKey="totalSales"
-                  fill="url(#gradientSales)"
-                  radius={[6, 6, 0, 0]}
+                  dataKey="sales"
+                  fill="url(#salesGradient)"
+                  radius={[4, 4, 0, 0]}
+                  name="Sales Amount"
                 />
+                <Line
+                  type="monotone"
+                  dataKey="transactions"
+                  stroke="#8b5cf6"
+                  strokeWidth={2}
+                  dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 4 }}
+                  name="Transactions"
+                />
+                <Legend />
                 <defs>
-                  <linearGradient
-                    id="gradientSales"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.9} />
-                    <stop offset="95%" stopColor="#4f46e5" stopOpacity={0.6} />
+                  <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#4f46e5" stopOpacity={0.8}/>
+                    <stop offset="100%" stopColor="#4f46e5" stopOpacity={0.2}/>
                   </linearGradient>
                 </defs>
               </BarChart>
@@ -366,35 +557,95 @@ export default function AdminDashboard() {
         {/* Product Categories Donut Chart */}
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle>Product Categories</CardTitle>
-            <CardDescription>
-              Distribution of products by category
-            </CardDescription>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle>Product Categories</CardTitle>
+                <CardDescription>
+                  Distribution of products by category
+                </CardDescription>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-semibold text-blue-600">
+                  Total: {productCategories.reduce((sum, cat) => sum + cat.productCount, 0)} products
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {productCategories.length} categories
+                </p>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={dashboardData?.productCategories || []}
-                  dataKey="productCount"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={85}
-                  label={({ name, productCount }: { name: string; productCount: number }) => `${name}: ${productCount}`}
-                >
-                  {(dashboardData?.productCategories || []).map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
+            {productCategories.length > 0 ? (
+              <div className="flex flex-col lg:flex-row items-center gap-6">
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie
+                      data={productCategories}
+                      dataKey="productCount"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={70}
+                      outerRadius={100}
+                      paddingAngle={2}
+                      label={({ name, productCount, percent }) => 
+                        `${name}: ${productCount} (${(percent * 100).toFixed(1)}%)`
+                      }
+                      labelLine={false}
+                    >
+                      {productCategories.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                          stroke="#fff"
+                          strokeWidth={2}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value: any, name: string, props: any) => {
+                        const total = productCategories.reduce((sum, cat) => sum + cat.productCount, 0);
+                        const percentage = ((value / total) * 100).toFixed(1);
+                        return [
+                          `${value} products (${percentage}%)`,
+                          props.payload.name
+                        ];
+                      }}
                     />
+                  </PieChart>
+                </ResponsiveContainer>
+                
+                {/* Category Legend */}
+                <div className="space-y-2 min-w-[200px]">
+                  <h4 className="font-semibold text-sm mb-3">Categories</h4>
+                  {productCategories.map((category, index) => (
+                    <div key={category.id} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                        />
+                        <span className="truncate max-w-[120px]">{category.name}</span>
+                      </div>
+                      <span className="font-medium">{category.productCount}</span>
+                    </div>
                   ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                <Package className="h-12 w-12 mb-4 opacity-50" />
+                <p>No product categories data available</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-2"
+                  onClick={() => navigate('/admin/products')}
+                >
+                  Add Products
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

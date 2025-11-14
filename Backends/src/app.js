@@ -7,6 +7,14 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth');
 const dashboardRoutes = require('./routes/dashboard');
 const productRoutes = require('./routes/products');
+const customerRoutes = require('./routes/customers');
+const saleRoutes = require('./routes/sales');
+const categoryRoutes = require('./routes/categories');
+const supplierRoutes = require('./routes/suppliers');
+const purchaseRoutes = require('./routes/purchases');
+const reportRoutes = require('./routes/reports');
+const settingsRoutes = require('./routes/settings');
+
 
 const app = express();
 
@@ -21,6 +29,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/customers', customerRoutes);
+app.use('/api/sales', saleRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/suppliers', supplierRoutes);
+app.use('/api/purchases', purchaseRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/settings', settingsRoutes);
+
 
 // Health check
 app.get('/health', (req, res) => {

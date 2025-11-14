@@ -138,6 +138,8 @@ model Sale {
   invoiceNumber String      @unique
   customerId    String?
   customer      Customer?   @relation(fields: [customerId], references: [id])
+  customerName  String?     
+  customerPhone String?     
   businessId    String
   business      Business    @relation(fields: [businessId], references: [id])
   saleItems     SaleItem[]
