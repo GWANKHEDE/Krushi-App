@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -14,7 +14,9 @@ import {
   Settings, 
   LogOut,
   Bell,
-  Search
+  Search,
+  User as UserIcon,
+  Mail
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@/services/api';
@@ -27,9 +29,23 @@ interface NavigationItem {
 
 export function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const profileRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('isAuthenticated');
@@ -60,19 +76,28 @@ export function AdminLayout() {
     navigate('/admin/login');
   };
 
+  const toggleProfile = () => {
+    setIsProfileOpen(!isProfileOpen);
+  };
+
   const user: User = JSON.parse(localStorage.getItem('user') || '{}');
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="p-6 border-b">
+      <div className="p-6 border-b h-16 flex items-center">
         <Link to="/admin/dashboard" className="flex items-center space-x-2">
           <div className="h-8 w-8 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center">
             <Sprout className="h-5 w-5 text-primary-foreground" />
           </div>
-          <div>
-            <span className="font-bold text-lg">KSK Admin</span>
-          </div>
+              <div className="max-w-[150px]"> 
+      <span
+        className="font-bold text-lg truncate block"
+        title={user.business?.name || ''}
+      >
+        {user.business?.name || ''}
+      </span>
+    </div>
         </Link>
       </div>
 
@@ -127,6 +152,83 @@ export function AdminLayout() {
     </div>
   );
 
+  const ProfileCard = () => (
+    <div 
+      ref={profileRef}
+      className="absolute right-4 top-16 z-50 w-80 bg-background border rounded-lg shadow-lg"
+    >
+      {/* Profile Header */}
+      <div className="p-6 border-b">
+        <div className="flex items-center space-x-4">
+          <Avatar className="h-12 w-12">
+            <AvatarFallback className="bg-primary text-primary-foreground text-lg">
+              {user.name ? user.name.charAt(0).toUpperCase() : 'A'}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1">
+            <h3 className="font-semibold text-lg">{user.name || 'Admin User'}</h3>
+            <p className="text-sm text-muted-foreground">{user.email || 'admin@ksk.com'}</p>
+            <p className="text-xs text-muted-foreground mt-1">Administrator</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Profile Info */}
+      <div className="p-4 space-y-3">
+        <div className="flex items-center space-x-3 text-sm">
+          <UserIcon className="h-4 w-4 text-muted-foreground" />
+          <div>
+            <p className="font-medium">Full Name</p>
+            <p className="text-muted-foreground">{user.name || 'Admin User'}</p>
+          </div>
+        </div>
+        <div className="flex items-center space-x-3 text-sm">
+          <Mail className="h-4 w-4 text-muted-foreground" />
+          <div>
+            <p className="font-medium">Email Address</p>
+            <p className="text-muted-foreground">{user.email || 'admin@ksk.com'}</p>
+          </div>
+        </div>
+        {user.phone && (
+          <div className="flex items-center space-x-3 text-sm">
+            <Mail className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <p className="font-medium">Phone</p>
+              <p className="text-muted-foreground">{user.phone}</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Actions */}
+      <div className="p-4 border-t">
+        <div className="space-y-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full justify-start"
+            onClick={() => {
+              navigate('/admin/settings');
+              setIsProfileOpen(false);
+            }}
+          >
+            <Settings className="h-4 w-4 mr-2" />
+            Account Settings
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full justify-start text-destructive hover:text-destructive"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Sign Out
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-background">
       {/* Desktop Sidebar */}
@@ -174,11 +276,24 @@ export function AdminLayout() {
               </span>
             </Button>
             
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-primary text-primary-foreground">
-                {user.name ? user.name.charAt(0).toUpperCase() : 'A'}
-              </AvatarFallback>
-            </Avatar>
+            {/* Profile Avatar with Dropdown */}
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full p-0 hover:bg-accent"
+                onClick={toggleProfile}
+              >
+                <Avatar className="h-8 w-8 cursor-pointer">
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    {user.name ? user.name.charAt(0).toUpperCase() : 'A'}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+              
+              {/* Profile Card */}
+              {isProfileOpen && <ProfileCard />}
+            </div>
           </div>
         </header>
 
