@@ -1,10 +1,10 @@
 const express = require('express');
-const { 
-  getAllCategories, 
-  getCategory, 
-  createCategory, 
-  updateCategory, 
-  deleteCategory 
+const {
+  getAllCategories,
+  getCategory,
+  createCategory,
+  updateCategory,
+  deleteCategory
 } = require('../controllers/categoryController');
 const { authenticateToken } = require('../middleware/auth');
 const router = express.Router();
