@@ -291,14 +291,14 @@ export interface PurchasesResponse {
 
 // Auth API
 export const authAPI = {
-  login: (credentials: LoginCredentials): Promise<{ data: LoginResponse }> => 
+  login: (credentials: LoginCredentials): Promise<{ data: LoginResponse }> =>
     api.post('/auth/login', credentials),
   register: (userData: any) => api.post('/auth/register', userData),
 };
 
 // Dashboard API
 export const dashboardAPI = {
-  getDashboardData: (): Promise<{ data: ApiResponse<DashboardData> }> => 
+  getDashboardData: (): Promise<{ data: ApiResponse<DashboardData> }> =>
     api.get('/dashboard'),
 };
 
@@ -313,7 +313,7 @@ export const productsAPI = {
 
 // Customers API
 export const customersAPI = {
-  getAllCustomers: (params?: any): Promise<{ data: ApiResponse<CustomersResponse> }> => 
+  getAllCustomers: (params?: any): Promise<{ data: ApiResponse<CustomersResponse> }> =>
     api.get('/customers', { params }),
   getCustomer: (id: string) => api.get(`/customers/${id}`),
   createCustomer: (customerData: any) => api.post('/customers', customerData),
@@ -323,7 +323,7 @@ export const customersAPI = {
 
 // Sales API
 export const salesAPI = {
-  getAllSales: (params?: any): Promise<{ data: ApiResponse<SalesResponse> }> => 
+  getAllSales: (params?: any): Promise<{ data: ApiResponse<SalesResponse> }> =>
     api.get('/sales', { params }),
   getSale: (id: string) => api.get(`/sales/${id}`),
   createSale: (saleData: CreateSaleData) => api.post('/sales', saleData),
@@ -334,7 +334,7 @@ export const salesAPI = {
 
 // Categories API
 export const categoriesAPI = {
-  getAllCategories: (): Promise<{ data: ApiResponse<CategoriesResponse> }> => 
+  getAllCategories: (): Promise<{ data: ApiResponse<CategoriesResponse> }> =>
     api.get('/categories'),
   getCategory: (id: string) => api.get(`/categories/${id}`),
   createCategory: (categoryData: any) => api.post('/categories', categoryData),
@@ -343,7 +343,7 @@ export const categoriesAPI = {
 };
 
 export const suppliersAPI = {
-  getAllSuppliers: (params?: any): Promise<{ data: ApiResponse<any> }> => 
+  getAllSuppliers: (params?: any): Promise<{ data: ApiResponse<any> }> =>
     api.get('/suppliers', { params }),
   getSupplier: (id: string) => api.get(`/suppliers/${id}`),
   createSupplier: (supplierData: any) => api.post('/suppliers', supplierData),
@@ -352,7 +352,7 @@ export const suppliersAPI = {
 };
 
 export const purchasesAPI = {
-  getAllPurchases: (params?: any): Promise<{ data: ApiResponse<PurchasesResponse> }> => 
+  getAllPurchases: (params?: any): Promise<{ data: ApiResponse<PurchasesResponse> }> =>
     api.get('/purchases', { params }),
   getPurchase: (id: string) => api.get(`/purchases/${id}`),
   createPurchase: (purchaseData: CreatePurchaseData) => api.post('/purchases', purchaseData),
@@ -372,6 +372,7 @@ export const settingsAPI = {
   updatePassword: (passwordData: any) => api.put('/settings/password', passwordData),
   updateSettings: (settingsData: any) => api.put('/settings/preferences', settingsData),
   generatePDF: (billData: any) => api.post('/settings/generate-pdf', billData),
+  getBusinessProfile: (): Promise<{ data: ApiResponse<any> }> => api.get('/settings/profile'),
 };
 
 export default api;

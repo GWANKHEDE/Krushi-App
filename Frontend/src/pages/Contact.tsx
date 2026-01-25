@@ -3,7 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -11,21 +10,28 @@ import icon from 'leaflet/dist/images/marker-icon.png';
 import iconRetina from 'leaflet/dist/images/marker-icon-2x.png';
 import shadow from 'leaflet/dist/images/marker-shadow.png';
 
-import { 
-  MapPin, 
-  Phone, 
-  Mail, 
-  Clock, 
-  MessageSquare, 
+import {
+  MapPin,
+  Phone,
+  Mail,
+  Clock,
+  MessageSquare,
   Send,
-  Sprout
+  Sprout,
+  Loader2
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-
-
+import { settingsAPI } from '@/services/api';
 
 export default function Contact() {
+  const [loading, setLoading] = useState(true);
+  const [contactDetails, setContactDetails] = useState({
+    address: 'Main Road, Penur, District: Parbhani, State, PIN: 431511',
+    phone: '+91 98233 32198',
+    email: 'info@krushisevakendra.com'
+  });
+
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -35,11 +41,34 @@ export default function Contact() {
   });
   const { toast } = useToast();
 
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: iconRetina,
-  iconUrl: icon,
-  shadowUrl: shadow,
-});
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: iconRetina,
+    iconUrl: icon,
+    shadowUrl: shadow,
+  });
+
+  useEffect(() => {
+    const fetchContactInfo = async () => {
+      try {
+        setLoading(true);
+        const response = await settingsAPI.getBusinessProfile();
+        if (response.data.success) {
+          const business = response.data.data;
+          setContactDetails({
+            address: business.address || 'Main Road, Penur, District: Parbhani, State, PIN: 431511',
+            phone: business.contactNumber || '+91 98233 32198',
+            email: business.email || 'info@krushisevakendra.com'
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching contact info:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContactInfo();
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,19 +91,19 @@ L.Icon.Default.mergeOptions({
     {
       icon: MapPin,
       title: 'Visit Us',
-      details: ['Main Road, Penur', 'District: Parbhani', 'State, PIN: 431511'],
+      details: [contactDetails.address],
       color: 'text-primary'
     },
     {
       icon: Phone,
       title: 'Call Us',
-      details: ['+91 98233 32198', '+91 9822237950', 'Mon-Sat: 8AM-7PM'],
+      details: [contactDetails.phone, 'Mon-Sat: 8AM-7PM'],
       color: 'text-success'
     },
     {
       icon: Mail,
       title: 'Email Us',
-      details: ['info@krushisevakendra.com', 'support@krushisevakendra.com', 'Response within 24hrs'],
+      details: [contactDetails.email, 'Response within 24hrs'],
       color: 'text-info'
     },
     {
@@ -84,6 +113,14 @@ L.Icon.Default.mergeOptions({
       color: 'text-info'
     }
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="container px-4 py-8">

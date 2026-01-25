@@ -137,10 +137,38 @@ const generatePDF = async (req, res) => {
   }
 };
 
+const getBusinessProfile = async (req, res) => {
+  try {
+    const businessId = req.user.business.id;
+
+    const business = await prisma.business.findUnique({
+      where: { id: businessId },
+      include: {
+        owner: {
+          select: {
+            name: true,
+            email: true
+          }
+        },
+        settings: true
+      }
+    });
+
+    if (!business) {
+      return errorResponse(res, 'Business not found', 404);
+    }
+
+    successResponse(res, business);
+  } catch (error) {
+    errorResponse(res, error.message);
+  }
+};
+
 module.exports = {
   updateProfile,
   updateBusiness,
   updatePassword,
   updateSettings,
-  generatePDF
+  generatePDF,
+  getBusinessProfile
 };

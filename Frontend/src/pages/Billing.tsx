@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +7,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -16,32 +15,38 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { useBilling } from "@/hooks/useBilling";
 import Loader from "@/services/Loader";
-import { Product, Customer, CreateSaleData } from "@/services/api";
+import { Product, CreateSaleData } from "@/services/api";
+import { BillingHistory } from "@/components/BillingHistory";
+import { PDFGenerator } from "@/components/PDFGenerator";
+import { History, Receipt } from "lucide-react";
 
 interface SelectedProduct extends Product {
   quantity: number;
 }
 
 export default function Billing() {
-  const { products, customers, loading, error, createSale, createCustomer } =
-    useBilling();
+  const { products, customers, loading, error, createSale } = useBilling();
   const { toast } = useToast();
 
-  const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>(
-    []
-  );
+  const [activeTab, setActiveTab] = useState("new-bill");
+  const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<string>("");
   const [billPreview, setBillPreview] = useState<any | null>(null);
+  const [lastInvoiceNumber, setLastInvoiceNumber] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "CARD" | "UPI">(
-    "CASH"
-  );
+  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "CARD" | "UPI">("CASH");
   const [isProcessing, setIsProcessing] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -141,14 +146,16 @@ export default function Billing() {
 
   const taxRate = 0.18;
 
-  const handleGenerateBill = () => {
-    // Validate customer info
-    if (!selectedCustomer && !customerName) {
-      toast({
-        title: "Customer Information Required",
-        description: "Please select a customer or enter customer name",
-        variant: "destructive",
-      });
+  const handlePreviewBill = () => {
+    const isNewCustomer = selectedCustomer === "new" || !selectedCustomer;
+
+    if (isNewCustomer && !customerName.trim()) {
+      toast({ title: "Customer Name Required", variant: "destructive" });
+      return;
+    }
+
+    if (!isNewCustomer && !selectedCustomer) {
+      toast({ title: "Select a Customer", variant: "destructive" });
       return;
     }
 
@@ -157,42 +164,38 @@ export default function Billing() {
     const total = subtotal + tax;
 
     const bill = {
-      customerName: selectedCustomer
+      customerName: !isNewCustomer
         ? customers.find((c) => c.id === selectedCustomer)?.name
         : customerName,
-      customerPhone: selectedCustomer
+      customerPhone: !isNewCustomer
         ? customers.find((c) => c.id === selectedCustomer)?.phone
         : customerPhone,
-      customerId:
-        selectedCustomer && selectedCustomer !== "new"
-          ? selectedCustomer
-          : undefined,
+      customerId: !isNewCustomer ? selectedCustomer : undefined,
       items: selectedProducts,
       subtotal,
       tax,
-      total,
+      totalDiscount: 0,
+      overallDiscount: 0,
+      grandTotal: total,
       paymentMethod,
-      createdAt: new Date().toLocaleString("en-IN", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
+      createdAt: new Date().toLocaleDateString(),
     };
+
     setBillPreview(bill);
+    setLastInvoiceNumber(null); // Reset until confirmed
     setShowModal(true);
   };
 
-  const handleProcessPayment = async () => {
+  const handleConfirmAndCreate = async () => {
     if (!billPreview) return;
-
     setIsProcessing(true);
+
     try {
+      const isNewCustomer = selectedCustomer === "new" || !selectedCustomer;
       const saleData: CreateSaleData = {
-        customerId: billPreview.customerId,
-        customerName: billPreview.customerName,
-        customerPhone: billPreview.customerPhone,
+        customerId: !isNewCustomer && selectedCustomer ? selectedCustomer : undefined,
+        customerName: isNewCustomer ? customerName : undefined,
+        customerPhone: isNewCustomer ? customerPhone : undefined,
         saleItems: selectedProducts.map((item) => ({
           productId: item.id,
           quantity: item.quantity,
@@ -201,31 +204,30 @@ export default function Billing() {
         })),
         subtotal: billPreview.subtotal,
         taxAmount: billPreview.tax,
-        totalAmount: billPreview.total,
+        totalAmount: billPreview.grandTotal,
         paymentMethod: paymentMethod,
         paymentStatus: "PAID",
-        notes: `Bill generated on ${new Date().toLocaleString()}`,
+        notes: "Bill created via Admin Panel",
       };
 
       const result = await createSale(saleData);
+      setLastInvoiceNumber(result.data.invoiceNumber || "INV-####");
 
       toast({
-        title: "Bill Generated Successfully",
-        description: `Invoice #${result.data.invoiceNumber} created`,
+        title: "Bill Created",
+        description: "Invoice generated successfully. You can now download PDF.",
       });
 
-      // Reset form
+      // Clear input fields but keep modal open for PDF
       setSelectedProducts([]);
       setCustomerName("");
       setCustomerPhone("");
       setSelectedCustomer("");
-      setSearchTerm("");
-      setShowModal(false);
-      setBillPreview(null);
+
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to create sale",
         variant: "destructive",
       });
     } finally {
@@ -241,456 +243,222 @@ export default function Billing() {
     return selectedProducts.reduce((total, item) => total + item.quantity, 0);
   };
 
-  if (loading) {
-      return <Loader message="Please wait..." />;
-    }
-
-  if (error) {
-    return (
-      <div className="container py-8">
-        <div className="flex justify-center items-center h-64">
-          <div className="text-center">
-            <p className="text-red-500 text-lg mb-4">Error: {error}</p>
-            <Button onClick={() => window.location.reload()}>Try Again</Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <Loader message="Loading billing module..." />;
+  if (error) return <div className="p-8 text-center text-red-500">Error: {error}</div>;
 
   return (
-    <div className="container py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Krushi Billing System</h1>
-        <Badge variant="secondary" className="text-lg">
-          Items: {getTotalItems()} | Total: ₹{calculateSubtotal().toFixed(2)}
-        </Badge>
-      </div>
+    <div className="container py-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold tracking-tight">Billing & Invoices</h1>
+          <TabsList className="grid w-[400px] grid-cols-2">
+            <TabsTrigger value="new-bill">
+              <Receipt className="mr-2 h-4 w-4" /> New Bill
+            </TabsTrigger>
+            <TabsTrigger value="history">
+              <History className="mr-2 h-4 w-4" /> Billing History
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-      {/* Customer Info */}
-      <Card className="mb-6">
-        <CardHeader className="border-b border-border pb-2 mb-1">
-          <CardTitle>Customer Details</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">
-              Select Existing Customer
-            </label>
-            <Select
-              value={selectedCustomer}
-              onValueChange={setSelectedCustomer}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Choose customer" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="new">+ New Customer</SelectItem>
-                {customers.map((customer) => (
-                  <SelectItem key={customer.id} value={customer.id}>
-                    {customer.name}{" "}
-                    {customer.phone ? `(${customer.phone})` : ""}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        {/* NEW BILL TAB */}
+        <TabsContent value="new-bill" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column: Product Selection */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Search */}
+              <Input
+                placeholder="Search products by name or SKU..."
+                className="h-12 text-lg"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
 
-          {(selectedCustomer === "new" || !selectedCustomer) && (
-            <>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Customer Name *</label>
-                <Input
-                  placeholder="Enter customer name"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Phone Number</label>
-                <Input
-                  placeholder="Enter phone number"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                />
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Product Search */}
-      <Card className="mb-6">
-        <CardHeader className="border-b border-border pb-2 mb-1">
-          <CardTitle>Product Search</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Input
-            placeholder="Search products by name or SKU..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-md"
-          />
-        </CardContent>
-      </Card>
-
-      {/* Product Selection */}
-      <Card className="mb-6">
-        <CardHeader className="border-b border-border pb-2 mb-1">
-          <CardTitle className="flex justify-between items-center">
-            <span>Available Products ({availableProducts.length})</span>
-            <Badge variant="outline">{availableProducts.length} products</Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {availableProducts.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">No products found</p>
-              {searchTerm && (
-                <Button
-                  variant="outline"
-                  onClick={() => setSearchTerm("")}
-                  className="mt-2"
-                >
-                  Clear Search
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {availableProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="border p-4 rounded-lg hover:shadow-md transition-shadow"
-                >
-                  <div className="flex justify-between items-start mb-2 border-b border-border pb-2 border-green-200 ">
-                    <h4 className="font-medium text-sm leading-tight text-center">
-                      {product.name}
-                    </h4>
-                    <Badge
-                      variant={
-                        product.currentStock <= product.lowStockAlert
-                          ? "destructive"
-                          : "secondary"
-                      }
-                      className="text-xs"
-                    >
-                      Stock: {product.currentStock}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-1">
-                    SKU: {product.sku}
-                  </p>
-                  <p className="text-sm font-semibold text-green-600 mb-3">
-                    ₹{product.sellingPrice}/{product.unit}
-                  </p>
-                  {selectedProducts.find((p) => p.id === product.id) ? (
-                    <div className="flex items-center justify-between">
+              {/* Products Grid */}
+              <Card className="max-h-[600px] overflow-y-auto">
+                <CardContent className="p-4 grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {availableProducts.map((product) => (
+                    <div key={product.id} className="border p-3 rounded-lg hover:shadow-md transition-all bg-card text-card-foreground">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-semibold text-sm line-clamp-2 min-h-[40px]">{product.name}</h4>
+                        <Badge variant={product.currentStock <= 5 ? "destructive" : "secondary"}>
+                          {product.currentStock}
+                        </Badge>
+                      </div>
+                      <p className="text-lg font-bold text-green-700 mb-2">₹{product.sellingPrice}</p>
                       <Button
                         size="sm"
-                        variant="outline"
-                        onClick={() => handleDecrement(product.id)}
-                        className="h-8 w-8 p-0"
+                        className="w-full"
+                        onClick={() => handleAddProduct(product)}
+                        disabled={product.currentStock === 0}
                       >
-                        -
-                      </Button>
-                      <span className="font-medium text-sm">
-                        {
-                          selectedProducts.find((p) => p.id === product.id)
-                            ?.quantity
-                        }
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleIncrement(product.id)}
-                        className="h-8 w-8 p-0"
-                      >
-                        +
+                        {product.currentStock === 0 ? "Out of Stock" : "Add to Cart"}
                       </Button>
                     </div>
-                  ) : (
-                    <Button
-                      onClick={() => handleAddProduct(product)}
-                      className="w-full text-sm "
-                      disabled={product.currentStock === 0}
-                      size="sm"
-                    >
-                      {product.currentStock === 0
-                        ? "Out of Stock"
-                        : "Add to Bill"}
-                    </Button>
+                  ))}
+                  {availableProducts.length === 0 && (
+                    <div className="col-span-full text-center py-12 text-muted-foreground">
+                      No products found matching your search.
+                    </div>
                   )}
-                </div>
-              ))}
+                </CardContent>
+              </Card>
             </div>
-          )}
-        </CardContent>
-      </Card>
 
-      {/* Selected Products */}
-      {selectedProducts.length > 0 && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex justify-between items-center">
-              <span>Selected Items ({selectedProducts.length})</span>
-              <Badge variant="default">
-                Total: ₹{calculateSubtotal().toFixed(2)}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {selectedProducts.map((item) => (
-              <div
-                key={item.id}
-                className="flex justify-between items-center border p-4 rounded-lg bg-muted/50"
-              >
-                <div className="flex-1">
-                  <p className="font-medium">{item.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    ₹{item.sellingPrice}/{item.unit} | Stock:{" "}
-                    {item.currentStock}
-                  </p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleDecrement(item.id)}
-                      className="h-8 w-8 p-0"
-                    >
-                      -
-                    </Button>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={item.currentStock}
-                      className="w-16 text-center h-8"
-                      value={item.quantity}
-                      onChange={(e) =>
-                        handleQuantityChange(item.id, Number(e.target.value))
-                      }
-                    />
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleIncrement(item.id)}
-                      className="h-8 w-8 p-0"
-                    >
-                      +
-                    </Button>
+            {/* Right Column: Cart & Checkout */}
+            <div className="space-y-6">
+              {/* Customer Details */}
+              <Card>
+                <CardHeader className="pb-3 border-b">
+                  <CardTitle className="text-lg">Customer Info</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 pt-4">
+                  <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Customer" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="new">+ New Customer</SelectItem>
+                      {customers.map(c => (
+                        <SelectItem key={c.id} value={c.id}>{c.name} ({c.phone})</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {(!selectedCustomer || selectedCustomer === "new") && (
+                    <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                      <Input
+                        placeholder="Customer Name"
+                        value={customerName}
+                        onChange={(e) => setCustomerName(e.target.value)}
+                      />
+                      <Input
+                        placeholder="Phone Number"
+                        value={customerPhone}
+                        onChange={(e) => setCustomerPhone(e.target.value)}
+                      />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Cart Items */}
+              <Card className="flex flex-col h-[500px]">
+                <CardHeader className="py-3 bg-muted/30 border-b">
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="text-lg">Cart ({getTotalItems()})</CardTitle>
+                    <Badge variant="outline" className="text-base font-bold">₹{calculateSubtotal().toFixed(2)}</Badge>
                   </div>
-                  <span className="font-medium w-20 text-right">
-                    ₹{(item.quantity * item.sellingPrice).toFixed(2)}
-                  </span>
+                </CardHeader>
+                <CardContent className="flex-1 overflow-y-auto p-0">
+                  {selectedProducts.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-muted-foreground space-y-2 p-8">
+                      <Receipt className="h-12 w-12 opacity-20" />
+                      <p>Cart is empty</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y">
+                      {selectedProducts.map((item) => (
+                        <div key={item.id} className="p-3 flex justify-between items-center bg-card">
+                          <div className="flex-1 min-w-0 pr-4">
+                            <p className="font-medium truncate">{item.name}</p>
+                            <p className="text-xs text-muted-foreground">₹{item.sellingPrice} x {item.quantity}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => handleDecrement(item.id)}>-</Button>
+                            <span className="w-6 text-center text-sm">{item.quantity}</span>
+                            <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => handleIncrement(item.id)}>+</Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+
+                {/* Footer Totals */}
+                <div className="p-4 border-t bg-muted/10 space-y-3">
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span>Subtotal</span>
+                      <span>₹{calculateSubtotal().toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>GST (18%)</span>
+                      <span>₹{(calculateSubtotal() * taxRate).toFixed(2)}</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between text-xl font-bold pt-2 border-t">
+                    <span>Total</span>
+                    <span className="text-green-600">₹{(calculateSubtotal() * (1 + taxRate)).toFixed(2)}</span>
+                  </div>
+
+                  <Select value={paymentMethod} onValueChange={(v: any) => setPaymentMethod(v)}>
+                    <SelectTrigger><SelectValue placeholder="Payment Method" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="CASH">Cash</SelectItem>
+                      <SelectItem value="UPI">UPI</SelectItem>
+                      <SelectItem value="CARD">Card</SelectItem>
+                    </SelectContent>
+                  </Select>
+
                   <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeProduct(item.id)}
-                    className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                    className="w-full h-12 text-lg font-bold shadow-lg"
+                    disabled={selectedProducts.length === 0}
+                    onClick={handlePreviewBill}
                   >
-                    ×
+                    Generate Bill
                   </Button>
                 </div>
-              </div>
-            ))}
-
-            <div className="border-t pt-4 space-y-3">
-              <div className="flex justify-between text-sm">
-                <span>Subtotal:</span>
-                <span className="font-medium">
-                  ₹{calculateSubtotal().toFixed(2)}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>GST (18%):</span>
-                <span className="font-medium">
-                  ₹{(calculateSubtotal() * taxRate).toFixed(2)}
-                </span>
-              </div>
-              <div className="flex justify-between text-lg font-bold border-t pt-2">
-                <span>Grand Total:</span>
-                <span className="text-green-600">
-                  ₹{(calculateSubtotal() * (1 + taxRate)).toFixed(2)}
-                </span>
-              </div>
+              </Card>
             </div>
+          </div>
+        </TabsContent>
 
-            {/* Payment Method */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Payment Method</label>
-              <div className="flex gap-2">
-                {(["CASH", "CARD", "UPI"] as const).map((method) => (
-                  <Button
-                    key={method}
-                    type="button"
-                    variant={paymentMethod === method ? "default" : "outline"}
-                    onClick={() => setPaymentMethod(method)}
-                    className="flex-1"
-                  >
-                    {method}
-                  </Button>
-                ))}
-              </div>
-            </div>
+        {/* HISTORY TAB */}
+        <TabsContent value="history">
+          <BillingHistory />
+        </TabsContent>
+      </Tabs>
 
-            <Button
-              onClick={handleGenerateBill}
-              className="w-full"
-              size="lg"
-              disabled={!customerName && !selectedCustomer}
-            >
-              {!customerName && !selectedCustomer
-                ? "Enter Customer Details"
-                : `Generate Bill - ₹${(
-                    calculateSubtotal() *
-                    (1 + taxRate)
-                  ).toFixed(2)}`}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Modal Bill Preview */}
+      {/* INVOICE PREVIEW MODAL */}
       <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-center">
-              🧾 Bill Preview
-            </DialogTitle>
+            <DialogTitle>Invoice Preview</DialogTitle>
           </DialogHeader>
+
           {billPreview && (
             <div className="space-y-6">
-              {/* Header */}
-              <div className="text-center space-y-2 border-b pb-4">
-                <h2 className="text-2xl font-bold">Krushi Seva Kendra</h2>
-                <p className="text-muted-foreground">
-                  Gandhi Chowk, Nanded, Maharashtra - 431601
-                </p>
-                <p className="text-sm">GSTIN: 27ABCDE1234F1Z5</p>
-                <p className="text-sm text-muted-foreground">
-                  {billPreview.createdAt}
-                </p>
-              </div>
-
-              {/* Customer & Payment Info */}
-              <div className="grid grid-cols-2 gap-6 text-sm">
-                <div>
-                  <h3 className="font-semibold mb-2">Customer Information</h3>
-                  <p>
-                    <strong>Name:</strong>{" "}
-                    {billPreview.customerName || "Walk-in Customer"}
-                  </p>
-                  <p>
-                    <strong>Phone:</strong> {billPreview.customerPhone || "N/A"}
-                  </p>
+              {!lastInvoiceNumber ? (
+                /* Preview Mode */
+                <div className="border p-8 rounded-lg text-center space-y-4 max-w-lg mx-auto bg-muted/10">
+                  <h3 className="text-xl font-bold">Review Bill Details</h3>
+                  <div className="text-left space-y-2 text-sm bg-white p-4 rounded shadow-sm border">
+                    <p><strong>Customer:</strong> {billPreview.customerName}</p>
+                    <p><strong>Items:</strong> {billPreview.items.length}</p>
+                    <p><strong>Total Amount:</strong> ₹{billPreview.grandTotal.toFixed(2)}</p>
+                    <p><strong>Payment:</strong> {billPreview.paymentMethod}</p>
+                  </div>
+                  <Button
+                    onClick={handleConfirmAndCreate}
+                    disabled={isProcessing}
+                    className="w-full bg-green-600 hover:bg-green-700"
+                    size="lg"
+                  >
+                    {isProcessing ? "Creating Invoice..." : "Confirm & Create Invoice"}
+                  </Button>
                 </div>
-                <div>
-                  <h3 className="font-semibold mb-2">Payment Information</h3>
-                  <p>
-                    <strong>Method:</strong> {billPreview.paymentMethod}
-                  </p>
-                  <p>
-                    <strong>Status:</strong>{" "}
-                    <span className="text-green-600 font-semibold">
-                      To be Paid
-                    </span>
-                  </p>
-                </div>
-              </div>
-
-              {/* Items Table */}
-              <div className="border rounded-lg overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-muted/50">
-                      <th className="p-3 text-left font-semibold">#</th>
-                      <th className="p-3 text-left font-semibold">Product</th>
-                      <th className="p-3 text-left font-semibold">Qty</th>
-                      <th className="p-3 text-left font-semibold">Rate</th>
-                      <th className="p-3 text-left font-semibold">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {billPreview.items.map(
-                      (item: SelectedProduct, idx: number) => (
-                        <tr key={idx} className="border-t">
-                          <td className="p-3">{idx + 1}</td>
-                          <td className="p-3">
-                            <div>
-                              <p className="font-medium">{item.name}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {item.sku}
-                              </p>
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            {item.quantity} {item.unit}
-                          </td>
-                          <td className="p-3">
-                            ₹{item.sellingPrice.toFixed(2)}
-                          </td>
-                          <td className="p-3 font-medium">
-                            ₹{(item.quantity * item.sellingPrice).toFixed(2)}
-                          </td>
-                        </tr>
-                      )
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Totals */}
-              <div className="border-t pt-4 space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>Subtotal:</span>
-                  <span>₹{billPreview.subtotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>GST (18%):</span>
-                  <span>₹{billPreview.tax.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-lg font-bold border-t pt-2">
-                  <span>Grand Total:</span>
-                  <span className="text-green-600">
-                    ₹{billPreview.total.toFixed(2)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-4 pt-4 border-t">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowModal(false)}
-                  className="flex-1"
-                  disabled={isProcessing}
-                >
-                  Edit Bill
-                </Button>
-                <Button
-                  onClick={handleProcessPayment}
-                  disabled={isProcessing}
-                  className="flex-1 bg-green-600 hover:bg-green-700"
-                >
-                  {isProcessing ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Processing...
-                    </>
-                  ) : (
-                    "Confirm & Print Bill"
-                  )}
-                </Button>
-              </div>
-
-              {/* Footer */}
-              <div className="text-center text-xs text-muted-foreground pt-4 border-t">
-                <p>Thank you for your business!</p>
-                <p>For queries, contact: +91-9876543210</p>
-              </div>
+              ) : (
+                /* Success Mode - PDF Generator */
+                <PDFGenerator
+                  billData={billPreview}
+                  invoiceNumber={lastInvoiceNumber}
+                  customerPhone={billPreview.customerPhone || ""}
+                  onSuccess={() => {
+                    // Optional: close modal automatically or keep open for manual close
+                  }}
+                />
+              )}
             </div>
           )}
         </DialogContent>

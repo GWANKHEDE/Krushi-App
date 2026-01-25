@@ -1,12 +1,40 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, Sprout, House, ShoppingCart, User, LogIn } from "lucide-react";
+import { settingsAPI } from "@/services/api";
 
 export function Layout() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const [businessInfo, setBusinessInfo] = useState({
+    name: "Krushi Seva Kendra",
+    address: "Penur, Tq Purna, Parbhani, Maharashtra 431511",
+    phone: "+91 9823332198",
+    email: "info@krushisevakendra.com",
+  });
+
+  useEffect(() => {
+    const fetchBusinessInfo = async () => {
+      try {
+        const response = await settingsAPI.getBusinessProfile();
+        if (response.data.success) {
+          const data = response.data.data;
+          setBusinessInfo({
+            name: data.name || "Krushi Seva Kendra",
+            address: data.address || "Penur, Tq Purna, Parbhani, Maharashtra 431511",
+            phone: data.contactNumber || "+91 9823332198",
+            email: data.email || "info@krushisevakendra.com",
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch business info:", error);
+      }
+    };
+
+    fetchBusinessInfo();
+  }, []);
 
   const navigation = [
     { name: "Home", href: "/", icon: House },
@@ -28,7 +56,7 @@ export function Layout() {
               <Sprout className="h-5 w-5 text-primary-foreground" />
             </div>
             <span className="font-bold text-xl bg-gradient-to-r from-green-600 via-lime-500 to-yellow-600 bg-clip-text text-transparent">
-              Krushi Seva Kendra
+              {businessInfo.name}
             </span>
           </Link>
 
@@ -42,11 +70,10 @@ export function Layout() {
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActive(item.href)
+                    className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive(item.href)
                         ? "bg-primary text-primary-foreground"
                         : "text-foreground hover:bg-accent hover:text-accent-foreground"
-                    }`}
+                      }`}
                   >
                     <Icon className="h-4 w-4" />
                     <span>{item.name}</span>
@@ -81,11 +108,10 @@ export function Layout() {
                         key={item.name}
                         to={item.href}
                         onClick={() => setIsOpen(false)}
-                        className={`flex items-center space-x-2 px-4 py-2 rounded-md text-base font-medium transition-colors ${
-                          isActive(item.href)
+                        className={`flex items-center space-x-2 px-4 py-2 rounded-md text-base font-medium transition-colors ${isActive(item.href)
                             ? "bg-primary text-primary-foreground"
                             : "text-foreground hover:bg-accent hover:text-accent-foreground"
-                        }`}
+                          }`}
                       >
                         <Icon className="h-5 w-5" />
                         <span>{item.name}</span>
@@ -122,7 +148,7 @@ export function Layout() {
                 <div className="h-6 w-6 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center">
                   <Sprout className="h-4 w-4 text-primary-foreground" />
                 </div>
-                <span className="font-semibold">Krushi Seva Kendra</span>
+                <span className="font-semibold">{businessInfo.name}</span>
               </div>
               <p className="text-sm text-muted-foreground">
                 Your trusted partner in agriculture. Providing quality
@@ -161,14 +187,14 @@ export function Layout() {
             <div>
               <h3 className="font-semibold mb-4">Contact Info</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>📍 Penur, Tq Purna, Parbhani, Maharashtra 431511</li>
-                <li>📞 +91 9823332198</li>
-                <li>✉️ info@krushisevakendra.com</li>
+                <li>📍 {businessInfo.address}</li>
+                <li>📞 {businessInfo.phone}</li>
+                <li>✉️ {businessInfo.email}</li>
               </ul>
             </div>
           </div>
           <div className="border-t mt-8 pt-6 text-center text-sm text-muted-foreground">
-            <p>&copy; 2024 Wankhede Krushi Seva Kendra. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} {businessInfo.name}. All rights reserved.</p>
           </div>
         </div>
       </footer>

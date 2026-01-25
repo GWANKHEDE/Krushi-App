@@ -477,7 +477,7 @@ export default function AdminDashboard() {
               </Badge>
             </div>
           </CardHeader>
-          <CardContent className="space-y-3 max-h-60 overflow-y-auto">
+          <CardContent className="space-y-3 max-h-60 overflow-y-auto hide-scrollbar">
             {dashboardData?.lowStockAlerts?.map((product) => (
               <div
                 key={product.id}
@@ -615,7 +615,7 @@ export default function AdminDashboard() {
               <div>
                 <CardTitle>Product Categories</CardTitle>
                 <CardDescription>
-                  Distribution of products by category
+                  Distribution of products across categories
                 </CardDescription>
               </div>
               <div className="text-right">
@@ -628,7 +628,7 @@ export default function AdminDashboard() {
                   products
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {productCategories.length} categories
+                  {productCategories.length} catergies of the products 
                 </p>
               </div>
             </div>

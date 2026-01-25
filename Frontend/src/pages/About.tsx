@@ -1,24 +1,73 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Users, 
-  Award, 
-  Clock, 
+import {
+  Users,
+  Award,
+  Clock,
   MapPin,
   Sprout,
   Shield,
   Target,
-  Heart
+  Heart,
+  Loader2
 } from 'lucide-react';
 import owner from '@/assets/owner.jpeg';
 import accountant from '@/assets/accountant.jpeg';
+import { useEffect, useState } from 'react';
+import { dashboardAPI, settingsAPI } from '@/services/api';
 
 export default function About() {
-  const stats = [
-    { label: 'Years of Experience', value: '5+' },
-    { label: 'Happy Farmers', value: '1K+' },
-    { label: 'Products Available', value: '2K+' },
-    { label: 'Areas Served', value: '20+' }
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    years: '5+',
+    happyFarmers: '1K+',
+    products: '2K+',
+    areas: '20+'
+  });
+  const [businessName, setBusinessName] = useState('Krushi Seva Kendra');
+  const [ownerName, setOwnerName] = useState('Sudam Wankhede');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [dashboardRes, profileRes] = await Promise.all([
+          dashboardAPI.getDashboardData(),
+          settingsAPI.getBusinessProfile()
+        ]);
+
+        if (dashboardRes.data.success) {
+          const data = dashboardRes.data.data;
+          setStats(prev => ({
+            ...prev,
+            products: data.totals.totalProducts + '+',
+            // We could use other stats if available, for now keeping static/mock for others
+            // as the dashboard API doesn't return all these specific metrics yet
+          }));
+        }
+
+        if (profileRes.data.success) {
+          const business = profileRes.data.data;
+          setBusinessName(business.name);
+          if (business.owner?.name) {
+            setOwnerName(business.owner.name);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching about data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const statItems = [
+    { label: 'Years of Experience', value: stats.years },
+    { label: 'Happy Farmers', value: stats.happyFarmers },
+    { label: 'Products Available', value: stats.products },
+    { label: 'Areas Served', value: stats.areas }
   ];
 
   const values = [
@@ -46,7 +95,7 @@ export default function About() {
 
   const team = [
     {
-      name: 'Sudam Wankhede',
+      name: ownerName,
       role: 'Owner & Founder',
       experience: 'Agriculture expert',
       description: 'Agricultural engineer with expertise in crop management and sustainable farming practices.',
@@ -68,11 +117,19 @@ export default function About() {
     }
   ];
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="container px-4 py-8">
       {/* Header */}
       <div className="text-center mb-12">
-        <h1 className="text-3xl font-bold mb-4">About Krushi Seva Kendra</h1>
+        <h1 className="text-3xl font-bold mb-4">About {businessName}</h1>
         <p className="text-muted-foreground max-w-3xl mx-auto text-lg">
           For over 5 years, we have been dedicated to empowering farmers with
           quality agricultural products and expert guidance, helping them
@@ -82,7 +139,7 @@ export default function About() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
-        {stats.map((stat, index) => (
+        {statItems.map((stat, index) => (
           <Card key={index} className="text-center">
             <CardContent className="pt-6">
               <div className="text-3xl font-bold text-primary mb-2">
@@ -101,13 +158,13 @@ export default function About() {
             <h2 className="text-2xl font-bold mb-6">Our Story</h2>
             <div className="space-y-4 text-muted-foreground">
               <p>
-                Krushi Seva Kendra was founded in 2021 with a simple mission: to
+                {businessName} was founded in 2021 with a simple mission: to
                 bridge the gap between farmers and quality agricultural
                 products. What started as a small local store has grown into a
                 trusted partner for thousands of farmers across the region.
               </p>
               <p>
-                Our founder, Rajesh Sharma, himself coming from a farming
+                Our founder, {ownerName}, himself coming from a farming
                 family, understood the challenges farmers face in accessing
                 quality fertilizers, seeds, and tools. He envisioned a place
                 where farmers could not only buy products but also receive
@@ -174,6 +231,7 @@ export default function About() {
                   <img
                     src={member.image}
                     className="h-full w-full rounded-full object-cover"
+                    alt={member.name}
                   />
                 </div>
                 <CardTitle>{member.name}</CardTitle>
@@ -197,7 +255,7 @@ export default function About() {
       {/* Why Choose Us */}
       <section className="bg-muted/30 rounded-lg p-8">
         <h2 className="text-2xl font-bold text-center mb-8">
-          Why Choose Krushi Seva Kendra?
+          Why Choose {businessName}?
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="text-center">

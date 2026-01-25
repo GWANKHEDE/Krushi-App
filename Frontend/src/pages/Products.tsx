@@ -27,12 +27,21 @@ import {
   Edit,
   Trash2,
 } from "lucide-react";
+// Product Images
+import cottonImg from "@/assets/cotton.webp";
+import soyaImg from "@/assets/soya.webp";
+import ureaImg from "@/assets/uera.avif";
+import dapImg from "@/assets/DAP.png";
+import potashImg from "@/assets/potash.jfif";
+import calarisImg from "@/assets/calaris.jpg";
+
 import { useToast } from "@/components/ui/use-toast";
 import { productsAPI, categoriesAPI } from "@/services/api";
 import { Product, Category } from "@/services/api";
 import AddProductDialog from "../components/AddProductDialog";
 import EditProductDialog from "../components/EditProductDialog";
 import DeleteProductDialog from "../components/DeleteProductDialog";
+import { useLocation } from "react-router-dom";
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -46,6 +55,8 @@ export default function Products() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
   const { toast } = useToast();
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith("/admin");
 
   // Load products and categories
   useEffect(() => {
@@ -143,6 +154,27 @@ export default function Products() {
     };
   };
 
+  // Helper to get product image based on name or fallback
+  const getProductImage = (product: Product) => {
+    const name = product.name.toLowerCase();
+    if (name.includes("cotton")) return cottonImg;
+    if (name.includes("soya") || name.includes("bean")) return soyaImg;
+    if (name.includes("urea")) return ureaImg;
+    if (name.includes("dap")) return dapImg;
+    if (name.includes("potash")) return potashImg;
+    if (name.includes("calaris") || name.includes("sync")) return calarisImg;
+
+    // Fallbacks
+    const images = [
+      "https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1622383563227-044011358d42?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1574943320219-553eb213f72d?q=80&w=1000&auto=format&fit=crop",
+    ];
+    // Use SKU or ID to consistently pick a random image
+    const index = name.length + (product.sku?.length || 0);
+    return images[index % images.length];
+  };
+
   const handleProductAdded = () => {
     loadData();
     setIsAddDialogOpen(false);
@@ -177,7 +209,7 @@ export default function Products() {
     setSortBy("name");
   };
 
-   if (loading) {
+  if (loading) {
     return <Loader message="Please wait..." />;
   }
 
@@ -191,10 +223,12 @@ export default function Products() {
             Browse collection of agricultural products
           </p>
         </div>
-        <Button onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Product
-        </Button>
+        {isAdmin && (
+          <Button onClick={() => setIsAddDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Product
+          </Button>
+        )}
       </div>
 
       {/* Filters */}
@@ -292,7 +326,21 @@ export default function Products() {
               key={product.id}
               className="relative overflow-hidden hover:shadow-lg transition-shadow group"
             >
-              <CardHeader className="border-b border-border pb-2 mb-1">            
+              <div className="relative aspect-video overflow-hidden bg-gray-100">
+                <img
+                  src={getProductImage(product)}
+                  alt={product.name}
+                  className="h-full w-full object-contain mix-blend-multiply p-4 transform group-hover:scale-110 transition-transform duration-500"
+                />
+                <div className="absolute top-2 right-2 flex gap-2">
+                  <Badge variant={stockInfo.variant} className="shadow-sm">
+                    <StockIcon className="h-3 w-3 mr-1" />
+                    {stockInfo.status}
+                  </Badge>
+                </div>
+              </div>
+
+              <CardHeader className="border-b border-border pb-2 mb-1 px-4 pt-4">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <CardTitle className="text-lg mb-1 line-clamp-1">
@@ -302,10 +350,6 @@ export default function Products() {
                       SKU: {product.sku} • {product.category?.name}
                     </CardDescription>
                   </div>
-                  <Badge variant={stockInfo.variant} className="ml-2">
-                    <StockIcon className="h-3 w-3 mr-1" />
-                    {stockInfo.status}
-                  </Badge>
                 </div>
               </CardHeader>
 
@@ -317,14 +361,16 @@ export default function Products() {
                 )}
 
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">
-                      Cost Price:
-                    </span>
-                    <span className="text-sm font-medium">
-                      ₹{product.costPrice.toFixed(2)}
-                    </span>
-                  </div>
+                  {isAdmin && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">
+                        Cost Price:
+                      </span>
+                      <span className="text-sm font-medium">
+                        ₹{product.costPrice.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
 
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">
@@ -362,22 +408,24 @@ export default function Products() {
                     <CheckCircle className="h-4 w-4 mr-1" />
                     Active
                   </div>
-                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setEditingProduct(product)}
-                    >
-                      <Edit className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setDeletingProduct(product)}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
+                  {isAdmin && (
+                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEditingProduct(product)}
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setDeletingProduct(product)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -396,10 +444,12 @@ export default function Products() {
           <Button variant="outline" onClick={clearFilters} className="mr-2">
             Clear All Filters
           </Button>
-          <Button onClick={() => setIsAddDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add New Product
-          </Button>
+          {isAdmin && (
+            <Button onClick={() => setIsAddDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add New Product
+            </Button>
+          )}
         </div>
       )}
 
