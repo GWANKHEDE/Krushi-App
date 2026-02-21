@@ -1,14 +1,16 @@
 const express = require('express');
-const { 
+const {
   updateProfile,
   updateBusiness,
   updatePassword,
   updateSettings,
-  generatePDF
+  generatePDF,
+  getBusinessProfile
 } = require('../controllers/settingsController');
 const { authenticateToken } = require('../middleware/auth');
 const router = express.Router();
 
+router.get('/profile', authenticateToken, getBusinessProfile);
 router.put('/profile', authenticateToken, updateProfile);
 router.put('/business', authenticateToken, updateBusiness);
 router.put('/password', authenticateToken, updatePassword);

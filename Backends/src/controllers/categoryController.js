@@ -62,12 +62,12 @@ const createCategory = async (req, res) => {
 
     // Check if category already exists
     const existingCategory = await prisma.category.findFirst({
-      where: { 
-        name: { 
+      where: {
+        name: {
           equals: name,
           mode: 'insensitive'
         },
-        businessId 
+        businessId
       }
     });
 

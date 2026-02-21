@@ -7,9 +7,9 @@ const getAllProducts = async (req, res) => {
     const businessId = req.user.business.id;
     const { page = 1, limit = 10, search, category } = req.query;
 
-    const where = { 
+    const where = {
       businessId,
-      isActive: true 
+      isActive: true
     };
 
     if (search) {
@@ -54,7 +54,7 @@ const getProduct = async (req, res) => {
 
     const product = await prisma.product.findFirst({
       where: { id, businessId },
-      include: { 
+      include: {
         category: true,
         saleItems: {
           include: { sale: true },
@@ -77,16 +77,16 @@ const getProduct = async (req, res) => {
 const createProduct = async (req, res) => {
   try {
     const businessId = req.user.business.id;
-    const { 
-      name, 
-      description, 
-      sku, 
-      categoryId, 
-      costPrice, 
-      sellingPrice, 
-      currentStock, 
+    const {
+      name,
+      description,
+      sku,
+      categoryId,
+      costPrice,
+      sellingPrice,
+      currentStock,
       lowStockAlert,
-      unit 
+      unit
     } = req.body;
 
     // Check if SKU already exists

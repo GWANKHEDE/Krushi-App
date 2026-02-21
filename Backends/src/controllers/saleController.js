@@ -112,9 +112,12 @@ const createSale = async (req, res) => {
       return errorResponse(res, 'Subtotal and total amount are required', 400);
     }
 
-    // Validate that either customerId or customerName is provided
-    if (!customerId && !customerName) {
-      return errorResponse(res, 'Either customer ID or customer name is required', 400);
+    // FIX: Better validation for customer information
+    const hasValidCustomerId = customerId && customerId !== "new";
+    const hasCustomerName = customerName && customerName.trim() !== "";
+    
+    if (!hasValidCustomerId && !hasCustomerName) {
+      return errorResponse(res, 'Either valid customer ID or customer name is required', 400);
     }
 
     // Generate invoice number
@@ -141,10 +144,44 @@ const createSale = async (req, res) => {
         }
       }
 
+      let finalCustomerId = null;
+      let finalCustomerName = null;
+      let finalCustomerPhone = null;
+
+      // FIX: Handle customer creation/selection
+      if (hasValidCustomerId) {
+        // Verify the customer exists and belongs to the business
+        const customer = await tx.customer.findFirst({
+          where: { 
+            id: customerId,
+            businessId 
+          }
+        });
+        
+        if (!customer) {
+          throw new Error('Customer not found');
+        }
+        
+        finalCustomerId = customerId;
+      } else {
+        // NEW: Create customer in Customer table for new customers
+        const newCustomer = await tx.customer.create({
+          data: {
+            name: customerName.trim(),
+            phone: customerPhone || null,
+            businessId: businessId,
+            // You can add other fields like email, address if needed
+          }
+        });
+        
+        finalCustomerId = newCustomer.id;
+      }
+
       // Prepare sale data
       const saleData = {
         invoiceNumber,
         businessId,
+        customerId: finalCustomerId, // Always use customerId now
         subtotal: parseFloat(subtotal),
         taxAmount: parseFloat(taxAmount || 0),
         discount: parseFloat(discount),
@@ -162,14 +199,6 @@ const createSale = async (req, res) => {
         }
       };
 
-      // Add customer information
-      if (customerId) {
-        saleData.customerId = customerId;
-      } else {
-        saleData.customerName = customerName;
-        saleData.customerPhone = customerPhone;
-      }
-
       // Create sale
       const sale = await tx.sale.create({
         data: saleData,
@@ -179,7 +208,7 @@ const createSale = async (req, res) => {
               product: true
             }
           },
-          customer: true
+          customer: true // Include customer details in response
         }
       });
 
