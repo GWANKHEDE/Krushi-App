@@ -1,86 +1,46 @@
-import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
-import { productsAPI } from "@/services/api";
-import { Product } from "@/services/api";
-import { AlertTriangle } from "lucide-react";
+import { useState } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { AlertTriangle } from 'lucide-react'
+import { deleteProduct } from '@/lib/store'
+import { toast } from '@/lib/toast'
+import type { Product } from '@/lib/store'
 
-interface DeleteProductDialogProps {
-  product: Product | null;
-  onOpenChange: (open: boolean) => void;
-  onProductDeleted: () => void;
+interface Props {
+  product: Product | null
+  onOpenChange: (open: boolean) => void
+  onProductDeleted: () => void
 }
 
-export default function DeleteProductDialog({
-  product,
-  onOpenChange,
-  onProductDeleted,
-}: DeleteProductDialogProps) {
-  const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
+export default function DeleteProductDialog({ product, onOpenChange, onProductDeleted }: Props) {
+  const [loading, setLoading] = useState(false)
 
-  const handleDelete = async () => {
-    if (!product) return;
+  if (!product) return null
 
-    setLoading(true);
+  const handleDelete = () => {
+    setLoading(true)
     try {
-      await productsAPI.deleteProduct(product.id);
-      onProductDeleted();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to delete product",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (!product) return null;
+      deleteProduct(product.id)
+      onProductDeleted()
+      toast.error("Product deleted successfully", {
+        className: "bg-red-600 text-white border-none shadow-lg font-bold"
+      })
+    } catch { toast.error('Failed to delete product') }
+    finally { setLoading(false) }
+  }
 
   return (
     <Dialog open={!!product} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-red-600" />
-            Delete Product
-          </DialogTitle>
-          <DialogDescription>
-            Are you sure you want to delete <strong>{product.name}</strong>? 
-            This action cannot be undone. The product will be marked as inactive 
-            and removed from active listings.
-          </DialogDescription>
+          <DialogTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-destructive" />Delete Product</DialogTitle>
+          <DialogDescription>Delete <strong>{product.name}</strong>? This action cannot be undone.</DialogDescription>
         </DialogHeader>
-        
         <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={loading}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={loading}
-          >
-            {loading ? "Deleting..." : "Delete Product"}
-          </Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>Cancel</Button>
+          <Button variant="destructive" onClick={handleDelete} disabled={loading}>{loading ? 'Deleting...' : 'Delete'}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

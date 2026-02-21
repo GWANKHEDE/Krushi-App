@@ -1,478 +1,216 @@
-import { useState, useMemo, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import Loader from "@/services/Loader";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Search,
-  Filter,
-  Package,
-  AlertCircle,
-  CheckCircle,
-  Plus,
-  Edit,
-  Trash2,
-} from "lucide-react";
-// Product Images
-import cottonImg from "@/assets/cotton.webp";
-import soyaImg from "@/assets/soya.webp";
-import ureaImg from "@/assets/uera.avif";
-import dapImg from "@/assets/DAP.png";
-import potashImg from "@/assets/potash.jfif";
-import calarisImg from "@/assets/calaris.jpg";
-
-import { useToast } from "@/components/ui/use-toast";
-import { productsAPI, categoriesAPI } from "@/services/api";
-import { Product, Category } from "@/services/api";
-import AddProductDialog from "../components/AddProductDialog";
-import EditProductDialog from "../components/EditProductDialog";
-import DeleteProductDialog from "../components/DeleteProductDialog";
-import { useLocation } from "react-router-dom";
+import { useState, useMemo } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Search, Filter, Package, AlertCircle, CheckCircle, Plus, Edit, Trash2 } from 'lucide-react'
+import { getProducts, getCategories, addProduct, updateProduct, deleteProduct as removeProduct, type Product, type Category } from '@/lib/store'
+import AddProductDialog from '../components/AddProductDialog'
+import EditProductDialog from '../components/EditProductDialog'
+import DeleteProductDialog from '../components/DeleteProductDialog'
+import { useLocation } from 'react-router-dom'
+import { toast } from '@/lib/toast'
 
 export default function Products() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [selectedStockStatus, setSelectedStockStatus] = useState("All");
-  const [sortBy, setSortBy] = useState("name");
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
-  const { toast } = useToast();
-  const location = useLocation();
-  const isAdmin = location.pathname.startsWith("/admin");
+  const [products, setProducts] = useState<Product[]>(getProducts())
+  const [categories] = useState<Category[]>(getCategories())
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('All')
+  const [selectedStock, setSelectedStock] = useState('All')
+  const [sortBy, setSortBy] = useState('name')
+  const [addOpen, setAddOpen] = useState(false)
+  const [editing, setEditing] = useState<Product | null>(null)
+  const [deleting, setDeleting] = useState<Product | null>(null)
+  const location = useLocation()
+  const isAdmin = location.pathname.startsWith('/admin')
 
-  // Load products and categories
-  useEffect(() => {
-    loadData();
-  }, []);
+  const reload = () => setProducts(getProducts())
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const [productsResponse, categoriesResponse] = await Promise.all([
-        productsAPI.getAllProducts({ limit: 1000 }),
-        categoriesAPI.getAllCategories(),
-      ]);
-
-      setProducts(productsResponse.data.data.products || []);
-      setCategories(categoriesResponse.data.data.categories || []);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to load products",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filteredProducts = useMemo(() => {
-    let filtered = products.filter((product) => {
-      const matchesSearch =
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description?.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchesCategory =
-        selectedCategory === "All" ||
-        product.category?.name === selectedCategory;
-
-      const matchesStockStatus =
-        selectedStockStatus === "All" ||
-        (selectedStockStatus === "In Stock" &&
-          product.currentStock > product.lowStockAlert) ||
-        (selectedStockStatus === "Low Stock" &&
-          product.currentStock <= product.lowStockAlert &&
-          product.currentStock > 0) ||
-        (selectedStockStatus === "Out of Stock" && product.currentStock === 0);
-
-      return (
-        matchesSearch &&
-        matchesCategory &&
-        matchesStockStatus &&
-        product.isActive
-      );
-    });
-
-    // Sort products
-    filtered.sort((a, b) => {
+  const filtered = useMemo(() => {
+    let items = products.filter(p => {
+      const matchSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.sku.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchCat = selectedCategory === 'All' || p.category?.name === selectedCategory
+      const matchStock = selectedStock === 'All' ||
+        (selectedStock === 'In Stock' && p.currentStock > p.lowStockAlert) ||
+        (selectedStock === 'Low Stock' && p.currentStock <= p.lowStockAlert && p.currentStock > 0) ||
+        (selectedStock === 'Out of Stock' && p.currentStock === 0)
+      return matchSearch && matchCat && matchStock && p.isActive
+    })
+    items.sort((a, b) => {
       switch (sortBy) {
-        case "price-low":
-          return a.sellingPrice - b.sellingPrice;
-        case "price-high":
-          return b.sellingPrice - a.sellingPrice;
-        case "stock":
-          return b.currentStock - a.currentStock;
-        case "name-desc":
-          return b.name.localeCompare(a.name);
-        default:
-          return a.name.localeCompare(b.name);
+        case 'price-low': return a.sellingPrice - b.sellingPrice
+        case 'price-high': return b.sellingPrice - a.sellingPrice
+        case 'stock': return b.currentStock - a.currentStock
+        default: return a.name.localeCompare(b.name)
       }
-    });
+    })
+    return items
+  }, [products, searchTerm, selectedCategory, selectedStock, sortBy])
 
-    return filtered;
-  }, [products, searchTerm, selectedCategory, selectedStockStatus, sortBy]);
-
-  const getStockStatus = (product: Product) => {
-    if (product.currentStock === 0)
-      return {
-        status: "Out of Stock",
-        variant: "destructive" as const,
-        icon: AlertCircle,
-        color: "text-red-600",
-      };
-    if (product.currentStock <= product.lowStockAlert)
-      return {
-        status: "Low Stock",
-        variant: "destructive" as const,
-        icon: AlertCircle,
-        color: "text-orange-600",
-      };
-    return {
-      status: "In Stock",
-      variant: "default" as const,
-      icon: CheckCircle,
-      color: "text-green-600",
-    };
-  };
-
-  // Helper to get product image based on name or fallback
-  const getProductImage = (product: Product) => {
-    const name = product.name.toLowerCase();
-    if (name.includes("cotton")) return cottonImg;
-    if (name.includes("soya") || name.includes("bean")) return soyaImg;
-    if (name.includes("urea")) return ureaImg;
-    if (name.includes("dap")) return dapImg;
-    if (name.includes("potash")) return potashImg;
-    if (name.includes("calaris") || name.includes("sync")) return calarisImg;
-
-    // Fallbacks
-    const images = [
-      "https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?q=80&w=1000&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1622383563227-044011358d42?q=80&w=1000&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1574943320219-553eb213f72d?q=80&w=1000&auto=format&fit=crop",
-    ];
-    // Use SKU or ID to consistently pick a random image
-    const index = name.length + (product.sku?.length || 0);
-    return images[index % images.length];
-  };
-
-  const handleProductAdded = () => {
-    loadData();
-    setIsAddDialogOpen(false);
-    toast({
-      title: "Success",
-      description: "Product added successfully",
-    });
-  };
-
-  const handleProductUpdated = () => {
-    loadData();
-    setEditingProduct(null);
-    toast({
-      title: "Success",
-      description: "Product updated successfully",
-    });
-  };
-
-  const handleProductDeleted = () => {
-    loadData();
-    setDeletingProduct(null);
-    toast({
-      title: "Success",
-      description: "Product deleted successfully",
-    });
-  };
-
-  const clearFilters = () => {
-    setSearchTerm("");
-    setSelectedCategory("All");
-    setSelectedStockStatus("All");
-    setSortBy("name");
-  };
-
-  if (loading) {
-    return <Loader message="Please wait..." />;
+  const stockInfo = (p: Product) => {
+    if (p.currentStock === 0) return { label: 'Out of Stock', variant: 'destructive' as const, color: 'text-destructive', icon: AlertCircle }
+    if (p.currentStock <= p.lowStockAlert) return { label: 'Low Stock', variant: 'destructive' as const, color: 'text-warning', icon: AlertCircle }
+    return { label: 'In Stock', variant: 'default' as const, color: 'text-success', icon: CheckCircle }
   }
 
+  const handleAdded = () => { reload(); setAddOpen(false); toast.success('Product added successfully') }
+  const handleUpdated = () => { reload(); setEditing(null); toast.warning('Product updated successfully') }
+  const handleDeleted = () => { reload(); setDeleting(null); toast.error('Product deleted successfully') }
+
   return (
-    <div className="container px-4 py-8">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Our Products</h1>
-          <p className="text-muted-foreground">
-            Browse collection of agricultural products
-          </p>
+    <div className="container px-4 py-6 md:py-8 space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="space-y-1">
+          <h1 className="text-xl font-bold tracking-tight text-primary uppercase">Inventory</h1>
+          <p className="text-xs text-muted-foreground font-medium italic">Monitor your agricultural stock levels.</p>
         </div>
         {isAdmin && (
-          <Button onClick={() => setIsAddDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Product
+          <Button onClick={() => setAddOpen(true)} className="rounded-xl h-8 px-5 font-bold uppercase tracking-widest shadow-lg shadow-primary/10 transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center">
+            <Plus className="h-4 w-4 mr-2" />Add Product
           </Button>
         )}
       </div>
 
-      {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 bg-muted/30 rounded-lg mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            placeholder="Search products..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+      {/* Filters Section */}
+      <Card className="border-none shadow-soft bg-secondary/10 p-4 rounded-2xl overflow-hidden ring-1 ring-primary/5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="relative lg:col-span-2">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-primary/40 h-4 w-4" />
+            <Input
+              placeholder="Search by name or SKU..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="pl-10 h-8 bg-background border-primary/10 rounded-xl focus-visible:ring-primary shadow-sm font-medium text-sm"
+            />
+          </div>
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="h-8 rounded-xl border-primary/10 bg-background shadow-sm font-bold text-sm">
+              <div className="flex items-center gap-2"><Filter className="h-4 w-4 opacity-40" /><SelectValue placeholder="Category" /></div>
+            </SelectTrigger>
+            <SelectContent className="rounded-xl">
+              <SelectItem value="All">All Categories</SelectItem>
+              {categories.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={selectedStock} onValueChange={setSelectedStock}>
+            <SelectTrigger className="h-8 rounded-xl border-primary/10 bg-background shadow-sm font-bold text-sm">
+              <div className="flex items-center gap-2"><Package className="h-4 w-4 opacity-40" /><SelectValue placeholder="Stock" /></div>
+            </SelectTrigger>
+            <SelectContent className="rounded-xl">
+              <SelectItem value="All">All Stock Levels</SelectItem>
+              <SelectItem value="In Stock">In Stock</SelectItem>
+              <SelectItem value="Low Stock">Low Stock</SelectItem>
+              <SelectItem value="Out of Stock">Out of Stock</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            variant="ghost"
+            className="h-8 rounded-xl text-primary font-bold uppercase tracking-widest hover:bg-primary/5 text-xs flex items-center justify-center"
+            onClick={() => { setSearchTerm(''); setSelectedCategory('All'); setSelectedStock('All'); setSortBy('name') }}
+          >
+            Reset
+          </Button>
         </div>
+      </Card>
 
-        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-          <SelectTrigger>
-            <SelectValue placeholder="Category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="All">All Categories</SelectItem>
-            {categories.map((category) => (
-              <SelectItem key={category.id} value={category.name}>
-                {category.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={selectedStockStatus}
-          onValueChange={setSelectedStockStatus}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Stock Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="All">All Status</SelectItem>
-            <SelectItem value="In Stock">In Stock</SelectItem>
-            <SelectItem value="Low Stock">Low Stock</SelectItem>
-            <SelectItem value="Out of Stock">Out of Stock</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger>
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="name">Name (A-Z)</SelectItem>
-            <SelectItem value="name-desc">Name (Z-A)</SelectItem>
-            <SelectItem value="price-low">Price (Low to High)</SelectItem>
-            <SelectItem value="price-high">Price (High to Low)</SelectItem>
-            <SelectItem value="stock">Stock Level</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Button variant="outline" onClick={clearFilters}>
-          <Filter className="h-4 w-4 mr-2" />
-          Clear Filters
-        </Button>
-      </div>
-
-      {/* Results count */}
-      <div className="flex items-center justify-between mb-6">
-        <p className="text-muted-foreground">
-          Showing {filteredProducts.length} of {products.length} products
+      {/* Stock summary */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-primary/5 rounded-2xl border border-primary/10">
+        <p className="text-sm font-bold text-primary/80 uppercase tracking-widest">
+          Showing <span className="text-primary">{filtered.length} items</span> matching results
         </p>
-        <div className="flex gap-2 text-sm">
-          <Badge variant="outline" className="bg-green-50 text-green-700">
-            In Stock:{" "}
-            {products.filter((p) => p.currentStock > p.lowStockAlert).length}
-          </Badge>
-          <Badge variant="outline" className="bg-orange-50 text-orange-700">
-            Low Stock:{" "}
-            {
-              products.filter(
-                (p) => p.currentStock <= p.lowStockAlert && p.currentStock > 0
-              ).length
-            }
-          </Badge>
-          <Badge variant="outline" className="bg-red-50 text-red-700">
-            Out of Stock: {products.filter((p) => p.currentStock === 0).length}
-          </Badge>
+        <div className="flex gap-2">
+          <Badge variant="outline" className="h-7 px-3 rounded-lg border-success/30 bg-success/10 text-success font-black uppercase text-[9px]">Healthy: {products.filter(p => p.currentStock > p.lowStockAlert).length}</Badge>
+          <Badge variant="outline" className="h-7 px-3 rounded-lg border-warning/30 bg-warning/10 text-warning font-black uppercase text-[9px]">Low: {products.filter(p => p.currentStock <= p.lowStockAlert && p.currentStock > 0).length}</Badge>
+          <Badge variant="outline" className="h-7 px-3 rounded-lg border-destructive/30 bg-destructive/10 text-destructive font-black uppercase text-[9px]">Out: {products.filter(p => p.currentStock === 0).length}</Badge>
         </div>
       </div>
 
       {/* Products Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProducts.map((product) => {
-          const stockInfo = getStockStatus(product);
-          const StockIcon = stockInfo.icon;
-
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        {filtered.map(product => {
+          const si = stockInfo(product)
           return (
-            <Card
-              key={product.id}
-              className="relative overflow-hidden hover:shadow-lg transition-shadow group"
-            >
-              <div className="relative aspect-video overflow-hidden bg-gray-100">
-                <img
-                  src={getProductImage(product)}
-                  alt={product.name}
-                  className="h-full w-full object-contain mix-blend-multiply p-4 transform group-hover:scale-110 transition-transform duration-500"
-                />
-                <div className="absolute top-2 right-2 flex gap-2">
-                  <Badge variant={stockInfo.variant} className="shadow-sm">
-                    <StockIcon className="h-3 w-3 mr-1" />
-                    {stockInfo.status}
+            <Card key={product.id} className="overflow-hidden hover:shadow-2xl transition-all group border-none shadow-soft ring-1 ring-primary/5 hover:ring-primary/20 rounded-[2rem] bg-card/60 backdrop-blur-sm">
+              <div className={`h-2 w-full bg-gradient-to-r ${si.label === 'In Stock' ? 'from-green-500 to-emerald-600' : si.label === 'Low Stock' ? 'from-orange-400 to-orange-600' : 'from-red-500 to-red-700'}`} />
+              <CardHeader className="pb-4 pt-6">
+                <div className="flex justify-between items-start gap-4">
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-lg font-bold text-foreground/90 group-hover:text-primary transition-colors leading-tight">{product.name}</CardTitle>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="secondary" className="text-[9px] font-bold uppercase tracking-widest py-0.5">{product.category?.name}</Badge>
+                      <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">SKU: {product.sku}</span>
+                    </div>
+                  </div>
+                  <Badge variant={si.variant} className={`shrink-0 h-8 rounded-xl font-bold uppercase px-3 text-[10px] border-none ${si.label === 'In Stock' ? 'bg-success text-success-foreground' : ''}`}>
+                    <si.icon className="h-3.5 w-3.5 mr-1" />{si.label}
                   </Badge>
                 </div>
-              </div>
-
-              <CardHeader className="border-b border-border pb-2 mb-1 px-4 pt-4">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg mb-1 line-clamp-1">
-                      {product.name}
-                    </CardTitle>
-                    <CardDescription className="text-sm">
-                      SKU: {product.sku} • {product.category?.name}
-                    </CardDescription>
-                  </div>
-                </div>
               </CardHeader>
+              <CardContent className="space-y-6 pb-8">
+                {product.description && <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed italic">"{product.description}"</p>}
 
-              <CardContent className="space-y-4">
-                {product.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {product.description}
-                  </p>
+                <div className="bg-primary/5 rounded-2xl p-4 space-y-4 border border-primary/5">
+                  <div className="flex justify-between items-end">
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Selling Price</span>
+                    <span className="font-bold text-primary text-2xl tabular-nums tracking-tighter">
+                      ₹{product.sellingPrice.toLocaleString()}
+                      <span className="text-xs font-bold text-muted-foreground ml-1 uppercase">/{product.unit}</span>
+                    </span>
+                  </div>
+
+                  <div className="h-px bg-primary/10" />
+
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <Package className={`h-4 w-4 ${si.color} opacity-40`} />
+                      <span className="text-xs font-bold text-muted-foreground uppercase">Current Stock</span>
+                    </div>
+                    <span className={`font-black tracking-tight text-lg tabular-nums ${si.color}`}>
+                      {product.currentStock} {product.unit}s
+                    </span>
+                  </div>
+                </div>
+
+                {isAdmin && (
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex gap-2">
+                      <Button size="icon" variant="outline" onClick={() => setEditing(product)} className="h-8 w-8 rounded-xl border-primary/10 text-primary hover:bg-primary hover:text-primary-foreground shadow-sm">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button size="icon" variant="outline" onClick={() => setDeleting(product)} className="h-8 w-8 rounded-xl border-destructive/10 text-destructive hover:bg-destructive hover:text-white shadow-sm">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[8px] font-black uppercase text-muted-foreground block leading-none mb-1">Company Cost</span>
+                      <span className="text-xs font-bold font-mono">₹{product.costPrice.toFixed(2)}</span>
+                    </div>
+                  </div>
                 )}
-
-                <div className="space-y-3">
-                  {isAdmin && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">
-                        Cost Price:
-                      </span>
-                      <span className="text-sm font-medium">
-                        ₹{product.costPrice.toFixed(2)}
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">
-                      Selling Price:
-                    </span>
-                    <span className="text-lg font-bold text-primary">
-                      ₹{product.sellingPrice.toFixed(2)}
-                      <span className="text-sm font-normal text-muted-foreground">
-                        /{product.unit}
-                      </span>
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">
-                      Available Stock:
-                    </span>
-                    <span className={`font-medium ${stockInfo.color}`}>
-                      {product.currentStock} {product.unit}
-                    </span>
-                  </div>
-
-                  {product.currentStock <= product.lowStockAlert && (
-                    <div className="p-2 bg-orange-50 rounded-md">
-                      <p className="text-xs text-orange-700">
-                        <strong>Low Stock Alert:</strong> Reorder when stock
-                        reaches {product.lowStockAlert} {product.unit}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between pt-2 border-t">
-                  <div className="flex items-center text-green-600 text-sm">
-                    <CheckCircle className="h-4 w-4 mr-1" />
-                    Active
-                  </div>
-                  {isAdmin && (
-                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setEditingProduct(product)}
-                      >
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setDeletingProduct(product)}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
               </CardContent>
             </Card>
-          );
+          )
         })}
       </div>
 
-      {/* No results */}
-      {filteredProducts.length === 0 && (
-        <div className="text-center py-12">
-          <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No products found</h3>
-          <p className="text-muted-foreground mb-4">
-            Try adjusting your search criteria or add a new product
-          </p>
-          <Button variant="outline" onClick={clearFilters} className="mr-2">
-            Clear All Filters
-          </Button>
-          {isAdmin && (
-            <Button onClick={() => setIsAddDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add New Product
-            </Button>
-          )}
+      {filtered.length === 0 && (
+        <div className="bg-muted/50 rounded-[3rem] border-2 border-dashed border-primary/20 py-24 flex flex-col items-center justify-center text-center px-4">
+          <div className="h-20 w-20 rounded-3xl bg-primary/5 flex items-center justify-center mb-6">
+            <Package className="h-10 w-10 text-primary/20" />
+          </div>
+          <h3 className="text-xl font-bold text-foreground/80 mb-2 uppercase tracking-tight">No products found</h3>
+          <p className="text-muted-foreground max-w-sm mb-8 font-medium italic">We couldn't find any products matching your current filters. Try clearing them to see more.</p>
+          <div className="flex gap-4">
+            <Button variant="outline" onClick={() => { setSearchTerm(''); setSelectedCategory('All'); setSelectedStock('All') }} className="h-8 rounded-2xl px-8 font-bold uppercase tracking-widest border-primary/20 flex items-center justify-center">Clear All Filters</Button>
+            {isAdmin && <Button onClick={() => setAddOpen(true)} className="h-8 rounded-2xl px-8 font-bold uppercase tracking-widest shadow-xl shadow-primary/20 flex items-center justify-center">Add New Product</Button>}
+          </div>
         </div>
       )}
 
-      {/* Dialogs */}
-      <AddProductDialog
-        open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
-        onProductAdded={handleProductAdded}
-        categories={categories}
-      />
-
-      <EditProductDialog
-        product={editingProduct}
-        onOpenChange={(open) => !open && setEditingProduct(null)}
-        onProductUpdated={handleProductUpdated}
-        categories={categories}
-      />
-
-      <DeleteProductDialog
-        product={deletingProduct}
-        onOpenChange={(open) => !open && setDeletingProduct(null)}
-        onProductDeleted={handleProductDeleted}
-      />
+      <AddProductDialog open={addOpen} onOpenChange={setAddOpen} onProductAdded={handleAdded} categories={categories} />
+      <EditProductDialog product={editing} onOpenChange={open => !open && setEditing(null)} onProductUpdated={handleUpdated} categories={categories} />
+      <DeleteProductDialog product={deleting} onOpenChange={open => !open && setDeleting(null)} onProductDeleted={handleDeleted} />
     </div>
-  );
+  )
 }

@@ -1,177 +1,61 @@
-import { Button } from "@/components/ui/button";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
-import { suppliersAPI } from "@/services/api";
+import { useState } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { addSupplier } from '@/lib/store'
+import { toast } from '@/lib/toast'
 
-interface AddSupplierDialogProps {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    onSupplierAdded: () => void;
+interface Props {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    onSupplierAdded: () => void
 }
 
-export default function AddSupplierDialog({
-    open,
-    onOpenChange,
-    onSupplierAdded,
-}: AddSupplierDialogProps) {
-    const [loading, setLoading] = useState(false);
-    const { toast } = useToast();
-    const [formData, setFormData] = useState({
-        name: "",
-        contactPerson: "",
-        email: "",
-        phone: "",
-        address: "",
-        gstin: "",
-    });
+const INIT = { name: '', contactPerson: '', email: '', phone: '', address: '', gstin: '' }
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
-    };
+export default function AddSupplierDialog({ open, onOpenChange, onSupplierAdded }: Props) {
+    const [form, setForm] = useState(INIT)
+    const [loading, setLoading] = useState(false)
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!formData.name) {
-            toast({
-                title: "Error",
-                description: "Supplier name is required",
-                variant: "destructive",
-            });
-            return;
-        }
-
-        setLoading(true);
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!form.name) { toast.error('Supplier name is required'); return }
+        setLoading(true)
         try {
-            await suppliersAPI.createSupplier(formData);
-            toast({
-                title: "Success",
-                description: "Supplier added successfully",
-            });
-            setFormData({
-                name: "",
-                contactPerson: "",
-                email: "",
-                phone: "",
-                address: "",
-                gstin: "",
-            });
-            onSupplierAdded();
-            onOpenChange(false);
-        } catch (error: any) {
-            toast({
-                title: "Error",
-                description: error.response?.data?.message || "Failed to add supplier",
-                variant: "destructive",
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
+            addSupplier(form)
+            toast.success('Supplier added successfully')
+            setForm(INIT)
+            onSupplierAdded()
+            onOpenChange(false)
+        } catch { toast.error('Failed to add supplier') }
+        finally { setLoading(false) }
+    }
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                    <DialogTitle>Add New Supplier</DialogTitle>
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto p-0 border-none shadow-strong rounded-2xl">
+                <DialogHeader className="p-6 pb-2">
+                    <DialogTitle className="text-xl font-bold text-primary uppercase tracking-tight">Add New Supplier</DialogTitle>
                 </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="name">Supplier Name *</Label>
-                        <Input
-                            id="name"
-                            name="name"
-                            value={formData.name}
-                            onChange={handleChange}
-                            placeholder="e.g. Kisan Agro Supplies"
-                            required
-                        />
+                <form onSubmit={handleSubmit} className="p-6 pt-0 space-y-4">
+                    <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Supplier Name *</Label><Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required className="h-9" /></div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-bold uppercase tracking-widest text-muted-foreground/80">
+                        <div className="space-y-1.5"><Label className="text-inherit">Contact Person</Label><Input value={form.contactPerson} onChange={e => setForm(p => ({ ...p, contactPerson: e.target.value }))} className="h-9" /></div>
+                        <div className="space-y-1.5"><Label className="text-inherit">Phone</Label><Input value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} className="h-9" /></div>
                     </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="contactPerson">Contact Person</Label>
-                            <Input
-                                id="contactPerson"
-                                name="contactPerson"
-                                value={formData.contactPerson}
-                                onChange={handleChange}
-                                placeholder="Manager Name"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="phone">Phone Number</Label>
-                            <Input
-                                id="phone"
-                                name="phone"
-                                value={formData.phone}
-                                onChange={handleChange}
-                                placeholder="+91..."
-                            />
-                        </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-bold uppercase tracking-widest text-muted-foreground/80">
+                        <div className="space-y-1.5"><Label className="text-inherit">Email</Label><Input type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} className="h-9" /></div>
+                        <div className="space-y-1.5"><Label className="text-inherit">GSTIN</Label><Input value={form.gstin} onChange={e => setForm(p => ({ ...p, gstin: e.target.value }))} className="h-9" /></div>
                     </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input
-                                id="email"
-                                name="email"
-                                type="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                placeholder="supplier@example.com"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="gstin">GSTIN</Label>
-                            <Input
-                                id="gstin"
-                                name="gstin"
-                                value={formData.gstin}
-                                onChange={handleChange}
-                                placeholder="GST Number"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="address">Address</Label>
-                        <Textarea
-                            id="address"
-                            name="address"
-                            value={formData.address}
-                            onChange={handleChange}
-                            placeholder="Full address..."
-                            rows={3}
-                        />
-                    </div>
-
-                    <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => onOpenChange(false)}
-                            disabled={loading}
-                        >
-                            Cancel
-                        </Button>
-                        <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700">
-                            {loading ? "Adding..." : "Add Supplier"}
-                        </Button>
+                    <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Address</Label><Textarea value={form.address} onChange={e => setForm(p => ({ ...p, address: e.target.value }))} rows={2} className="text-sm" /></div>
+                    <DialogFooter className="gap-2 pt-2">
+                        <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={loading} className="h-9 text-xs font-bold uppercase tracking-widest">Cancel</Button>
+                        <Button type="submit" disabled={loading} className="h-9 px-6 rounded-lg font-bold uppercase text-xs tracking-widest shadow-lg shadow-primary/20">{loading ? 'Adding...' : 'Add Supplier'}</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
         </Dialog>
-    );
+    )
 }

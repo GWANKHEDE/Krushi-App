@@ -1,831 +1,176 @@
-import { useState, useEffect } from 'react';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardDescription,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import Loader from '@/services/Loader';
-import { 
-  Bell, 
-  Lock, 
-  FileText, 
-  Settings, 
-  Warehouse,
-  User,
-  Building,
-  Download,
-  Save,
-  Eye,
-  EyeOff
-} from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
-import { dashboardAPI, productsAPI, settingsAPI } from '@/services/api';
-
-interface UserProfile {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  phone?: string;
-  business?: Business;
-}
-
-interface Business {
-  id: string;
-  name: string;
-  address?: string;
-  contactNumber?: string;
-  email?: string;
-  gstin?: string;
-  settings?: BusinessSettings;
-}
-
-interface BusinessSettings {
-  id: string;
-  lowStockAlert: boolean;
-  gstReminder: boolean;
-  gstRate: number;
-  invoicePrefix: string;
-  nextInvoiceNumber: number;
-  pdfTemplate?: string;
-}
-
-interface PasswordForm {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-}
-
-interface InventoryStats {
-  lowStockItems: number;
-  totalInventoryValue: number;
-  totalProducts: number;
-}
+import { useState } from 'react'
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
+import { Bell, Lock, Settings, Warehouse, User, Building, Save, Eye, EyeOff, ShieldCheck, Mail, Phone, MapPin, BadgeCheck } from 'lucide-react'
+import { useAuth } from '@/lib/auth'
+import { getSettings, updateSettings, getProducts, getDashboardStats, getBusinessDetails } from '@/lib/store'
+import { toast } from '@/lib/toast'
+import { ShopDetailsModal } from '@/components/ShopDetailsModal'
 
 export default function SettingsPage() {
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [business, setBusiness] = useState<Business | null>(null);
-  const [settings, setSettings] = useState<BusinessSettings | null>(null);
-  const [inventoryStats, setInventoryStats] = useState<InventoryStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [passwordForm, setPasswordForm] = useState<PasswordForm>({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
-  const [showPassword, setShowPassword] = useState({
-    current: false,
-    new: false,
-    confirm: false
-  });
-  const { toast } = useToast();
-  const [profileForm, setProfileForm] = useState({
-    name: '',
-    email: '',
-    phone: ''
-  });
+  const { user } = useAuth()
+  const [settings, setSettings] = useState(getSettings())
+  const [shopOpen, setShopOpen] = useState(false)
+  const [business, setBusiness] = useState(getBusinessDetails())
 
-  const [businessForm, setBusinessForm] = useState({
-    name: '',
-    address: '',
-    email: '',
-    gstin: '',
-    contactNumber: ''
-  });
+  const stats = getDashboardStats()
+  const products = getProducts()
+  const inventoryValue = products.reduce((s, p) => s + p.costPrice * p.currentStock, 0)
 
-  // Load user data and settings
-  useEffect(() => {
-    loadUserData();
-    loadInventoryStats();
-  }, []);
-
-  const loadUserData = () => {
-    try {
-      const userData = localStorage.getItem('user');
-      const businessData = localStorage.getItem('business');
-      const settingsData = localStorage.getItem('settings');
-
-      if (userData) {
-        const userProfile = JSON.parse(userData);
-        setUser(userProfile);
-        setProfileForm({
-          name: userProfile.name || '',
-          email: userProfile.email || '',
-          phone: userProfile.phone || userProfile.business?.contactNumber || ''
-        });
-
-        if (userProfile.business) {
-          setBusiness(userProfile.business);
-          setBusinessForm({
-            name: userProfile.business.name || '',
-            address: userProfile.business.address || '',
-            email: userProfile.business.email || '',
-            gstin: userProfile.business.gstin || '',
-            contactNumber: userProfile.business.contactNumber || ''
-          });
-        }
-      }
-
-      if (settingsData) {
-        const savedSettings = JSON.parse(settingsData);
-        setSettings(savedSettings);
-      }
-    } catch (error) {
-      console.error('Error loading user data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadInventoryStats = async () => {
-    try {
-      const response = await dashboardAPI.getDashboardData();
-      const data = response.data.data;
-      
-      // Calculate inventory value (simplified - using cost price * stock)
-      const productsResponse = await productsAPI.getAllProducts({ limit: 1000 });
-      const products = productsResponse.data.data.products || [];
-      
-      const totalValue = products.reduce((sum: number, product: any) => 
-        sum + (product.costPrice * product.currentStock), 0
-      );
-
-      setInventoryStats({
-        lowStockItems: data.totals.lowStockItems,
-        totalInventoryValue: totalValue,
-        totalProducts: data.totals.totalProducts
-      });
-    } catch (error) {
-      console.error('Error loading inventory stats:', error);
-    }
-  };
-
-  const handleProfileUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    
-    try {
-      const response = await settingsAPI.updateProfile({
-        name: profileForm.name,
-        email: profileForm.email,
-        phone: profileForm.phone
-      });
-
-      // Update local storage with new data
-      const updatedUser = {
-        ...user,
-        name: profileForm.name,
-        email: profileForm.email,
-        phone: profileForm.phone,
-        business: {
-          ...user?.business,
-          contactNumber: profileForm.phone
-        }
-      };
-      
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      setUser(updatedUser);
-
-      toast({
-        title: "Success",
-        description: "Profile updated successfully",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to update profile",
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleBusinessUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    
-    try {
-      const response = await settingsAPI.updateBusiness({
-        name: businessForm.name,
-        address: businessForm.address,
-        email: businessForm.email,
-        gstin: businessForm.gstin,
-        contactNumber: businessForm.contactNumber
-      });
-
-      // Update local storage with new business data
-      const updatedBusiness = {
-        ...business,
-        name: businessForm.name,
-        address: businessForm.address,
-        email: businessForm.email,
-        gstin: businessForm.gstin,
-        contactNumber: businessForm.contactNumber
-      };
-      
-      const updatedUser = {
-        ...user,
-        business: updatedBusiness
-      };
-      
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      localStorage.setItem('business', JSON.stringify(updatedBusiness));
-      setBusiness(updatedBusiness);
-      setUser(updatedUser);
-
-      toast({
-        title: "Success",
-        description: "Business information updated successfully",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to update business information",
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handlePasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      toast({
-        title: "Error",
-        description: "New passwords do not match",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (passwordForm.newPassword.length < 6) {
-      toast({
-        title: "Error",
-        description: "Password must be at least 6 characters long",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setSaving(true);
-    
-    try {
-      await settingsAPI.updatePassword({
-        currentPassword: passwordForm.currentPassword,
-        newPassword: passwordForm.newPassword
-      });
-      
-      toast({
-        title: "Success",
-        description: "Password updated successfully",
-      });
-      
-      // Reset form
-      setPasswordForm({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to update password",
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleSettingsChange = async (key: keyof BusinessSettings, value: any) => {
-    if (!settings) return;
-
-    const updatedSettings = { ...settings, [key]: value };
-    setSettings(updatedSettings);
-    
-    try {
-      await settingsAPI.updateSettings({
-        lowStockAlert: updatedSettings.lowStockAlert,
-        gstReminder: updatedSettings.gstReminder,
-        gstRate: updatedSettings.gstRate,
-        invoicePrefix: updatedSettings.invoicePrefix
-      });
-
-      // Update local storage
-      localStorage.setItem('settings', JSON.stringify(updatedSettings));
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to update settings",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const generateSamplePDF = async () => {
-    try {
-      // Simulate PDF generation
-      toast({
-        title: "Generating PDF",
-        description: "Creating sample bill document...",
-      });
-      
-      await settingsAPI.generatePDF({
-        billData: {
-          // Sample bill data
-          invoiceNumber: 'INV-001',
-          customerName: 'Sample Customer',
-          items: [],
-          total: 0
-        }
-      });
-      
-      toast({
-        title: "Success",
-        description: "Sample PDF generated successfully",
-      });
-      
-      // In a real implementation, you would download the PDF
-      // window.open('/api/generate-pdf', '_blank');
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to generate PDF",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const togglePasswordVisibility = (field: keyof typeof showPassword) => {
-    setShowPassword(prev => ({
-      ...prev,
-      [field]: !prev[field]
-    }));
-  };
-
-  if (loading) {
-    return <Loader message="Please wait..." />;
+  const handleSettingsChange = (key: string, value: boolean | number | string) => {
+    const updated = { ...settings, [key]: value }
+    setSettings(updated)
+    updateSettings(updated)
+    toast.warning('Settings synchronized successfully!')
   }
 
-  return (
-    <div className="container py-8 space-y-8">
-      {/* <h2 className="text-2xl font-bold flex items-center gap-2">
-        <Settings className="h-6 w-6" /> Settings
-      </h2> */}
-
-      {/* Profile Section */}
-      <Card>
-        <CardHeader className='border-b border-border border-green-500 mb-1 pb-2'>
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" /> Profile Settings
-          </CardTitle>
-          <CardDescription>Edit your personal information</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleProfileUpdate}>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  value={profileForm.name}
-                  onChange={(e) => setProfileForm(prev => ({
-                    ...prev,
-                    name: e.target.value
-                  }))}
-                  placeholder="Enter your full name"
-                />
-              </div>
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={profileForm.email}
-                  onChange={(e) => setProfileForm(prev => ({
-                    ...prev,
-                    email: e.target.value
-                  }))}
-                  placeholder="Enter your email"
-                />
-              </div>
-              <div>
-                <Label htmlFor="phone">Mobile</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={profileForm.phone}
-                  onChange={(e) => setProfileForm(prev => ({
-                    ...prev,
-                    phone: e.target.value
-                  }))}
-                  placeholder="Enter your mobile number"
-                />
-              </div>
-              <div>
-                <Label htmlFor="role">Role</Label>
-                <Input
-                  id="role"
-                  value={user?.role || ''}
-                  readOnly
-                  className="bg-muted"
-                />
-              </div>
-              <div className="md:col-span-2 text-right">
-                <Button type="submit" disabled={saving}>
-                  <Save className="mr-2 h-4 w-4" />
-                  {saving ? "Updating..." : "Update Profile"}
-                </Button>
-              </div>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      {/* Password Section */}
-      <Card>
-        <CardHeader className='border-b border-border border-green-500 mb-1 pb-2'>
-          <CardTitle className="flex items-center gap-2">
-            <Lock className="h-5 w-5" /> Password Management
-          </CardTitle>
-          <CardDescription>Change your login credentials</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handlePasswordChange}>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="relative">
-                <Label htmlFor="currentPassword">Current Password</Label>
-                <Input
-                  id="currentPassword"
-                  type={showPassword.current ? "text" : "password"}
-                  value={passwordForm.currentPassword}
-                  onChange={(e) => setPasswordForm(prev => ({
-                    ...prev,
-                    currentPassword: e.target.value
-                  }))}
-                  placeholder="Enter current password"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-2 top-7 h-6 w-6 p-0"
-                  onClick={() => togglePasswordVisibility('current')}
-                >
-                  {showPassword.current ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-
-              <div className="relative">
-                <Label htmlFor="newPassword">New Password</Label>
-                <Input
-                  id="newPassword"
-                  type={showPassword.new ? "text" : "password"}
-                  value={passwordForm.newPassword}
-                  onChange={(e) => setPasswordForm(prev => ({
-                    ...prev,
-                    newPassword: e.target.value
-                  }))}
-                  placeholder="Enter new password"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-2 top-7 h-6 w-6 p-0"
-                  onClick={() => togglePasswordVisibility('new')}
-                >
-                  {showPassword.new ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-
-              <div className="relative">
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                <Input
-                  id="confirmPassword"
-                  type={showPassword.confirm ? "text" : "password"}
-                  value={passwordForm.confirmPassword}
-                  onChange={(e) => setPasswordForm(prev => ({
-                    ...prev,
-                    confirmPassword: e.target.value
-                  }))}
-                  placeholder="Confirm new password"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-2 top-7 h-6 w-6 p-0"
-                  onClick={() => togglePasswordVisibility('confirm')}
-                >
-                  {showPassword.confirm ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-
-              <div className="md:col-span-2 text-right">
-                <Button type="submit" variant="outline" disabled={saving}>
-                  <Lock className="mr-2 h-4 w-4" />
-                  {saving ? "Updating..." : "Update Password"}
-                </Button>
-              </div>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      {/* Business Section */}
-      <Card>
-        <CardHeader className='border-b border-border border-green-500 mb-1 pb-2'>
-          <CardTitle className="flex items-center gap-2">
-            <Building className="h-5 w-5" /> Business Details
-          </CardTitle>
-          <CardDescription>Manage your company information</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleBusinessUpdate}>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <Label htmlFor="businessName">Business Name</Label>
-                <Input
-                  id="businessName"
-                  value={businessForm.name}
-                  onChange={(e) => setBusinessForm(prev => ({
-                    ...prev,
-                    name: e.target.value
-                  }))}
-                  placeholder="Enter business name"
-                />
-              </div>
-              <div>
-                <Label htmlFor="gstNumber">GST Number</Label>
-                <Input
-                  id="gstNumber"
-                  value={businessForm.gstin}
-                  onChange={(e) => setBusinessForm(prev => ({
-                    ...prev,
-                    gstin: e.target.value
-                  }))}
-                  placeholder="Enter GST number"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="address">Business Address</Label>
-                <Textarea
-                  id="address"
-                  value={businessForm.address}
-                  onChange={(e) => setBusinessForm(prev => ({
-                    ...prev,
-                    address: e.target.value
-                  }))}
-                  placeholder="Enter business address"
-                  rows={3}
-                />
-              </div>
-              <div>
-                <Label htmlFor="businessEmail">Business Email</Label>
-                <Input
-                  id="businessEmail"
-                  type="email"
-                  value={businessForm.email}
-                  onChange={(e) => setBusinessForm(prev => ({
-                    ...prev,
-                    email: e.target.value
-                  }))}
-                  placeholder="Enter business email"
-                />
-              </div>
-              <div>
-                <Label htmlFor="contactNumber">Contact Number</Label>
-                <Input
-                  id="contactNumber"
-                  type="tel"
-                  value={businessForm.contactNumber}
-                  onChange={(e) => setBusinessForm(prev => ({
-                    ...prev,
-                    contactNumber: e.target.value
-                  }))}
-                  placeholder="Enter contact number"
-                />
-              </div>
-              <div className="md:col-span-2 text-right">
-                <Button type="submit" disabled={saving}>
-                  <Save className="mr-2 h-4 w-4" />
-                  {saving ? "Updating..." : "Update Business Info"}
-                </Button>
-              </div>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      {/* Notifications & Settings */}
-      <Card>
-        <CardHeader className='border-b border-border border-green-500 mb-1 pb-2'>
-          <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5" /> Notifications & Reminders
-          </CardTitle>
-          <CardDescription>Manage stock alerts and GST reminders</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex items-center justify-between p-4 border rounded-lg">
-            <div className="space-y-1">
-              <Label htmlFor="lowStockAlert" className="text-base">Low Stock Alert</Label>
-              <p className="text-sm text-muted-foreground">
-                Get notified when product stock is running low
-              </p>
-            </div>
-            <Switch
-              id="lowStockAlert"
-              checked={settings?.lowStockAlert || false}
-              onCheckedChange={(checked) => 
-                handleSettingsChange('lowStockAlert', checked)
-              }
-            />
-          </div>
-
-          <div className="flex items-center justify-between p-4 border rounded-lg">
-            <div className="space-y-1">
-              <Label htmlFor="gstReminder" className="text-base">GST Billing Reminder</Label>
-              <p className="text-sm text-muted-foreground">
-                Remind to include GST in bills and track GST payments
-              </p>
-            </div>
-            <Switch
-              id="gstReminder"
-              checked={settings?.gstReminder || false}
-              onCheckedChange={(checked) => 
-                handleSettingsChange('gstReminder', checked)
-              }
-            />
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <Label htmlFor="gstRate">GST Rate (%)</Label>
-              <Input
-                id="gstRate"
-                type="number"
-                step="0.1"
-                min="0"
-                max="100"
-                value={settings?.gstRate || 18}
-                onChange={(e) => 
-                  handleSettingsChange('gstRate', parseFloat(e.target.value))
-                }
-                placeholder="GST percentage"
-              />
-            </div>
-            <div>
-              <Label htmlFor="invoicePrefix">Invoice Prefix</Label>
-              <Input
-                id="invoicePrefix"
-                value={settings?.invoicePrefix || 'INV'}
-                onChange={(e) => 
-                  handleSettingsChange('invoicePrefix', e.target.value)
-                }
-                placeholder="Invoice prefix"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* PDF Generator */}
-      <Card>
-        <CardHeader className='border-b border-border border-green-500 mb-3 pb-2'>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" /> PDF Bill Generator
-          </CardTitle>
-          <CardDescription>Generate sample bills for testing or printing</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-wrap gap-4">
-            <Button 
-              variant="outline" 
-              onClick={generateSamplePDF}
-              className="flex items-center gap-2"
-            >
-              <FileText className="h-4 w-4" />
-              Generate Sample Bill
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={generateSamplePDF}
-              className="flex items-center gap-2"
-            >
-              <Download className="h-4 w-4" />
-              Download PDF Template
-            </Button>
-          </div>
-          <div className="p-4 bg-muted/50 rounded-lg">
-            <p className="text-sm text-muted-foreground">
-              <strong>Features:</strong> Professional bill layout, GST calculation, 
-              business details, automatic numbering, and print-friendly format.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Inventory Overview */}
-      <Card>
-        <CardHeader className="border-b border-border border-green-500 mb-3 pb-2">
-          <CardTitle className="flex items-center gap-2">
-            <Warehouse className="h-5 w-5" /> Inventory Status
-          </CardTitle>
-          <CardDescription>Quick look at your current stock health</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className={`p-6 rounded-lg border-2 ${
-              (inventoryStats?.lowStockItems || 0) > 0 
-                ? 'border-orange-200 bg-orange-50' 
-                : 'border-green-200 bg-green-50'
-            }`}>
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-full ${
-                  (inventoryStats?.lowStockItems || 0) > 0 
-                    ? 'bg-orange-100 text-orange-600' 
-                    : 'bg-green-100 text-green-600'
-                }`}>
-                  <Bell className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-sm">Low Stock Items</p>
-                  <p className={`text-2xl font-bold ${
-                    (inventoryStats?.lowStockItems || 0) > 0 
-                      ? 'text-orange-700' 
-                      : 'text-green-700'
-                  }`}>
-                    {inventoryStats?.lowStockItems || 0} Products
-                  </p>
-                  {(inventoryStats?.lowStockItems || 0) > 0 && (
-                    <p className="text-xs text-orange-600 mt-1">
-                      Requires immediate attention
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="p-6 rounded-lg border-2 border-blue-200 bg-blue-50">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-blue-100 text-blue-600">
-                  <Warehouse className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-sm">Total Inventory Value</p>
-                  <p className="text-2xl font-bold text-blue-700">
-                    ₹{(inventoryStats?.totalInventoryValue || 0).toLocaleString('en-IN')}
-                  </p>
-                  <p className="text-xs text-blue-600 mt-1">
-                    Across {inventoryStats?.totalProducts || 0} products
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Additional Inventory Stats */}
-          <div className="mt-6 grid grid-cols-2 gap-4 text-center">
-            <div className="p-3 bg-muted/30 rounded-lg">
-              <p className="text-sm text-muted-foreground">Active Products</p>
-              <p className="text-lg font-semibold">{inventoryStats?.totalProducts || 0}</p>
-            </div>
-            <div className="p-3 bg-muted/30 rounded-lg">
-              <p className="text-sm text-muted-foreground">Stock Health</p>
-              <p className="text-lg font-semibold">
-                {inventoryStats && inventoryStats.totalProducts > 0 
-                  ? `${Math.round(((inventoryStats.totalProducts - (inventoryStats.lowStockItems || 0)) / inventoryStats.totalProducts) * 100)}%`
-                  : '0%'
-                }
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+  const InfoCard = ({ icon: Icon, label, value, color = "text-primary" }: { icon: any; label: string; value: string; color?: string }) => (
+    <div className="flex items-center gap-4 p-4 rounded-2xl bg-muted/30 border border-primary/5">
+      <div className={`h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center ${color}`}>
+        <Icon className="h-5 w-5" />
+      </div>
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</p>
+        <p className="font-bold text-sm tracking-tight">{value}</p>
+      </div>
     </div>
-  );
+  )
+
+  return (
+    <div className="container px-4 py-8 space-y-12 animate-in fade-in duration-700">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="space-y-1">
+          <h1 className="text-xl font-bold tracking-tight text-primary uppercase">Configuration</h1>
+          <p className="text-xs text-muted-foreground font-medium italic">Tailor your Krushi Kendra experience.</p>
+        </div>
+        <Button onClick={() => setShopOpen(true)} className="h-8 px-6 rounded-xl font-bold uppercase tracking-widest text-xs shadow-lg shadow-primary/10 hover:scale-[1.02] transition-transform flex items-center justify-center">
+          <Building className="h-4 w-4 mr-2" /> Update Shop
+        </Button>
+      </header>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column: Account & Shop Summary */}
+        <div className="space-y-8">
+          <Card className="border-none shadow-medium bg-card/60 backdrop-blur-md rounded-[2.5rem] overflow-hidden ring-1 ring-primary/5">
+            <CardHeader className="bg-primary/5 border-b border-primary/5 p-8">
+              <div className="flex items-center gap-4">
+                <div className="h-16 w-16 rounded-3xl bg-primary flex items-center justify-center shadow-lg">
+                  <User className="h-8 w-8 text-accent" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-bold text-primary uppercase">{user?.name}</CardTitle>
+                  <CardDescription className="font-bold text-[10px] uppercase text-primary/40 tracking-widest">{user?.role} Account</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-8 space-y-4">
+              <InfoCard icon={Mail} label="Contact Email" value={user?.email || 'N/A'} />
+              <InfoCard icon={Phone} label="Mobile Link" value={user?.phone || 'Not Linked'} />
+              <InfoCard icon={ShieldCheck} label="Security Status" value="Active & Encrypted" color="text-emerald-500" />
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-medium bg-gradient-to-br from-primary to-primary-foreground p-px rounded-[2.5rem] overflow-hidden">
+            <div className="bg-card/95 backdrop-blur-sm rounded-[2.45rem] p-8 h-full space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Store Snapshot</h3>
+                <BadgeCheck className="h-5 w-5 text-accent" />
+              </div>
+              <div className="space-y-4">
+                <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10">
+                  <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Registered Entity</p>
+                  <p className="font-bold text-lg text-primary uppercase tracking-tight leading-tight">{business.name}</p>
+                </div>
+                <div className="flex items-start gap-4 p-4 rounded-xl bg-muted/50">
+                  <MapPin className="h-5 w-5 text-primary/40 mt-0.5" />
+                  <p className="text-xs font-medium text-muted-foreground leading-relaxed italic">{business.address}</p>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Right Column: Detailed Settings */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* System Logic */}
+          <Card className="border-none shadow-medium bg-card/60 backdrop-blur-md rounded-[2.5rem] overflow-hidden ring-1 ring-primary/5">
+            <CardHeader className="p-6 border-b border-primary/5 bg-secondary/10">
+              <div className="flex items-center gap-3">
+                <Settings className="h-5 w-5 text-primary" />
+                <CardTitle className="text-lg font-bold text-primary uppercase tracking-tight">Core System Controls</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="p-8 space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <Label className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground">GST Compliance Rate (%)</Label>
+                  <Input type="number" step="0.1" value={settings.gstRate}
+                    onChange={e => handleSettingsChange('gstRate', parseFloat(e.target.value))}
+                    className="h-12 rounded-xl border-primary/10 bg-muted/30 font-bold text-base focus-visible:ring-primary"
+                  />
+                  <p className="text-[10px] font-medium italic text-muted-foreground">Standard GST rate applied to all generated invoices.</p>
+                </div>
+                <div className="space-y-4">
+                  <Label className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Invoice Sequence Prefix</Label>
+                  <Input value={settings.invoicePrefix}
+                    onChange={e => handleSettingsChange('invoicePrefix', e.target.value)}
+                    className="h-12 rounded-xl border-primary/10 bg-muted/30 font-bold text-base focus-visible:ring-primary uppercase"
+                  />
+                  <p className="text-[10px] font-medium italic text-muted-foreground">Custom prefix for professional invoice numbering.</p>
+                </div>
+              </div>
+
+              <div className="h-px bg-primary/5" />
+
+              <div className="space-y-6">
+                {[
+                  { id: 'lowStockAlert', label: 'Inventory Reminders', desc: 'Auto-detect when stock drops below threshold.' },
+                  { id: 'gstReminder', label: 'Tax Enforcement', desc: 'Always prompt for GST calculation in cart.' },
+                ].map(item => (
+                  <div key={item.id} className="flex items-center justify-between p-6 bg-muted/20 border border-primary/5 rounded-[1.5rem] group hover:bg-primary/5 transition-colors duration-300">
+                    <div className="space-y-1">
+                      <Label className="text-sm font-bold text-primary uppercase tracking-tight cursor-pointer">{item.label}</Label>
+                      <p className="text-[10px] font-medium text-muted-foreground italic group-hover:text-primary/60">{item.desc}</p>
+                    </div>
+                    <Switch checked={(settings as any)[item.id] || false} onCheckedChange={v => handleSettingsChange(item.id, v)} />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Infrastructure Health */}
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card className="border-none shadow-soft bg-orange-50/50 dark:bg-orange-950/20 rounded-[2rem] overflow-hidden">
+              <CardContent className="p-8 flex items-center gap-6">
+                <div className="h-16 w-16 rounded-2xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                  <Warehouse className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase text-orange-600/60 tracking-widest">Inventory Health</p>
+                  <p className="text-2xl font-bold text-orange-700 dark:text-orange-400 tabular-nums lowercase">{stats.lowStockItems} <span className="text-xs">refills needed</span></p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-none shadow-soft bg-primary/5 dark:bg-primary/10 rounded-[2rem] overflow-hidden">
+              <CardContent className="p-8 flex items-center gap-6">
+                <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <BadgeCheck className="h-8 w-8 text-primary" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase text-primary/60 tracking-widest">Net Asset Value</p>
+                  <p className="text-2xl font-bold text-primary tabular-nums tracking-tighter italic">₹{inventoryValue.toLocaleString()}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      <ShopDetailsModal open={shopOpen} onOpenChange={setShopOpen} onUpdated={() => setBusiness(getBusinessDetails())} />
+    </div>
+  )
 }

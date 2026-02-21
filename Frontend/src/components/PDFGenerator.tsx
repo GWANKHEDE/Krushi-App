@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { getBusinessDetails } from '@/lib/store';
 
 interface PDFGeneratorProps {
   billData: any;
@@ -32,15 +33,16 @@ interface PDFData {
   createdAt: string;
 }
 
-export function PDFGenerator({ 
-  billData, 
-  invoiceNumber, 
-  customerPhone, 
-  onSuccess, 
-  onError 
+export function PDFGenerator({
+  billData,
+  invoiceNumber,
+  customerPhone,
+  onSuccess,
+  onError
 }: PDFGeneratorProps) {
   const { toast } = useToast();
   const pdfTemplateRef = useRef<HTMLDivElement>(null);
+  const business = getBusinessDetails();
 
   const calculateProductTotal = (product: any) => {
     const baseTotal = product.quantity * product.sellingPrice;
@@ -76,7 +78,7 @@ export function PDFGenerator({
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
-        
+
         // Calculate dimensions to fit the page
         const imgWidth = canvas.width;
         const imgHeight = canvas.height;
@@ -106,9 +108,9 @@ export function PDFGenerator({
 📞 *Phone:* ${pdfData.customerPhone}
 
 🛍️ *Items:*
-${pdfData.items.map((item, index) => 
-  `${index + 1}. ${item.name} - ${item.quantity} ${item.unit} x ₹${item.sellingPrice}${item.discount > 0 ? ` (-${item.discount}%)` : ''} = ₹${calculateProductTotal(item).toFixed(2)}`
-).join('\n')}
+${pdfData.items.map((item, index) =>
+      `${index + 1}. ${item.name} - ${item.quantity} ${item.unit} x ₹${item.sellingPrice}${item.discount > 0 ? ` (-${item.discount}%)` : ''} = ₹${calculateProductTotal(item).toFixed(2)}`
+    ).join('\n')}
 
 💰 *Bill Summary:*
 Subtotal: ₹${pdfData.subtotal.toFixed(2)}
@@ -130,18 +132,18 @@ Thank you for your business! 🌱`;
     try {
       // Generate PDF
       const pdf = await generatePDF();
-      
+
       // Download PDF locally
       await downloadPDF(pdf, `invoice-${invoiceNumber}.pdf`);
-      
+
       // Send WhatsApp message
       await sendWhatsAppMessage(customerPhone, invoiceNumber, billData);
-      
+
       toast({
         title: "Success!",
         description: `Invoice #${invoiceNumber} sent to WhatsApp and PDF downloaded`,
       });
-      
+
       onSuccess?.();
     } catch (error: any) {
       const errorMessage = error.message || 'Failed to generate PDF';
@@ -157,31 +159,42 @@ Thank you for your business! 🌱`;
   return (
     <div>
       {/* Hidden PDF Template */}
-      <div 
-        ref={pdfTemplateRef} 
-        className="fixed -left-[10000px] top-0" 
-        style={{ 
-          width: '210mm', 
+      <div
+        ref={pdfTemplateRef}
+        className="fixed -left-[10000px] top-0"
+        style={{
+          width: '210mm',
           minHeight: '297mm',
           backgroundColor: 'white',
           padding: '20mm'
         }}
       >
-        <div className="space-y-6">
+        <div className="space-y-6 relative">
+          {/* Watermark Logo */}
+          {business.logo && (
+            <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none rotate-[-30deg]">
+              <img src={business.logo} alt="Watermark" className="w-[150mm]" />
+            </div>
+          )}
+
           {/* Header */}
-          <div className="text-center space-y-2 border-b pb-4">
-            <h2 className="text-2xl font-bold">Krushi Seva Kendra</h2>
-            <p className="text-gray-600">Gandhi Chowk, Nanded, Maharashtra - 431601</p>
-            <p className="text-sm">GSTIN: 27ABCDE1234F1Z5</p>
-            <p className="text-sm text-gray-500">{billData.createdAt}</p>
+          <div className="text-center space-y-2 border-b-2 border-primary/20 pb-4 relative">
+            <h2 className="text-3xl font-black text-primary uppercase tracking-tighter">{business.name}</h2>
+            <p className="text-gray-600 font-medium">{business.address}</p>
+            <div className="flex justify-center gap-4 text-sm font-semibold text-gray-500">
+              <span>GSTIN: {business.gstin}</span>
+              <span>•</span>
+              <span>Mob: {business.contactNumber}</span>
+            </div>
+            <p className="text-xs text-gray-400">{billData.createdAt}</p>
           </div>
-          
+
           {/* Invoice Info */}
           <div className="text-center">
             <h3 className="text-lg font-bold">TAX INVOICE</h3>
             <p className="text-sm">Invoice #: {invoiceNumber}</p>
           </div>
-          
+
           {/* Customer & Payment Info */}
           <div className="grid grid-cols-2 gap-6 text-sm">
             <div>
@@ -195,7 +208,7 @@ Thank you for your business! 🌱`;
               <p><strong>Status:</strong> <span className="text-green-600 font-semibold">PAID</span></p>
             </div>
           </div>
-          
+
           {/* Items Table */}
           <div className="border rounded-lg overflow-hidden">
             <table className="w-full text-sm">
@@ -234,7 +247,7 @@ Thank you for your business! 🌱`;
               </tbody>
             </table>
           </div>
-          
+
           {/* Totals */}
           <div className="border-t pt-4 space-y-2 text-sm">
             <div className="flex justify-between">
@@ -262,9 +275,10 @@ Thank you for your business! 🌱`;
           </div>
 
           {/* Footer */}
-          <div className="text-center text-xs text-gray-500 pt-4 border-t">
-            <p>Thank you for your business!</p>
-            <p>For queries, contact: +91-9876543210</p>
+          <div className="text-center text-xs text-gray-500 pt-6 border-t-2 border-primary/10 relative">
+            <p className="font-bold text-gray-600 mb-1 font-serif italic">Thank you for your business! 🌱</p>
+            <p>This is a computer-generated invoice and doesn't require a signature.</p>
+            <p className="mt-1">For queries, contact: {business.contactNumber} or email: {business.email}</p>
           </div>
         </div>
       </div>

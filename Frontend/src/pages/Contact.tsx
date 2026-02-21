@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -92,25 +93,25 @@ export default function Contact() {
       icon: MapPin,
       title: 'Visit Us',
       details: [contactDetails.address],
-      color: 'text-primary'
+      color: 'bg-primary/10 text-primary'
     },
     {
       icon: Phone,
       title: 'Call Us',
       details: [contactDetails.phone, 'Mon-Sat: 8AM-7PM'],
-      color: 'text-success'
+      color: 'bg-success/10 text-success'
     },
     {
       icon: Mail,
       title: 'Email Us',
       details: [contactDetails.email, 'Response within 24hrs'],
-      color: 'text-info'
+      color: 'bg-info/10 text-info'
     },
     {
       icon: Clock,
       title: 'Working Hours',
-      details: ['Monday - Saturday: 8:00 AM - 7:00 PM', 'Sunday: 9:00 AM - 5:00 PM', 'Emergency: 24/7'],
-      color: 'text-info'
+      details: ['Mon-Sat: 8AM - 7PM', 'Sun: 9AM - 5PM'],
+      color: 'bg-accent/10 text-accent-foreground'
     }
   ];
 
@@ -125,11 +126,12 @@ export default function Contact() {
   return (
     <div className="container px-4 py-8">
       {/* Header */}
-      <div className="text-center mb-12">
-        <h1 className="text-3xl font-bold mb-4">Contact Us</h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
-          Get in touch with our agricultural experts. We're here to help you
-          with all your farming needs.
+      <div className="text-center mb-16 animate-in fade-in slide-in-from-top-4 duration-1000">
+        <Badge variant="outline" className="mb-4 border-primary text-primary px-4 py-1 uppercase font-black text-[10px] tracking-widest">Support Center</Badge>
+        <h1 className="text-lg md:text-2xl font-black mb-4 tracking-tighter uppercase leading-none">Contact <span className="text-primary">Experts</span></h1>
+        <p className="text-muted-foreground max-w-2xl mx-auto text-sm font-bold italic uppercase tracking-wider leading-relaxed">
+          Get in touch with our agricultural consultants. We're here to provide
+          expert guidance for all your farming successes.
         </p>
       </div>
 
@@ -138,27 +140,22 @@ export default function Contact() {
         <div>
           <h2 className="text-2xl font-semibold mb-6">Get in Touch</h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-12">
             {contactInfo.map((info, index) => {
               const Icon = info.icon;
               return (
-                <Card key={index} className="hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center space-x-3">
-                      <div
-                        className={`h-10 w-10 rounded-full bg-muted flex items-center justify-center`}
-                      >
-                        <Icon className={`h-5 w-5 ${info.color}`} />
+                <Card key={index} className="border-none shadow-soft bg-card hover:shadow-strong transition-all rounded-[2rem] overflow-hidden group">
+                  <CardHeader className="pb-3 pt-8 px-8">
+                    <div className="flex flex-col items-center text-center gap-4">
+                      <div className={`h-16 w-16 rounded-2xl ${info.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                        <Icon className={`h-8 w-8`} />
                       </div>
-                      <CardTitle className="text-lg">{info.title}</CardTitle>
+                      <CardTitle className="text-lg font-black uppercase tracking-tight">{info.title}</CardTitle>
                     </div>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="px-6 pb-6 text-center">
                     {info.details.map((detail, idx) => (
-                      <p
-                        key={idx}
-                        className="text-sm text-muted-foreground mb-1"
-                      >
+                      <p key={idx} className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground italic mb-1">
                         {detail}
                       </p>
                     ))}
@@ -213,13 +210,13 @@ export default function Contact() {
                 <MessageSquare className="h-5 w-5 text-primary" />
                 <CardTitle>Send us a Message</CardTitle>
               </div>
-              <CardDescription>
-                Fill out the form below and we'll get back to you as soon as
-                possible.
+              <CardDescription className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 leading-relaxed">
+                Fill out the form below and our consultants will get back to you
+                as soon as possible.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Full Name *</Label>
@@ -282,7 +279,7 @@ export default function Contact() {
                   />
                 </div>
 
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="w-full h-8 rounded-xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest text-xs shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center">
                   <Send className="h-4 w-4 mr-2" />
                   Send Message
                 </Button>

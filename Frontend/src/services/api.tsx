@@ -137,6 +137,7 @@ export interface Product {
   category?: Category;
   categoryId: string;
   isActive: boolean;
+  createdAt: string;
 }
 
 export interface Category {

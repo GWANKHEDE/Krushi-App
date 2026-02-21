@@ -1,5 +1,7 @@
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { Sprout } from "lucide-react";
+
 
 const NotFound = () => {
   const location = useLocation();
@@ -41,23 +43,7 @@ const NotFound = () => {
 
         <div className="relative max-w-lg text-center bg-white bg-opacity-95 rounded-3xl shadow-2xl p-12">
           {/* Cute farming plant icon with gentle bounce */}
-          <svg
-            className="mx-auto mb-8 h-36 w-36 text-green-700 animate-bounce"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 64 64"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-          >
-            {/* Leaf with stem */}
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M32 58C20 48 8 24 32 8c24 16 12 40 0 50z"
-            />
-            <line x1="32" y1="8" x2="32" y2="58" strokeWidth="3" />
-          </svg>
+          <Sprout className="mx-auto mb-8 h-36 w-36 text-green-700 animate-bounce" />
 
           <h1 className="text-8xl font-extrabold text-amber-700 mb-4 tracking-wide drop-shadow-md">
             404

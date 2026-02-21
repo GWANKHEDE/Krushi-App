@@ -128,24 +128,25 @@ export default function About() {
   return (
     <div className="container px-4 py-8">
       {/* Header */}
-      <div className="text-center mb-12">
-        <h1 className="text-3xl font-bold mb-4">About {businessName}</h1>
-        <p className="text-muted-foreground max-w-3xl mx-auto text-lg">
+      <div className="text-center mb-16 animate-in fade-in slide-in-from-top-4 duration-1000">
+        <Badge variant="outline" className="mb-4 border-primary text-primary px-4 py-1 uppercase font-black text-[10px] tracking-widest">Our Legacy</Badge>
+        <h1 className="text-lg md:text-2xl font-black mb-6 tracking-tighter uppercase leading-none">About <span className="text-primary">{businessName}</span></h1>
+        <p className="text-muted-foreground max-w-3xl mx-auto text-sm font-bold italic uppercase tracking-wider leading-relaxed">
           For over 5 years, we have been dedicated to empowering farmers with
-          quality agricultural products and expert guidance, helping them
-          achieve better yields and sustainable farming practices.
+          premium agricultural products and expert guidance, helping them
+          achieve maximum yields and sustainable farming success.
         </p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20">
         {statItems.map((stat, index) => (
-          <Card key={index} className="text-center">
-            <CardContent className="pt-6">
-              <div className="text-3xl font-bold text-primary mb-2">
+          <Card key={index} className="text-center border-none shadow-soft bg-card rounded-[2rem] overflow-hidden group hover:shadow-strong transition-all">
+            <CardContent className="pt-8 pb-6">
+              <div className="text-lg md:text-2xl font-black text-primary mb-2 tracking-tighter group-hover:scale-110 transition-transform">
                 {stat.value}
               </div>
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{stat.label}</p>
             </CardContent>
           </Card>
         ))}
@@ -191,26 +192,27 @@ export default function About() {
       </section>
 
       {/* Our Values */}
-      <section className="mb-16">
-        <h2 className="text-2xl font-bold text-center mb-12">Our Values</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <section className="mb-24">
+        <div className="text-center mb-16">
+          <Badge variant="outline" className="mb-4 border-primary/30 text-primary/70 px-4 py-1 uppercase font-black text-[10px] tracking-widest">Our Principles</Badge>
+          <h2 className="text-lg md:text-2xl font-black uppercase tracking-tighter">Core Values</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-center md:text-left">
           {values.map((value, index) => {
             const Icon = value.icon;
             return (
-              <Card key={index} className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <div className="flex items-center space-x-3">
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Icon className="h-5 w-5 text-primary" />
-                    </div>
-                    <CardTitle className="text-lg">{value.title}</CardTitle>
+              <Card key={index} className="border-none shadow-soft bg-card hover:bg-accent/5 hover:shadow-strong transition-all rounded-[2.5rem] p-4 group">
+                <CardHeader className="flex flex-col md:flex-row items-center md:items-start gap-6 pt-8">
+                  <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                    <Icon className="h-8 w-8 text-primary" />
+                  </div>
+                  <div className="space-y-2">
+                    <CardTitle className="text-lg font-black uppercase tracking-tight">{value.title}</CardTitle>
+                    <CardDescription className="text-xs font-bold italic uppercase tracking-wider text-muted-foreground leading-relaxed">
+                      {value.description}
+                    </CardDescription>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-base">
-                    {value.description}
-                  </CardDescription>
-                </CardContent>
               </Card>
             );
           })}
@@ -218,32 +220,35 @@ export default function About() {
       </section>
 
       {/* Our Team */}
-      <section className="mb-16">
-        <h2 className="text-2xl font-bold text-center mb-12">Meet Our Team</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <section className="mb-24">
+        <div className="text-center mb-16">
+          <Badge className="bg-primary text-white px-4 py-1 uppercase font-black text-[10px] tracking-widest border-none">The Experts</Badge>
+          <h2 className="text-lg md:text-2xl font-black uppercase tracking-tighter mt-4">Meet Our Team</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {team.map((member, index) => (
             <Card
               key={index}
-              className="text-center hover:shadow-md transition-shadow"
+              className="text-center border-none shadow-soft bg-card hover:shadow-strong hover:-translate-y-2 transition-all duration-500 rounded-[2.5rem] overflow-hidden group"
             >
-              <CardHeader>
-                <div className="h-16 w-16 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center mx-auto mb-4">
+              <CardHeader className="pt-8">
+                <div className="h-24 w-24 rounded-full bg-gradient-to-r from-primary to-accent p-1 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-700">
                   <img
                     src={member.image}
-                    className="h-full w-full rounded-full object-cover"
+                    className="h-full w-full rounded-full object-cover border-4 border-card"
                     alt={member.name}
                   />
                 </div>
-                <CardTitle>{member.name}</CardTitle>
-                <CardDescription className="font-medium text-primary">
+                <CardTitle className="text-xl font-black uppercase tracking-tight">{member.name}</CardTitle>
+                <CardDescription className="font-black uppercase text-[10px] tracking-[0.2em] text-primary mt-2">
                   {member.role}
                 </CardDescription>
-                <Badge variant="secondary" className="mt-2 mx-auto">
+                <Badge variant="secondary" className="mt-4 mx-auto bg-primary/5 text-primary text-[9px] font-black uppercase tracking-widest border-none">
                   {member.experience}
                 </Badge>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
+              <CardContent className="pb-8 px-8">
+                <p className="text-muted-foreground text-[11px] font-bold italic uppercase tracking-wider leading-relaxed line-clamp-3">
                   {member.description}
                 </p>
               </CardContent>

@@ -1,17 +1,18 @@
-import { Routes, Route } from "react-router-dom";
-import { Layout } from "../components/Layout";
-import { AdminLayout } from "../components/AdminLayout";
-import Home from "../pages/Home";
-import Products from "../pages/Products";
-import Contact from "../pages/Contact";
-import About from "../pages/About";
-import AdminLogin from "../pages/AdminLogin";
-import AdminDashboard from "../pages/AdminDashboard";
-import Billing from "../pages/Billing";
-import Purchase from "../pages/Purchase";
-import Report from "../pages/Report";
-import Settings from "../pages/Settings";
-import NotFound from "../pages/NotFound";
+import { Routes, Route } from "react-router-dom"
+import { Layout } from "../components/Layout"
+import { AdminLayout } from "../components/AdminLayout"
+import { ProtectedRoute } from "../components/ProtectedRoute"
+import Home from "../pages/Home"
+import Products from "../pages/Products"
+import Contact from "../pages/Contact"
+import About from "../pages/About"
+import AdminLogin from "../pages/AdminLogin"
+import AdminDashboard from "../pages/AdminDashboard"
+import Billing from "../pages/Billing"
+import Purchase from "../pages/Purchase"
+import Report from "../pages/Report"
+import Settings from "../pages/Settings"
+import NotFound from "../pages/NotFound"
 
 export const AppRoutes = () => (
   <Routes>
@@ -22,10 +23,12 @@ export const AppRoutes = () => (
       <Route path="about" element={<About />} />
       <Route path="contact" element={<Contact />} />
     </Route>
-    
-    {/* Admin Routes */}
+
+    {/* Auth */}
     <Route path="/admin/login" element={<AdminLogin />} />
-    <Route path="/admin" element={<AdminLayout />}>
+
+    {/* Protected Admin Routes */}
+    <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
       <Route path="dashboard" element={<AdminDashboard />} />
       <Route path="billing" element={<Billing />} />
       <Route path="products" element={<Products />} />
@@ -33,8 +36,7 @@ export const AppRoutes = () => (
       <Route path="reports" element={<Report />} />
       <Route path="settings" element={<Settings />} />
     </Route>
-    
-    {/* Catch-all route */}
+
     <Route path="*" element={<NotFound />} />
   </Routes>
-);
+)

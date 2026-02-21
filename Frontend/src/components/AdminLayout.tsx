@@ -1,307 +1,133 @@
-import { useState, useEffect, useRef } from 'react';
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { 
-  Menu, 
-  Sprout, 
-  LayoutDashboard, 
-  Package, 
-  ShoppingCart, 
-  FileText, 
-  BarChart3, 
-  Settings, 
-  LogOut,
-  Bell,
-  Search,
-  User as UserIcon,
-  Mail
-} from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { User } from '@/services/api';
+import { useState, useRef, useEffect } from 'react'
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { ThemeToggle } from '@/components/ThemeToggle'
+import { useAuth } from '@/lib/auth'
+import { toast } from '@/lib/toast'
+import { Menu, Sprout, LayoutDashboard, Package, ShoppingCart, FileText, BarChart3, Settings, LogOut, Bell, Search, User as UserIcon, Mail } from 'lucide-react'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
+import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar'
+import { AppSidebar } from './AppSidebar'
+import { Separator } from '@/components/ui/separator'
 
-interface NavigationItem {
-  name: string;
-  href: string;
-  icon: React.ComponentType<any>;
-}
+const NAV_ITEMS = [
+  { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+  { name: 'Products', href: '/admin/products', icon: Package },
+  { name: 'Billing', href: '/admin/billing', icon: ShoppingCart },
+  { name: 'Purchase', href: '/admin/purchases', icon: FileText },
+  { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
+  { name: 'Settings', href: '/admin/settings', icon: Settings },
+]
 
 export function AdminLayout() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const profileRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
-        setIsProfileOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    if (!isAuthenticated) {
-      navigate('/admin/login');
-    }
-  }, [navigate]);
-
-  const navigation: NavigationItem[] = [
-    { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-    { name: 'Products', href: '/admin/products', icon: Package },
-    { name: 'Billing', href: '/admin/billing', icon: ShoppingCart },
-    { name: 'Purchase', href: '/admin/purchases', icon: FileText },
-    { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
-    { name: 'Settings', href: '/admin/settings', icon: Settings },
-  ];
-
-  const isActive = (path: string) => location.pathname === path;
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
+  const profileRef = useRef<HTMLDivElement>(null)
+  const location = useLocation()
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
 
   const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out.",
-    });
-    navigate('/admin/login');
-  };
+    logout()
+    toast.success('Logged out successfully')
+    navigate('/admin/login')
+  }
 
-  const toggleProfile = () => {
-    setIsProfileOpen(!isProfileOpen);
-  };
+  const initial = user?.name?.charAt(0).toUpperCase() || 'A'
+  const isActive = (path: string) => location.pathname === path
 
-  const user: User = JSON.parse(localStorage.getItem('user') || '{}');
-
-  const SidebarContent = () => (
-    <div className="flex flex-col h-full">
-      {/* Logo */}
-      <div className="p-6 border-b h-16 flex items-center">
-        <Link to="/admin/dashboard" className="flex items-center space-x-2">
-          <div className="h-8 w-8 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center">
-            <Sprout className="h-5 w-5 text-primary-foreground" />
-          </div>
-              <div className="max-w-[150px]"> 
-      <span
-        className="font-bold text-lg truncate block"
-        title={user.business?.name || ''}
-      >
-        {user.business?.name || ''}
-      </span>
-    </div>
-        </Link>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 p-4">
-        <ul className="space-y-1">
-          {navigation.map((item) => {
-            const Icon = item.icon;
-            return (
-              <li key={item.name}>
-                <Link
-                  to={item.href}
-                  onClick={() => setIsSidebarOpen(false)}
-                  className={`flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive(item.href)
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-foreground hover:bg-accent hover:text-accent-foreground'
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span>{item.name}</span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-
-      {/* User Section */}
-      <div className="p-4 border-t">
-        <div className="flex items-center space-x-3 mb-3">
-          <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-              {user.name ? user.name.charAt(0).toUpperCase() : 'A'}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <p className="text-sm font-medium">{user.name || 'Admin User'}</p>
-            <p className="text-xs text-muted-foreground">{user.email || 'admin@ksk.com'}</p>
-          </div>
+  const NavLinks = ({ className = "" }: { className?: string }) => (
+    <nav className={cn("flex items-center gap-4 text-xs font-bold uppercase tracking-widest", className)}>
+      <Link to="/admin/dashboard" className="flex items-center gap-2 text-base font-black text-primary md:text-sm mr-4">
+        <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+          <Sprout className="h-4 w-4 text-primary-foreground" />
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="w-full" 
-          onClick={handleLogout}
+        <span className="hidden lg:inline-block">{user?.business?.name || 'KRUSHI'}</span>
+      </Link>
+      {NAV_ITEMS.map(({ name, href }) => (
+        <Link
+          key={name}
+          to={href}
+          className={cn(
+            "transition-colors hover:text-primary",
+            isActive(href) ? "text-primary" : "text-muted-foreground"
+          )}
         >
-          <LogOut className="h-4 w-4 mr-2" />
-          Logout
-        </Button>
-      </div>
-    </div>
-  );
-
-  const ProfileCard = () => (
-    <div 
-      ref={profileRef}
-      className="absolute right-4 top-16 z-50 w-80 bg-background border rounded-lg shadow-lg"
-    >
-      {/* Profile Header */}
-      <div className="p-6 border-b">
-        <div className="flex items-center space-x-4">
-          <Avatar className="h-12 w-12">
-            <AvatarFallback className="bg-primary text-primary-foreground text-lg">
-              {user.name ? user.name.charAt(0).toUpperCase() : 'A'}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <h3 className="font-semibold text-lg">{user.name || 'Admin User'}</h3>
-            <p className="text-sm text-muted-foreground">{user.email || 'admin@ksk.com'}</p>
-            <p className="text-xs text-muted-foreground mt-1">Administrator</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Profile Info */}
-      <div className="p-4 space-y-3">
-        <div className="flex items-center space-x-3 text-sm">
-          <UserIcon className="h-4 w-4 text-muted-foreground" />
-          <div>
-            <p className="font-medium">Full Name</p>
-            <p className="text-muted-foreground">{user.name || 'Admin User'}</p>
-          </div>
-        </div>
-        <div className="flex items-center space-x-3 text-sm">
-          <Mail className="h-4 w-4 text-muted-foreground" />
-          <div>
-            <p className="font-medium">Email Address</p>
-            <p className="text-muted-foreground">{user.email || 'admin@ksk.com'}</p>
-          </div>
-        </div>
-        {user.phone && (
-          <div className="flex items-center space-x-3 text-sm">
-            <Mail className="h-4 w-4 text-muted-foreground" />
-            <div>
-              <p className="font-medium">Phone</p>
-              <p className="text-muted-foreground">{user.phone}</p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Actions */}
-      <div className="p-4 border-t">
-        <div className="space-y-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full justify-start"
-            onClick={() => {
-              navigate('/admin/settings');
-              setIsProfileOpen(false);
-            }}
-          >
-            <Settings className="h-4 w-4 mr-2" />
-            Account Settings
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full justify-start text-destructive hover:text-destructive"
-            onClick={handleLogout}
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Sign Out
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
+          {name}
+        </Link>
+      ))}
+    </nav>
+  )
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 lg:border-r">
-        <SidebarContent />
-      </div>
-
-      {/* Mobile Sidebar */}
-      <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
-        <SheetContent side="left" className="w-64 p-0">
-          <SidebarContent />
-        </SheetContent>
-      </Sheet>
-
-      {/* Main Content */}
-      <div className="lg:pl-64">
-        {/* Top Header */}
-        <header className="sticky top-0 z-40 flex h-16 items-center gap-x-4 border-b bg-background px-4 shadow-sm sm:gap-x-6 sm:px-6">
-          {/* Mobile menu button */}
-          <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
-            <SheetTrigger asChild className="lg:hidden">
-              <Button variant="ghost" size="icon">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-          </Sheet>
-
-          {/* Search */}
-          <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-            <div className="relative flex flex-1 items-center">
-              <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
-              <input
-                className="w-full bg-muted rounded-md pl-10 pr-4 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Search products, bills, customers..."
-              />
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full bg-background">
+        <AppSidebar />
+        <SidebarInset className="flex flex-col">
+          <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between gap-4 border-b bg-background/80 backdrop-blur-md px-4 md:px-6 transition-all">
+            <div className="flex items-center gap-4">
+              <SidebarTrigger className="-ml-1 h-9 w-9 rounded-lg hover:bg-primary/5 text-primary" />
+              <Separator orientation="vertical" className="mr-2 h-4 bg-primary/10" />
+              <div className="hidden md:flex relative group">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                <Input
+                  type="search"
+                  placeholder="Universal Search..."
+                  className="pl-10 h-8 w-[250px] lg:w-[400px] border-primary/10 bg-muted/30 focus-visible:ring-primary rounded-xl text-xs font-bold transition-all focus:bg-background shadow-sm"
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Right side */}
-          <div className="flex items-center gap-x-4">
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 h-4 w-4 bg-destructive rounded-full text-xs text-destructive-foreground flex items-center justify-center">
-                3
-              </span>
-            </Button>
-            
-            {/* Profile Avatar with Dropdown */}
-            <div className="relative">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full p-0 hover:bg-accent"
-                onClick={toggleProfile}
-              >
-                <Avatar className="h-8 w-8 cursor-pointer">
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    {user.name ? user.name.charAt(0).toUpperCase() : 'A'}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-              
-              {/* Profile Card */}
-              {isProfileOpen && <ProfileCard />}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1">
+                <ThemeToggle />
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl relative text-muted-foreground hover:text-primary hover:bg-primary/5">
+                  <Bell className="h-4 w-4" />
+                  <Badge className="absolute top-1 right-1 h-3 w-3 p-0 flex items-center justify-center text-[8px] bg-primary border-2 border-background font-black">3</Badge>
+                </Button>
+              </div>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full ml-1 border-2 border-primary/10 p-0 overflow-hidden hover:scale-105 transition-transform flex items-center justify-center">
+                    <Avatar className="h-full w-full">
+                      <AvatarFallback className="bg-primary text-primary-foreground text-[10px] font-black">{initial}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64 rounded-2xl border-primary/10 shadow-strong p-2 animate-in fade-in zoom-in-95 duration-200">
+                  <DropdownMenuLabel className="p-3">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-bold leading-none">{user?.name}</p>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{user?.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-primary/5" />
+                  <DropdownMenuItem className="rounded-xl p-3 font-bold text-[10px] uppercase tracking-widest cursor-pointer hover:bg-primary/5" onClick={() => navigate('/admin/settings')}>
+                    <Settings className="mr-3 h-4 w-4" /> Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="rounded-xl p-3 font-bold text-[10px] uppercase tracking-widest cursor-pointer hover:bg-primary/5" onClick={() => navigate('/admin/profile')}>
+                    <UserIcon className="mr-3 h-4 w-4" /> Profile Details
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-primary/5" />
+                  <DropdownMenuItem className="rounded-xl p-3 font-bold text-[10px] uppercase tracking-widest text-destructive focus:text-destructive cursor-pointer hover:bg-destructive/5" onClick={handleLogout}>
+                    <LogOut className="mr-3 h-4 w-4" /> Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-          </div>
-        </header>
+          </header>
 
-        {/* Page Content */}
-        <main className="flex-1">
-          <Outlet />
-        </main>
+          <main className="flex-1 p-4 w-full mx-auto animate-in fade-in duration-700">
+            <Outlet />
+          </main>
+        </SidebarInset>
       </div>
-    </div>
-  );
+    </SidebarProvider>
+  )
 }
