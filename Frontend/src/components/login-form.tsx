@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Loader2, Phone } from "lucide-react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
 interface LoginFormProps extends React.ComponentProps<"div"> {
     onLogin: (e: React.FormEvent) => void
@@ -36,6 +37,7 @@ export function LoginForm({
     ...props
 }: LoginFormProps) {
     const [loginMode, setLoginMode] = useState<'email' | 'mobile'>('email')
+    const { t } = useTranslation()
 
     const handleFormSubmit = (e: React.FormEvent) => {
         e.preventDefault()
@@ -47,19 +49,32 @@ export function LoginForm({
     }
 
     return (
-        <div className={cn("flex flex-col gap-6", className)} {...props}>
+        <div className={cn("flex flex-col gap-4", className)} {...props}>
             <Card className="overflow-hidden p-0 border-none shadow-strong rounded-[2rem]">
                 <CardContent className="grid p-0 md:grid-cols-2">
-                    <form className="p-6 md:p-8" onSubmit={handleFormSubmit}>
+                    <form className="p-4" onSubmit={handleFormSubmit}>
                         <FieldGroup>
-                            <div className="flex flex-col items-center gap-2 text-center mb-2">
-                                <h1 className="text-2xl font-bold text-primary uppercase tracking-tight">Welcome back</h1>
-                                <p className="text-muted-foreground text-xs font-medium italic text-balance">
-                                    Login to your Krushi Kendra account
+                            <div className="flex flex-col items-center gap-1.5 text-center mb-1.5">
+                                <h1 className="text-2xl font-bold text-primary uppercase tracking-tight">{t('welcome_back')}</h1>
+                                <p className="text-muted-foreground text-[10px] font-medium italic text-balance">
+                                    {t('login_subtitle')}
                                 </p>
                             </div>
 
-                            <div className="flex bg-muted/30 p-1 rounded-xl mb-4">
+                            <div
+                                className="bg-primary/5 border border-primary/10 rounded-xl p-2.5 text-center mb-3 cursor-pointer hover:bg-primary/10 transition-colors group"
+                                onClick={() => {
+                                    setEmail('admin@krushi.com');
+                                    setPassword('admin123');
+                                    setLoginMode('email');
+                                }}
+                            >
+                                <p className="text-[10px] font-bold text-primary tracking-wider group-hover:scale-[1.02] transition-transform">
+                                    {t('login_hint')}
+                                </p>
+                            </div>
+
+                            <div className="flex bg-muted/30 p-1 rounded-xl mb-3">
                                 <button type="button" onClick={() => setLoginMode('email')} className={cn("flex-1 text-xs font-bold uppercase tracking-widest py-2 rounded-lg transition-colors", loginMode === 'email' ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-primary")}>Email</button>
                                 <button type="button" onClick={() => setLoginMode('mobile')} className={cn("flex-1 text-xs font-bold uppercase tracking-widest py-2 rounded-lg transition-colors", loginMode === 'mobile' ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-primary")}>Mobile</button>
                             </div>
@@ -67,7 +82,7 @@ export function LoginForm({
                             {loginMode === 'email' ? (
                                 <>
                                     <Field>
-                                        <FieldLabel htmlFor="email" className="font-bold uppercase text-[10px] tracking-widest text-primary/70">Email Address</FieldLabel>
+                                        <FieldLabel htmlFor="email" className="font-bold uppercase text-[10px] tracking-widest text-primary/70">{t('email_address')}</FieldLabel>
                                         <Input
                                             id="email"
                                             type="email"
@@ -81,12 +96,12 @@ export function LoginForm({
                                     </Field>
                                     <Field>
                                         <div className="flex items-center">
-                                            <FieldLabel htmlFor="password" className="font-bold uppercase text-[10px] tracking-widest text-primary/70">Password</FieldLabel>
+                                            <FieldLabel htmlFor="password" className="font-bold uppercase text-[10px] tracking-widest text-primary/70">{t('password')}</FieldLabel>
                                             <a
                                                 href="#"
                                                 className="ml-auto text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors underline-offset-2 hover:underline"
                                             >
-                                                Forgot?
+                                                {t('forgot_password')}
                                             </a>
                                         </div>
                                         <Input
@@ -102,7 +117,7 @@ export function LoginForm({
                                 </>
                             ) : (
                                 <Field>
-                                    <FieldLabel htmlFor="mobile" className="font-bold uppercase text-[10px] tracking-widest text-primary/70">Mobile Number</FieldLabel>
+                                    <FieldLabel htmlFor="mobile" className="font-bold uppercase text-[10px] tracking-widest text-primary/70">{t('mobile_number')}</FieldLabel>
                                     <div className="relative">
                                         <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                         <Input
@@ -121,11 +136,11 @@ export function LoginForm({
 
                             <Field>
                                 <Button type="submit" className="w-full h-10 rounded-xl text-sm font-bold uppercase tracking-widest shadow-lg shadow-primary/10 transition-all hover:scale-[1.01] active:scale-[0.99]" disabled={loading}>
-                                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Sign In"}
+                                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : t('sign_in')}
                                 </Button>
                             </Field>
-                            <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card font-bold uppercase text-[10px] tracking-widest text-muted-foreground/60">
-                                Or continue with
+                            <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card font-bold uppercase text-[9px] tracking-widest text-muted-foreground/60 my-1">
+                                {t('or_continue_with')}
                             </FieldSeparator>
                             <div className="grid grid-cols-2 gap-4">
                                 <Button variant="outline" type="button" className="h-9 rounded-xl border-primary/10 hover:bg-primary/5 font-bold uppercase text-[10px] tracking-widest">
@@ -136,13 +151,13 @@ export function LoginForm({
                                 </Button>
                             </div>
                             <FieldDescription className="text-center font-bold uppercase text-[10px] tracking-widest">
-                                Don&apos;t have an account?{" "}
+                                {t('dont_have_account')}{" "}
                                 <button
                                     type="button"
                                     onClick={onSwitchToSignup}
                                     className="text-primary hover:underline cursor-pointer"
                                 >
-                                    Sign Up
+                                    {t('sign_up')}
                                 </button>
                             </FieldDescription>
                         </FieldGroup>
@@ -161,8 +176,8 @@ export function LoginForm({
                 </CardContent>
             </Card>
             <FieldDescription className="px-6 text-center text-[10px] font-bold uppercase tracking-widest opacity-40">
-                By clicking continue, you agree to our <a href="#" className="underline">Terms</a>{" "}
-                and <a href="#" className="underline">Privacy</a>.
+                By clicking continue, you agree to our <a href="#" className="underline">{t('terms')}</a>{" "}
+                and <a href="#" className="underline">{t('privacy')}</a>.
             </FieldDescription>
         </div>
     )

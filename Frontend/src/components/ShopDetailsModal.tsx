@@ -8,6 +8,7 @@ import { Building, Save, Loader2, Image as ImageIcon } from 'lucide-react'
 import { getBusinessDetails, updateBusinessDetails, type Business } from '@/lib/store'
 import { toast } from '@/lib/toast'
 import { useAuth } from '@/lib/auth'
+import { useTranslation } from 'react-i18next'
 
 interface ShopDetailsModalProps {
     open: boolean
@@ -19,6 +20,7 @@ export function ShopDetailsModal({ open, onOpenChange, onUpdated }: ShopDetailsM
     const [loading, setLoading] = useState(false)
     const [form, setForm] = useState<Business>(getBusinessDetails())
     const { refreshUser } = useAuth()
+    const { t } = useTranslation()
 
     useEffect(() => {
         if (open) setForm(getBusinessDetails())
@@ -63,8 +65,8 @@ export function ShopDetailsModal({ open, onOpenChange, onUpdated }: ShopDetailsM
                             <Building className="h-5 w-5 text-accent" />
                         </div>
                         <div>
-                            <DialogTitle className="text-lg font-bold text-primary uppercase tracking-tight leading-none mb-1">Shop Identity</DialogTitle>
-                            <DialogDescription className="text-[10px] font-medium italic opacity-70">Update your branding and profile details.</DialogDescription>
+                            <DialogTitle className="text-lg font-bold text-primary uppercase tracking-tight leading-none mb-1">{t('shop_identity')}</DialogTitle>
+                            <DialogDescription className="text-[10px] font-medium italic opacity-70">{t('shop_details_subtitle')}</DialogDescription>
                         </div>
                     </div>
                 </DialogHeader>
@@ -72,7 +74,7 @@ export function ShopDetailsModal({ open, onOpenChange, onUpdated }: ShopDetailsM
                 <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 pt-4 space-y-5 custom-scrollbar">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <Label className="font-bold text-[9px] uppercase tracking-widest text-muted-foreground ml-1">Shop Name</Label>
+                            <Label className="font-bold text-[9px] uppercase tracking-widest text-muted-foreground ml-1">{t('shop_name')}</Label>
                             <Input
                                 value={form.name} onChange={e => set('name', e.target.value)}
                                 className="h-9 rounded-xl border-primary/10 bg-muted/40 focus-visible:ring-primary shadow-sm font-bold text-sm"
@@ -80,7 +82,7 @@ export function ShopDetailsModal({ open, onOpenChange, onUpdated }: ShopDetailsM
                             />
                         </div>
                         <div className="space-y-1">
-                            <Label className="font-bold text-[9px] uppercase tracking-widest text-muted-foreground ml-1">GSTIN Number</Label>
+                            <Label className="font-bold text-[9px] uppercase tracking-widest text-muted-foreground ml-1">{t('gstin_number')}</Label>
                             <Input
                                 value={form.gstin || ''} onChange={e => set('gstin', e.target.value)}
                                 className="h-9 rounded-xl border-primary/10 bg-muted/40 focus-visible:ring-primary shadow-sm font-bold text-sm"
@@ -90,7 +92,7 @@ export function ShopDetailsModal({ open, onOpenChange, onUpdated }: ShopDetailsM
                     </div>
 
                     <div className="space-y-1">
-                        <Label className="font-bold text-[9px] uppercase tracking-widest text-muted-foreground ml-1">Business Branding</Label>
+                        <Label className="font-bold text-[9px] uppercase tracking-widest text-muted-foreground ml-1">{t('business_branding')}</Label>
                         <div className="flex items-center gap-3 p-3 rounded-xl border-2 border-dashed border-primary/10 bg-primary/5 hover:bg-primary/10 transition-colors relative group">
                             <div className="h-12 w-12 rounded-lg bg-card/50 flex items-center justify-center border border-primary/10 overflow-hidden shrink-0">
                                 {form.logo ? (
@@ -109,7 +111,7 @@ export function ShopDetailsModal({ open, onOpenChange, onUpdated }: ShopDetailsM
                                 )}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-[9px] font-black text-primary uppercase mb-0.5">Click to Upload Logo</p>
+                                <p className="text-[9px] font-black text-primary uppercase mb-0.5">{t('click_to_upload')}</p>
                                 <Input
                                     type="file"
                                     accept="image/*"
@@ -145,7 +147,7 @@ export function ShopDetailsModal({ open, onOpenChange, onUpdated }: ShopDetailsM
                     </div>
 
                     <div className="space-y-1">
-                        <Label className="font-bold text-[9px] uppercase tracking-widest text-muted-foreground ml-1">Store Address</Label>
+                        <Label className="font-bold text-[9px] uppercase tracking-widest text-muted-foreground ml-1">{t('store_address')}</Label>
                         <Textarea
                             value={form.address || ''} onChange={e => set('address', e.target.value)}
                             className="min-h-[60px] rounded-xl border-primary/10 bg-muted/40 focus-visible:ring-primary shadow-sm font-bold resize-none text-[11px] leading-tight"
@@ -154,9 +156,9 @@ export function ShopDetailsModal({ open, onOpenChange, onUpdated }: ShopDetailsM
                     </div>
 
                     <div className="flex justify-end gap-3 pt-2 shrink-0">
-                        <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="h-8 px-4 rounded-xl font-bold uppercase tracking-widest text-[9px] text-muted-foreground">Cancel</Button>
+                        <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="h-8 px-4 rounded-xl font-bold uppercase tracking-widest text-[9px] text-muted-foreground">{t('cancel')}</Button>
                         <Button type="submit" disabled={loading} className="h-8 px-6 rounded-xl font-bold uppercase tracking-widest shadow-lg shadow-primary/20 text-[9px] text-primary-foreground flex items-center justify-center">
-                            {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><Save className="h-3 w-3 mr-2" />Sync Changes</>}
+                            {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><Save className="h-3 w-3 mr-2" />{t('sync_changes')}</>}
                         </Button>
                     </div>
                 </form>

@@ -15,8 +15,10 @@ import owner from '@/assets/owner.jpeg';
 import accountant from '@/assets/accountant.jpeg';
 import { useEffect, useState } from 'react';
 import { dashboardAPI, settingsAPI } from '@/services/api';
+import { useTranslation } from 'react-i18next';
 
 export default function About() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     years: '5+',
@@ -64,32 +66,32 @@ export default function About() {
   }, []);
 
   const statItems = [
-    { label: 'Years of Experience', value: stats.years },
-    { label: 'Happy Farmers', value: stats.happyFarmers },
-    { label: 'Products Available', value: stats.products },
-    { label: 'Areas Served', value: stats.areas }
+    { label: t('years_exp'), value: stats.years },
+    { label: t('happy_farmers'), value: stats.happyFarmers },
+    { label: t('products_avail'), value: stats.products },
+    { label: t('areas_served'), value: stats.areas }
   ];
 
   const values = [
     {
       icon: Shield,
-      title: 'Quality Assurance',
-      description: 'We ensure all our products meet the highest quality standards and are sourced from certified suppliers.'
+      title: t('quality_assurance'),
+      description: t('qa_desc')
     },
     {
       icon: Heart,
-      title: 'Farmer First',
-      description: 'Our farmers\' success is our priority. We provide personalized solutions for every farming need.'
+      title: t('farmer_first'),
+      description: t('ff_desc')
     },
     {
       icon: Target,
-      title: 'Sustainable Farming',
-      description: 'We promote eco-friendly and sustainable farming practices for a better future.'
+      title: t('sustainable_farming'),
+      description: t('sf_desc')
     },
     {
       icon: Users,
-      title: 'Expert Support',
-      description: 'Our team of agricultural experts provides guidance and support throughout your farming journey.'
+      title: t('expert_support'),
+      description: t('expert_support_desc')
     }
   ];
 
@@ -129,12 +131,10 @@ export default function About() {
     <div className="container px-4 py-8">
       {/* Header */}
       <div className="text-center mb-16 animate-in fade-in slide-in-from-top-4 duration-1000">
-        <Badge variant="outline" className="mb-4 border-primary text-primary px-4 py-1 uppercase font-black text-[10px] tracking-widest">Our Legacy</Badge>
-        <h1 className="text-lg md:text-2xl font-black mb-6 tracking-tighter uppercase leading-none">About <span className="text-primary">{businessName}</span></h1>
+        <Badge variant="outline" className="mb-4 border-primary text-primary px-4 py-1 uppercase font-black text-[10px] tracking-widest">{t('our_legacy')}</Badge>
+        <h1 className="text-lg md:text-2xl font-black mb-6 tracking-tighter uppercase leading-none">{t('about_span')} <span className="text-primary">{businessName}</span></h1>
         <p className="text-muted-foreground max-w-3xl mx-auto text-sm font-bold italic uppercase tracking-wider leading-relaxed">
-          For over 5 years, we have been dedicated to empowering farmers with
-          premium agricultural products and expert guidance, helping them
-          achieve maximum yields and sustainable farming success.
+          {t('legacy_desc')}
         </p>
       </div>
 
@@ -156,36 +156,24 @@ export default function About() {
       <section className="mb-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
-            <h2 className="text-2xl font-bold mb-6">Our Story</h2>
+            <h2 className="text-2xl font-bold mb-6">{t('our_story')}</h2>
             <div className="space-y-4 text-muted-foreground">
               <p>
-                {businessName} was founded in 2021 with a simple mission: to
-                bridge the gap between farmers and quality agricultural
-                products. What started as a small local store has grown into a
-                trusted partner for thousands of farmers across the region.
+                {t('story_p1', { businessName })}
               </p>
               <p>
-                Our founder, {ownerName}, himself coming from a farming
-                family, understood the challenges farmers face in accessing
-                quality fertilizers, seeds, and tools. He envisioned a place
-                where farmers could not only buy products but also receive
-                expert guidance and support.
+                {t('story_p2', { ownerName })}
               </p>
               <p>
-                Today, we continue to honor that vision by providing
-                comprehensive agricultural solutions, from premium products to
-                technical expertise, helping farmers achieve sustainable and
-                profitable farming.
+                {t('story_p3')}
               </p>
             </div>
           </div>
           <div className="bg-muted rounded-lg p-8 text-center">
             <Sprout className="h-16 w-16 text-primary mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Our Mission</h3>
+            <h3 className="text-xl font-semibold mb-2">{t('our_mission')}</h3>
             <p className="text-muted-foreground">
-              To empower farmers with quality agricultural products, innovative
-              solutions, and expert guidance to achieve sustainable farming
-              success and food security.
+              {t('mission_desc')}
             </p>
           </div>
         </div>
@@ -194,8 +182,8 @@ export default function About() {
       {/* Our Values */}
       <section className="mb-24">
         <div className="text-center mb-16">
-          <Badge variant="outline" className="mb-4 border-primary/30 text-primary/70 px-4 py-1 uppercase font-black text-[10px] tracking-widest">Our Principles</Badge>
-          <h2 className="text-lg md:text-2xl font-black uppercase tracking-tighter">Core Values</h2>
+          <Badge variant="outline" className="mb-4 border-primary/30 text-primary/70 px-4 py-1 uppercase font-black text-[10px] tracking-widest">{t('our_principles')}</Badge>
+          <h2 className="text-lg md:text-2xl font-black uppercase tracking-tighter">{t('core_values')}</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-center md:text-left">
           {values.map((value, index) => {
@@ -222,8 +210,8 @@ export default function About() {
       {/* Our Team */}
       <section className="mb-24">
         <div className="text-center mb-16">
-          <Badge className="bg-primary text-white px-4 py-1 uppercase font-black text-[10px] tracking-widest border-none">The Experts</Badge>
-          <h2 className="text-lg md:text-2xl font-black uppercase tracking-tighter mt-4">Meet Our Team</h2>
+          <Badge className="bg-primary text-white px-4 py-1 uppercase font-black text-[10px] tracking-widest border-none">{t('the_experts')}</Badge>
+          <h2 className="text-lg md:text-2xl font-black uppercase tracking-tighter mt-4">{t('meet_our_team')}</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {team.map((member, index) => (
@@ -260,35 +248,35 @@ export default function About() {
       {/* Why Choose Us */}
       <section className="bg-muted/30 rounded-lg p-8">
         <h2 className="text-2xl font-bold text-center mb-8">
-          Why Choose {businessName}?
+          {t('why_choose_business', { businessName })}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="text-center">
             <Award className="h-8 w-8 text-primary mx-auto mb-3" />
-            <h3 className="font-semibold mb-2">Certified Products</h3>
+            <h3 className="font-semibold mb-2">{t('certified_products')}</h3>
             <p className="text-sm text-muted-foreground">
-              All products are certified and quality tested
+              {t('certified_products_desc')}
             </p>
           </div>
           <div className="text-center">
             <Clock className="h-8 w-8 text-primary mx-auto mb-3" />
-            <h3 className="font-semibold mb-2">Quick Delivery</h3>
+            <h3 className="font-semibold mb-2">{t('quick_delivery')}</h3>
             <p className="text-sm text-muted-foreground">
-              Fast and reliable delivery to your farm
+              {t('quick_delivery_desc')}
             </p>
           </div>
           <div className="text-center">
             <MapPin className="h-8 w-8 text-primary mx-auto mb-3" />
-            <h3 className="font-semibold mb-2">Wide Coverage</h3>
+            <h3 className="font-semibold mb-2">{t('wide_coverage')}</h3>
             <p className="text-sm text-muted-foreground">
-              Serving farmers across multiple districts
+              {t('wide_coverage_desc')}
             </p>
           </div>
           <div className="text-center">
             <Users className="h-8 w-8 text-primary mx-auto mb-3" />
-            <h3 className="font-semibold mb-2">Expert Support</h3>
+            <h3 className="font-semibold mb-2">{t('expert_support')}</h3>
             <p className="text-sm text-muted-foreground">
-              24/7 agricultural expert consultation
+              {t('expert_consultation_desc')}
             </p>
           </div>
         </div>

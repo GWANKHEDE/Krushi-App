@@ -24,8 +24,10 @@ import {
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { settingsAPI } from '@/services/api';
+import { useTranslation } from 'react-i18next';
 
 export default function Contact() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [contactDetails, setContactDetails] = useState({
     address: 'Main Road, Penur, District: Parbhani, State, PIN: 431511',
@@ -91,25 +93,25 @@ export default function Contact() {
   const contactInfo = [
     {
       icon: MapPin,
-      title: 'Visit Us',
+      title: t('visit_us'),
       details: [contactDetails.address],
       color: 'bg-primary/10 text-primary'
     },
     {
       icon: Phone,
-      title: 'Call Us',
+      title: t('call_us'),
       details: [contactDetails.phone, 'Mon-Sat: 8AM-7PM'],
       color: 'bg-success/10 text-success'
     },
     {
       icon: Mail,
-      title: 'Email Us',
+      title: t('email_us'),
       details: [contactDetails.email, 'Response within 24hrs'],
       color: 'bg-info/10 text-info'
     },
     {
       icon: Clock,
-      title: 'Working Hours',
+      title: t('working_hours'),
       details: ['Mon-Sat: 8AM - 7PM', 'Sun: 9AM - 5PM'],
       color: 'bg-accent/10 text-accent-foreground'
     }
@@ -127,18 +129,17 @@ export default function Contact() {
     <div className="container px-4 py-8">
       {/* Header */}
       <div className="text-center mb-16 animate-in fade-in slide-in-from-top-4 duration-1000">
-        <Badge variant="outline" className="mb-4 border-primary text-primary px-4 py-1 uppercase font-black text-[10px] tracking-widest">Support Center</Badge>
-        <h1 className="text-lg md:text-2xl font-black mb-4 tracking-tighter uppercase leading-none">Contact <span className="text-primary">Experts</span></h1>
+        <Badge variant="outline" className="mb-4 border-primary text-primary px-4 py-1 uppercase font-black text-[10px] tracking-widest">{t('support_center')}</Badge>
+        <h1 className="text-lg md:text-2xl font-black mb-4 tracking-tighter uppercase leading-none">{t('contact')} <span className="text-primary">{t('the_experts')}</span></h1>
         <p className="text-muted-foreground max-w-2xl mx-auto text-sm font-bold italic uppercase tracking-wider leading-relaxed">
-          Get in touch with our agricultural consultants. We're here to provide
-          expert guidance for all your farming successes.
+          {t('contact_desc')}
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Contact Information */}
         <div>
-          <h2 className="text-2xl font-semibold mb-6">Get in Touch</h2>
+          <h2 className="text-2xl font-semibold mb-6">{t('get_in_touch')}</h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-12">
             {contactInfo.map((info, index) => {
@@ -170,32 +171,32 @@ export default function Contact() {
             <CardHeader>
               <div className="flex items-center space-x-2">
                 <Sprout className="h-5 w-5 text-primary" />
-                <CardTitle>Why Contact Us?</CardTitle>
+                <CardTitle>{t('why_contact_us')}</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-start space-x-2">
                 <div className="h-2 w-2 rounded-full bg-primary mt-2"></div>
                 <p className="text-sm">
-                  Expert guidance on product selection and usage
+                  {t('expert_guidance_selection')}
                 </p>
               </div>
               <div className="flex items-start space-x-2">
                 <div className="h-2 w-2 rounded-full bg-primary mt-2"></div>
                 <p className="text-sm">
-                  Bulk order discounts and special pricing
+                  {t('bulk_order_discounts')}
                 </p>
               </div>
               <div className="flex items-start space-x-2">
                 <div className="h-2 w-2 rounded-full bg-primary mt-2"></div>
                 <p className="text-sm">
-                  Custom farming solutions for your specific needs
+                  {t('custom_farming_solutions')}
                 </p>
               </div>
               <div className="flex items-start space-x-2">
                 <div className="h-2 w-2 rounded-full bg-primary mt-2"></div>
                 <p className="text-sm">
-                  Technical support and after-sales service
+                  {t('technical_support')}
                 </p>
               </div>
             </CardContent>
@@ -208,29 +209,28 @@ export default function Contact() {
             <CardHeader>
               <div className="flex items-center space-x-2">
                 <MessageSquare className="h-5 w-5 text-primary" />
-                <CardTitle>Send us a Message</CardTitle>
+                <CardTitle>{t('send_us_message')}</CardTitle>
               </div>
               <CardDescription className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 leading-relaxed">
-                Fill out the form below and our consultants will get back to you
-                as soon as possible.
+                {t('fill_out_form')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Full Name *</Label>
+                    <Label htmlFor="name">{t('full_name')} *</Label>
                     <Input
                       id="name"
                       name="name"
-                      placeholder="Enter your full name"
+                      placeholder={t('full_name')}
                       value={formData.name}
                       onChange={handleInputChange}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number *</Label>
+                    <Label htmlFor="phone">{t('phone_number')} *</Label>
                     <Input
                       id="phone"
                       name="phone"
@@ -243,7 +243,7 @@ export default function Contact() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
+                  <Label htmlFor="email">{t('email_address')}</Label>
                   <Input
                     id="email"
                     name="email"
@@ -255,11 +255,11 @@ export default function Contact() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="subject">Subject *</Label>
+                  <Label htmlFor="subject">{t('subject')} *</Label>
                   <Input
                     id="subject"
                     name="subject"
-                    placeholder="What can we help you with?"
+                    placeholder={t('subject')}
                     value={formData.subject}
                     onChange={handleInputChange}
                     required
@@ -267,11 +267,11 @@ export default function Contact() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="message">Message *</Label>
+                  <Label htmlFor="message">{t('message')} *</Label>
                   <Textarea
                     id="message"
                     name="message"
-                    placeholder="Please describe your inquiry in detail..."
+                    placeholder={t('message')}
                     rows={5}
                     value={formData.message}
                     onChange={handleInputChange}
@@ -281,7 +281,7 @@ export default function Contact() {
 
                 <Button type="submit" className="w-full h-8 rounded-xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest text-xs shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center">
                   <Send className="h-4 w-4 mr-2" />
-                  Send Message
+                  {t('send_message')}
                 </Button>
               </form>
             </CardContent>
@@ -289,7 +289,7 @@ export default function Contact() {
         </div>
       </div>
       <div className="mt-12">
-        <h2 className="text-2xl font-semibold mb-6 text-center">Find Us</h2>
+        <h2 className="text-2xl font-semibold mb-6 text-center">{t('find_us')}</h2>
         <Card>
           <CardContent className="p-0">
             <div className="w-full h-64 rounded-lg overflow-hidden">

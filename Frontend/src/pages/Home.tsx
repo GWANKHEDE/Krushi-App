@@ -31,6 +31,7 @@ import potashImg from "@/assets/potash.jfif";
 import calarisImg from "@/assets/calaris.jpg";
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { productsAPI, categoriesAPI, Product, Category } from "@/services/api";
 
 export default function Home() {
@@ -38,6 +39,7 @@ export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [slide, setSlide] = useState(0);
+  const { t } = useTranslation();
 
   const heroImages = [hero1, hero2, hero3, hero4];
 
@@ -75,38 +77,38 @@ export default function Home() {
   const features = [
     {
       icon: Sprout,
-      title: "Quality Products",
-      description: "Premium fertilizers, seeds, and tools for better yields",
+      title: t('quality_products'),
+      description: t('hero_desc'),
     },
     {
       icon: Shield,
-      title: "Trusted Brands",
-      description: "Authentic products from certified manufacturers",
+      title: t('trusted_brands'),
+      description: t('trusted_brands'),
     },
     {
       icon: Recycle,
-      title: "Eco-Friendly",
-      description: "Sustainable and environmentally friendly farming solutions",
+      title: t('eco_friendly'),
+      description: t('eco_friendly'),
     },
     {
       icon: Users,
-      title: "Expert Support",
-      description: "Agricultural experts to guide your farming journey",
+      title: t('expert_support'),
+      description: t('expert_support'),
     },
   ];
 
   const services = [
     {
       icon: Leaf,
-      title: "Organic Solutions",
-      description: "Eco-friendly farming products for sustainable agriculture",
+      title: t('organic_solutions'),
+      description: t('organic_solutions_desc'),
       color: "text-green-600",
       bgColor: "bg-green-100",
     },
     {
       icon: Zap,
-      title: "Modern Equipment",
-      description: "Latest farming tools and machinery for efficient farming",
+      title: t('modern_equipment'),
+      description: t('modern_equipment_desc'),
       color: "text-blue-600",
       bgColor: "bg-blue-100",
     },
@@ -174,17 +176,16 @@ export default function Home() {
         <div className="relative z-10 h-full container mx-auto px-4 flex flex-col justify-center items-start">
           <div className="max-w-3xl animate-fade-in-up">
             <Badge className="mb-6 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-1.5 text-sm uppercase tracking-wider shadow-lg border-none">
-              Welcome to Krushi Seva Kendra
+              {t('welcome_to_business')}
             </Badge>
             <h1 className="text-lg md:text-2xl font-black text-white mb-4 leading-tight drop-shadow-lg uppercase tracking-tight">
-              Cultivating <br />
+              {t('cultivating')} <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
-                Better Tomorrows
+                {t('better_tomorrows')}
               </span>
             </h1>
             <p className="text-base text-gray-200 mb-6 max-w-xl leading-relaxed drop-shadow-md font-medium">
-              Empowering farmers with premium quality agricultural inputs, expert guidance,
-              and sustainable solutions for maximum yield.
+              {t('hero_desc')}
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
@@ -193,7 +194,7 @@ export default function Home() {
                 className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 h-8 text-xs rounded-xl transition-all hover:scale-[1.02] shadow-lg hover:shadow-primary/20 font-bold uppercase tracking-widest"
               >
                 <Link to="/products">
-                  Explore Products
+                  {t('explore_products')}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -203,7 +204,7 @@ export default function Home() {
                 size="default"
                 className="bg-white/10 backdrop-blur-md border-white/30 text-white hover:bg-white/20 px-6 h-8 text-xs rounded-xl transition-all hover:scale-[1.02] font-bold uppercase tracking-widest"
               >
-                <Link to="/contact">Contact Experts</Link>
+                <Link to="/contact">{t('contact_experts')}</Link>
               </Button>
             </div>
           </div>
@@ -219,20 +220,20 @@ export default function Home() {
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             <div className="space-y-6">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-[9px] font-black uppercase tracking-widest text-yellow-400">
-                <Zap className="h-3.5 w-3.5 animate-pulse fill-current" /> Exclusive Seasonal Offer
+                <Zap className="h-3.5 w-3.5 animate-pulse fill-current" /> {t('exclusive_offer')}
               </div>
               <h2 className="text-lg md:text-2xl font-black uppercase tracking-tighter leading-none mb-2">
-                Save <span className="text-yellow-400">25%</span> on <br className="hidden md:block" /> Fertilizer Bundles
+                {t('save_percent')}
               </h2>
               <p className="text-white/70 font-bold text-[10px] md:text-xs italic uppercase tracking-widest leading-relaxed">
-                Maximize harvest efficiency with premium crop nutrition.
+                {t('maximize_efficiency')}
               </p>
               <div className="flex flex-wrap gap-4 items-center">
                 <Button asChild size="default" className="bg-yellow-400 text-primary hover:bg-yellow-500 rounded-xl h-8 px-5 text-[10px] font-black uppercase tracking-widest shadow-xl transition-all hover:scale-[1.02] active:scale-95">
-                  <Link to="/products?category=Fertilizers">Claim Now</Link>
+                  <Link to="/products?category=Fertilizers">{t('claim_now')}</Link>
                 </Button>
                 <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-black tracking-widest opacity-60 mb-0.5">Ends in</span>
+                  <span className="text-[9px] uppercase font-black tracking-widest opacity-60 mb-0.5">{t('ends_in')}</span>
                   <div className="flex gap-2 text-sm font-black tracking-tighter tabular-nums">
                     <span className="bg-black/20 px-2 py-0.5 rounded-lg">02d</span>
                     <span className="bg-black/20 px-2 py-0.5 rounded-lg">14h</span>
@@ -285,13 +286,13 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-end mb-12">
             <div>
-              <Badge variant="outline" className="mb-4 border-primary text-primary px-4 py-1 uppercase font-black text-[10px] tracking-widest">Collections</Badge>
+              <Badge variant="outline" className="mb-4 border-primary text-primary px-4 py-1 uppercase font-black text-[10px] tracking-widest">{t('collections')}</Badge>
               <h2 className="text-lg md:text-2xl font-black text-foreground mb-4 tracking-tighter uppercase leading-none">
-                Shop by Category
+                {t('shop_by_category')}
               </h2>
               <div className="h-1.5 w-20 bg-primary rounded-full mb-4"></div>
               <p className="text-muted-foreground text-sm font-bold italic uppercase tracking-wider">
-                Find exactly what you need for your farm
+                {t('shop_by_category_desc')}
               </p>
             </div>
             <Button variant="ghost" asChild className="hidden md:flex text-primary hover:text-primary hover:bg-primary/5 font-black uppercase tracking-widest text-xs">
@@ -313,7 +314,7 @@ export default function Home() {
                     <h3 className="text-xl font-black text-white mb-2 uppercase tracking-tighter">{category.name}</h3>
                     <div className="h-1 w-0 group-hover:w-16 bg-primary rounded-full transition-all duration-500"></div>
                     <p className="text-white/70 text-[10px] font-black uppercase tracking-widest mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {category._count?.products || 0} Products available
+                      {t('products_count', { count: category._count?.products || 0 })}
                     </p>
                   </div>
                 </div>
@@ -327,12 +328,12 @@ export default function Home() {
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16 space-y-4">
-            <Badge className="bg-accent text-accent-foreground px-4 py-1 uppercase font-black text-[10px] tracking-widest border-none">Just In</Badge>
+            <Badge className="bg-accent text-accent-foreground px-4 py-1 uppercase font-black text-[10px] tracking-widest border-none">{t('just_in')}</Badge>
             <h2 className="text-lg md:text-2xl font-black text-foreground tracking-tighter uppercase leading-none">
-              New Arrivals
+              {t('new_arrivals')}
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto text-sm font-bold italic uppercase tracking-wider">
-              Explore the latest agricultural innovations added to our inventory this week
+              {t('latest_innovations')}
             </p>
           </div>
 
@@ -368,7 +369,7 @@ export default function Home() {
                       ₹{product.sellingPrice}
                     </p>
                     <Button asChild size="sm" variant="ghost" className="h-8 rounded-lg px-3 text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/10">
-                      <Link to="/products">Buy Now</Link>
+                      <Link to="/products">{t('buy_now')}</Link>
                     </Button>
                   </div>
                 </div>
@@ -383,9 +384,9 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center mb-16 gap-6">
             <div className="text-center md:text-left">
-              <Badge variant="outline" className="mb-4 border-primary/30 text-primary/70 px-4 py-1 uppercase font-black text-[10px] tracking-widest">Trending</Badge>
+              <Badge variant="outline" className="mb-4 border-primary/30 text-primary/70 px-4 py-1 uppercase font-black text-[10px] tracking-widest">{t('trending')}</Badge>
               <h2 className="text-lg md:text-2xl font-black text-foreground tracking-tighter uppercase leading-none">
-                Best Sellers
+                {t('best_sellers')}
               </h2>
             </div>
             <Button asChild size="default" className="bg-primary text-white hover:bg-primary/90 px-6 h-8 rounded-full text-xs shadow-lg font-black uppercase tracking-widest transition-all hover:scale-105">
@@ -414,7 +415,7 @@ export default function Home() {
                         : "bg-destructive text-destructive-foreground"
                         } shadow-lg px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border-none`}
                     >
-                      {product.currentStock > 10 ? "Available" : "Limited"}
+                      {product.currentStock > 10 ? t('available') : t('limited')}
                     </Badge>
                   </div>
                 </div>
@@ -442,10 +443,10 @@ export default function Home() {
                   <div className="flex items-center justify-between pt-6 border-t border-muted">
                     <div className="flex items-center text-[10px] text-success font-black uppercase tracking-widest">
                       <CheckCircle className="h-4 w-4 mr-2" />
-                      Authentic
+                      {t('authentic')}
                     </div>
                     <Button size="sm" asChild className="bg-primary hover:bg-primary/90 text-white rounded-xl px-6 h-9 font-black uppercase tracking-widest text-[10px]">
-                      <Link to="/products">View</Link>
+                      <Link to="/products">{t('view')}</Link>
                     </Button>
                   </div>
                 </CardContent>
@@ -466,14 +467,13 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
             <div className="space-y-8">
               <div className="inline-block px-4 py-1.5 rounded-full bg-white/20 border border-white/30 text-white font-black text-[10px] uppercase tracking-[0.2em]">
-                Why Choose Us
+                {t('why_choose_us')}
               </div>
               <h2 className="text-xl md:text-2xl font-black uppercase tracking-tighter leading-none">
-                Comprehensive <br /> <span className="text-yellow-400">Agri Services</span>
+                {t('comprehensive_agri_services')}
               </h2>
               <p className="text-white/80 text-sm font-bold italic leading-relaxed">
-                We go beyond just selling products. Our team is dedicated to
-                providing the knowledge and modern tools you need to succeed.
+                {t('agri_services_desc')}
               </p>
 
               <div className="space-y-4">
@@ -530,16 +530,15 @@ export default function Home() {
 
           <div className="relative z-10 max-w-4xl mx-auto space-y-10">
             <h2 className="text-lg md:text-2xl font-black text-white mb-8 leading-none tracking-tighter uppercase">
-              Ready to Transform <br /> Your Farming?
+              {t('ready_to_transform')}
             </h2>
             <p className="text-base md:text-lg text-white/80 mb-12 max-w-2xl mx-auto font-bold italic leading-relaxed">
-              Join thousands of satisfied farmers who trust Krushi Seva Kendra for
-              their agricultural needs. Experience quality and reliability.
+              {t('join_thousands')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="default" className="bg-white text-primary hover:bg-gray-100 px-8 h-8 text-sm rounded-full shadow-lg hover:scale-105 transition-all font-black uppercase tracking-widest">
                 <Link to="/products">
-                  Shop Now
+                  {t('shop_now')}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -549,7 +548,7 @@ export default function Home() {
                 size="default"
                 className="bg-transparent border-2 border-white/30 text-white hover:bg-white/10 px-8 h-8 text-sm rounded-full backdrop-blur-sm font-black uppercase tracking-widest"
               >
-                <Link to="/contact">Get Expert Advice</Link>
+                <Link to="/contact">{t('get_expert_advice')}</Link>
               </Button>
             </div>
           </div>

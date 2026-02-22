@@ -11,6 +11,7 @@ import EditProductDialog from '../components/EditProductDialog'
 import DeleteProductDialog from '../components/DeleteProductDialog'
 import { useLocation } from 'react-router-dom'
 import { toast } from '@/lib/toast'
+import { useTranslation } from 'react-i18next'
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>(getProducts())
@@ -24,6 +25,7 @@ export default function Products() {
   const [deleting, setDeleting] = useState<Product | null>(null)
   const location = useLocation()
   const isAdmin = location.pathname.startsWith('/admin')
+  const { t } = useTranslation()
 
   const reload = () => setProducts(getProducts())
 
@@ -49,9 +51,9 @@ export default function Products() {
   }, [products, searchTerm, selectedCategory, selectedStock, sortBy])
 
   const stockInfo = (p: Product) => {
-    if (p.currentStock === 0) return { label: 'Out of Stock', variant: 'destructive' as const, color: 'text-destructive', icon: AlertCircle }
-    if (p.currentStock <= p.lowStockAlert) return { label: 'Low Stock', variant: 'destructive' as const, color: 'text-warning', icon: AlertCircle }
-    return { label: 'In Stock', variant: 'default' as const, color: 'text-success', icon: CheckCircle }
+    if (p.currentStock === 0) return { label: t('out'), variant: 'destructive' as const, color: 'text-destructive', icon: AlertCircle }
+    if (p.currentStock <= p.lowStockAlert) return { label: t('low'), variant: 'destructive' as const, color: 'text-warning', icon: AlertCircle }
+    return { label: t('in_stock'), variant: 'default' as const, color: 'text-success', icon: CheckCircle }
   }
 
   const handleAdded = () => { reload(); setAddOpen(false); toast.success('Product added successfully') }
@@ -62,12 +64,12 @@ export default function Products() {
     <div className="container px-4 py-6 md:py-8 space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="space-y-1">
-          <h1 className="text-xl font-bold tracking-tight text-primary uppercase">Inventory</h1>
-          <p className="text-xs text-muted-foreground font-medium italic">Monitor your agricultural stock levels.</p>
+          <h1 className="text-xl font-bold tracking-tight text-primary uppercase">{t('inventory')}</h1>
+          <p className="text-xs text-muted-foreground font-medium italic">{t('inventory_desc', 'Monitor your agricultural stock levels.')}</p>
         </div>
         {isAdmin && (
           <Button onClick={() => setAddOpen(true)} className="rounded-xl h-8 px-5 font-bold uppercase tracking-widest shadow-lg shadow-primary/10 transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center">
-            <Plus className="h-4 w-4 mr-2" />Add Product
+            <Plus className="h-4 w-4 mr-2" />{t('add_product')}
           </Button>
         )}
       </div>
@@ -78,7 +80,7 @@ export default function Products() {
           <div className="relative lg:col-span-2">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-primary/40 h-4 w-4" />
             <Input
-              placeholder="Search by name or SKU..."
+              placeholder={t('search_sku')}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               className="pl-10 h-8 bg-background border-primary/10 rounded-xl focus-visible:ring-primary shadow-sm font-medium text-sm"
@@ -89,7 +91,7 @@ export default function Products() {
               <div className="flex items-center gap-2"><Filter className="h-4 w-4 opacity-40" /><SelectValue placeholder="Category" /></div>
             </SelectTrigger>
             <SelectContent className="rounded-xl">
-              <SelectItem value="All">All Categories</SelectItem>
+              <SelectItem value="All">{t('all_categories')}</SelectItem>
               {categories.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -98,10 +100,10 @@ export default function Products() {
               <div className="flex items-center gap-2"><Package className="h-4 w-4 opacity-40" /><SelectValue placeholder="Stock" /></div>
             </SelectTrigger>
             <SelectContent className="rounded-xl">
-              <SelectItem value="All">All Stock Levels</SelectItem>
-              <SelectItem value="In Stock">In Stock</SelectItem>
-              <SelectItem value="Low Stock">Low Stock</SelectItem>
-              <SelectItem value="Out of Stock">Out of Stock</SelectItem>
+              <SelectItem value="All">{t('all_stock_levels')}</SelectItem>
+              <SelectItem value="In Stock">{t('in_stock')}</SelectItem>
+              <SelectItem value="Low Stock">{t('low')}</SelectItem>
+              <SelectItem value="Out of Stock">{t('out')}</SelectItem>
             </SelectContent>
           </Select>
           <Button
@@ -109,7 +111,7 @@ export default function Products() {
             className="h-8 rounded-xl text-primary font-bold uppercase tracking-widest hover:bg-primary/5 text-xs flex items-center justify-center"
             onClick={() => { setSearchTerm(''); setSelectedCategory('All'); setSelectedStock('All'); setSortBy('name') }}
           >
-            Reset
+            {t('reset')}
           </Button>
         </div>
       </Card>
@@ -117,12 +119,12 @@ export default function Products() {
       {/* Stock summary */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-primary/5 rounded-2xl border border-primary/10">
         <p className="text-sm font-bold text-primary/80 uppercase tracking-widest">
-          Showing <span className="text-primary">{filtered.length} items</span> matching results
+          {t('showing_items', { count: filtered.length })}
         </p>
         <div className="flex gap-2">
-          <Badge variant="outline" className="h-7 px-3 rounded-lg border-success/30 bg-success/10 text-success font-black uppercase text-[9px]">Healthy: {products.filter(p => p.currentStock > p.lowStockAlert).length}</Badge>
-          <Badge variant="outline" className="h-7 px-3 rounded-lg border-warning/30 bg-warning/10 text-warning font-black uppercase text-[9px]">Low: {products.filter(p => p.currentStock <= p.lowStockAlert && p.currentStock > 0).length}</Badge>
-          <Badge variant="outline" className="h-7 px-3 rounded-lg border-destructive/30 bg-destructive/10 text-destructive font-black uppercase text-[9px]">Out: {products.filter(p => p.currentStock === 0).length}</Badge>
+          <Badge variant="outline" className="h-7 px-3 rounded-lg border-success/30 bg-success/10 text-success font-black uppercase text-[9px]">{t('healthy')}: {products.filter(p => p.currentStock > p.lowStockAlert).length}</Badge>
+          <Badge variant="outline" className="h-7 px-3 rounded-lg border-warning/30 bg-warning/10 text-warning font-black uppercase text-[9px]">{t('low')}: {products.filter(p => p.currentStock <= p.lowStockAlert && p.currentStock > 0).length}</Badge>
+          <Badge variant="outline" className="h-7 px-3 rounded-lg border-destructive/30 bg-destructive/10 text-destructive font-black uppercase text-[9px]">{t('out')}: {products.filter(p => p.currentStock === 0).length}</Badge>
         </div>
       </div>
 
@@ -152,7 +154,7 @@ export default function Products() {
 
                 <div className="bg-primary/5 rounded-2xl p-4 space-y-4 border border-primary/5">
                   <div className="flex justify-between items-end">
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Selling Price</span>
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1">{t('selling_price')}</span>
                     <span className="font-bold text-primary text-2xl tabular-nums tracking-tighter">
                       ₹{product.sellingPrice.toLocaleString()}
                       <span className="text-xs font-bold text-muted-foreground ml-1 uppercase">/{product.unit}</span>
@@ -164,7 +166,7 @@ export default function Products() {
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
                       <Package className={`h-4 w-4 ${si.color} opacity-40`} />
-                      <span className="text-xs font-bold text-muted-foreground uppercase">Current Stock</span>
+                      <span className="text-xs font-bold text-muted-foreground uppercase">{t('current_stock_label')}</span>
                     </div>
                     <span className={`font-black tracking-tight text-lg tabular-nums ${si.color}`}>
                       {product.currentStock} {product.unit}s
@@ -183,7 +185,7 @@ export default function Products() {
                       </Button>
                     </div>
                     <div className="text-right">
-                      <span className="text-[8px] font-black uppercase text-muted-foreground block leading-none mb-1">Company Cost</span>
+                      <span className="text-[8px] font-black uppercase text-muted-foreground block leading-none mb-1">{t('company_cost')}</span>
                       <span className="text-xs font-bold font-mono">₹{product.costPrice.toFixed(2)}</span>
                     </div>
                   </div>
@@ -199,11 +201,11 @@ export default function Products() {
           <div className="h-20 w-20 rounded-3xl bg-primary/5 flex items-center justify-center mb-6">
             <Package className="h-10 w-10 text-primary/20" />
           </div>
-          <h3 className="text-xl font-bold text-foreground/80 mb-2 uppercase tracking-tight">No products found</h3>
-          <p className="text-muted-foreground max-w-sm mb-8 font-medium italic">We couldn't find any products matching your current filters. Try clearing them to see more.</p>
+          <h3 className="text-xl font-bold text-foreground/80 mb-2 uppercase tracking-tight">{t('no_products_found')}</h3>
+          <p className="text-muted-foreground max-w-sm mb-8 font-medium italic">{t('no_products_desc')}</p>
           <div className="flex gap-4">
-            <Button variant="outline" onClick={() => { setSearchTerm(''); setSelectedCategory('All'); setSelectedStock('All') }} className="h-8 rounded-2xl px-8 font-bold uppercase tracking-widest border-primary/20 flex items-center justify-center">Clear All Filters</Button>
-            {isAdmin && <Button onClick={() => setAddOpen(true)} className="h-8 rounded-2xl px-8 font-bold uppercase tracking-widest shadow-xl shadow-primary/20 flex items-center justify-center">Add New Product</Button>}
+            <Button variant="outline" onClick={() => { setSearchTerm(''); setSelectedCategory('All'); setSelectedStock('All') }} className="h-8 rounded-2xl px-8 font-bold uppercase tracking-widest border-primary/20 flex items-center justify-center">{t('clear_all_filters')}</Button>
+            {isAdmin && <Button onClick={() => setAddOpen(true)} className="h-8 rounded-2xl px-8 font-bold uppercase tracking-widest shadow-xl shadow-primary/20 flex items-center justify-center">{t('add_product')}</Button>}
           </div>
         </div>
       )}
