@@ -112,6 +112,7 @@ export function initStore() {
         set('krushi_sales', [])
         set('krushi_purchases', [])
         set('krushi_settings', SEED_SETTINGS)
+        set('krushi_ledgers', [])
     }
 }
 
@@ -196,12 +197,33 @@ export const getSales = (): Sale[] => get('krushi_sales', [])
 export const createSale = (data: {
     customerId?: string; customerName?: string; customerPhone?: string
     saleItems: SaleItem[]; subtotal: number; taxAmount: number; discount?: number
-    totalAmount: number; paymentMethod: PaymentMethod; paymentStatus: PaymentStatus; notes?: string
+    totalAmount: number; paymentMethod: PaymentMethod; paymentStatus: PaymentStatus; notes?: string;
+    dueDate?: string;
 }) => {
     const sales = get<Sale[]>('krushi_sales', [])
     const settings = getSettings()
     const invoiceNumber = `${settings.invoicePrefix}${settings.nextInvoiceNumber.toString().padStart(6, '0')}`
     const products = get<Product[]>('krushi_products', [])
+    let customerId = data.customerId === 'new' ? undefined : data.customerId
+
+    // Handle Customer Creation if missing
+    if (!customerId && data.customerName) {
+        // Try to find existing by phone first
+        if (data.customerPhone) {
+            const existing = getCustomers().find(c => c.phone === data.customerPhone)
+            if (existing) customerId = existing.id
+        }
+
+        // If still no ID, create new customer
+        if (!customerId) {
+            const newCust = addCustomer({
+                name: data.customerName,
+                phone: data.customerPhone,
+                address: 'New Customer via Billing'
+            })
+            customerId = newCust.id
+        }
+    }
 
     const enrichedItems = data.saleItems.map(item => ({
         ...item, id: uid(),
@@ -216,10 +238,32 @@ export const createSale = (data: {
     set('krushi_products', updatedProducts)
 
     const sale: Sale = {
-        id: uid(), invoiceNumber, ...data, discount: data.discount || 0,
-        saleItems: enrichedItems, saleDate: now(), createdAt: now(),
+        id: uid(), invoiceNumber, ...data, customerId, // Explicitly use the resolved ID
+        discount: data.discount || 0,
+        saleItems: enrichedItems as any, saleDate: now(), createdAt: now(),
     }
     set('krushi_sales', [sale, ...sales])
+
+    // Update Ledger for customer dynamically
+    if (customerId) {
+        const ledgers = get<any[]>('krushi_ledgers', []);
+        const filtered = ledgers.filter(l => l.customerId === customerId);
+        const lastBalance = filtered.length > 0 ? filtered[filtered.length - 1].balance : 0;
+
+        const newLedgerEntry = {
+            id: uid(),
+            customerId: customerId,
+            date: now(),
+            particulars: `Invoice #${invoiceNumber}`,
+            debit: data.totalAmount,
+            credit: 0,
+            balance: lastBalance + data.totalAmount, // Debiting increases what they owe us
+            type: 'sale',
+            dueDate: data.dueDate
+        };
+        set('krushi_ledgers', [...ledgers, newLedgerEntry]);
+    }
+
     updateSettings({ nextInvoiceNumber: settings.nextInvoiceNumber + 1 })
     return sale
 }

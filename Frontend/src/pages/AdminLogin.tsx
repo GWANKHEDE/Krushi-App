@@ -43,7 +43,7 @@ export default function AdminLogin() {
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       toast.error('Invalid Login Attempt', {
-        description: 'Please enter both your email and password to proceed.'
+        autoClose: 4000
       });
       return;
     }
@@ -54,7 +54,7 @@ export default function AdminLogin() {
         const loggedInUser = login(email, password)
         if (loggedInUser) {
           toast.success(`Welcome back, ${loggedInUser.name}!`, {
-            duration: 3000,
+            autoClose: 3000,
             className: "bg-green-600 text-white border-none shadow-lg font-bold"
           })
           navigate('/admin/dashboard', { replace: true })
@@ -63,10 +63,18 @@ export default function AdminLogin() {
           setErrors({ general: 'Invalid credentials' });
         }
       } else {
-        toast.success('Account created successfully! You can now login.', {
-          className: "bg-green-600 text-white border-none shadow-lg font-bold"
-        })
-        setIsLogin(true)
+        const newUser = login(email, password) // Login immediately after signup
+        if (newUser) {
+          toast.success(`Welcome to Krushi Kendra, ${newUser.name}!`, {
+            className: "bg-green-600 text-white border-none shadow-lg font-bold"
+          })
+          navigate('/admin/dashboard', { replace: true })
+        } else {
+          toast.success('Account created successfully! Please log in.', {
+            className: "bg-green-600 text-white border-none shadow-lg font-bold"
+          })
+          setIsLogin(true)
+        }
       }
     } finally {
       setLoading(false)

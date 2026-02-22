@@ -4,18 +4,21 @@ import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { Menu, Sprout, House, ShoppingCart, User, LogIn } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { LanguageSwitcher } from './LanguageSwitcher'
 
 const NAV = [
-  { name: 'Home', href: '/', icon: House },
-  { name: 'Products', href: '/products', icon: ShoppingCart },
-  { name: 'About', href: '/about', icon: Sprout },
-  { name: 'Contact', href: '/contact', icon: User },
+  { name: 'home', href: '/', icon: House },
+  { name: 'products', href: '/products', icon: ShoppingCart },
+  { name: 'about', href: '/about', icon: Sprout },
+  { name: 'contact', href: '/contact', icon: User },
 ]
 
 export function Layout() {
   const [isOpen, setIsOpen] = useState(false)
   const location = useLocation()
-  const [biz, setBiz] = useState({ name: 'Krushi Seva Kendra', address: 'Penur, Tq Purna, Parbhani, Maharashtra 431511', phone: '+91 9823332198', email: 'info@krushisevakendra.com' })
+  const { t } = useTranslation()
+  const [biz, setBiz] = useState<{ name: string, address: string, phone: string, email: string, logo?: string }>({ name: 'Krushi Seva Kendra', address: 'Penur, Tq Purna, Parbhani, Maharashtra 431511', phone: '+91 9823332198', email: 'info@krushisevakendra.com' })
 
   useEffect(() => {
     try {
@@ -25,14 +28,15 @@ export function Layout() {
         address: u.business.address || prev.address,
         phone: u.business.contactNumber || prev.phone,
         email: u.business.email || prev.email,
+        logo: u.business.logo || undefined
       }))
     } catch { /* fallback defaults */ }
-  }, [])
+  }, [location.pathname]) // Re-run on navigation to pick up latest business changes from other pages if any (though usually global)
 
   const isActive = (path: string) => location.pathname === path
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative overflow-x-hidden">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex h-16 items-center justify-between w-full px-4 md:px-8">
           <Link to="/" className="flex items-center space-x-2">
@@ -47,15 +51,16 @@ export function Layout() {
               {NAV.map(item => (
                 <Link key={item.name} to={item.href}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive(item.href) ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>
-                  <item.icon className="h-4 w-4" /><span>{item.name}</span>
+                  <item.icon className="h-4 w-4" /><span>{t(item.name)}</span>
                 </Link>
               ))}
             </nav>
 
+            <LanguageSwitcher />
             <ThemeToggle />
 
             <Button asChild variant="outline" className="hidden md:flex">
-              <Link to="/admin/login"><LogIn className="h-4 w-4 mr-2" />Admin Login</Link>
+              <Link to="/admin/login"><LogIn className="h-4 w-4 mr-2" />{t('admin_login')}</Link>
             </Button>
 
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -67,11 +72,11 @@ export function Layout() {
                   {NAV.map(item => (
                     <Link key={item.name} to={item.href} onClick={() => setIsOpen(false)}
                       className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-base font-medium transition-colors ${isActive(item.href) ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>
-                      <item.icon className="h-5 w-5" /><span>{item.name}</span>
+                      <item.icon className="h-5 w-5" /><span>{t(item.name)}</span>
                     </Link>
                   ))}
                   <Link to="/admin/login" onClick={() => setIsOpen(false)} className="flex items-center gap-2 px-4 py-2.5 mt-4 border-t pt-4 font-medium hover:bg-accent transition-colors rounded-md">
-                    <LogIn className="h-5 w-5" /><span>Admin Login</span>
+                    <LogIn className="h-5 w-5" /><span>{t('admin_login')}</span>
                   </Link>
                 </div>
               </SheetContent>
@@ -80,7 +85,24 @@ export function Layout() {
         </div>
       </header>
 
-      <main><Outlet /></main>
+      <main className="relative flex-1 bg-gradient-to-br from-green-100 via-yellow-50 to-green-200 dark:from-slate-950 dark:via-emerald-950/30 dark:to-slate-950 overflow-hidden">
+        {/* Logo Watermark specifically for Main Content */}
+        {biz.logo && (
+          <div
+            className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-[0.03] dark:opacity-[0.05] z-0 overflow-hidden"
+            aria-hidden="true"
+          >
+            <img
+              src={biz.logo}
+              alt=""
+              className="w-1/2 max-w-[400px] object-contain grayscale scale-150 rotate-[-12deg]"
+            />
+          </div>
+        )}
+        <div className="relative z-10 p-4 md:p-8">
+          <Outlet />
+        </div>
+      </main>
 
       <footer className="bg-muted/50 border-t mt-16">
         <div className="container px-4 py-8">
@@ -95,10 +117,10 @@ export function Layout() {
               <p className="text-sm text-muted-foreground">Your trusted partner in agriculture. Quality fertilizers, seeds, and tools.</p>
             </div>
             <div>
-              <h3 className="font-semibold mb-3">Quick Links</h3>
+              <h3 className="font-semibold mb-3">{t('quick_links')}</h3>
               <ul className="space-y-1.5 text-sm text-muted-foreground">
                 {['products', 'about', 'contact'].map(l => (
-                  <li key={l}><Link to={`/${l}`} className="hover:text-foreground transition-colors capitalize">{l === 'about' ? 'About Us' : l}</Link></li>
+                  <li key={l}><Link to={`/${l}`} className="hover:text-foreground transition-colors">{t(l)}</Link></li>
                 ))}
               </ul>
             </div>
@@ -112,7 +134,7 @@ export function Layout() {
             </div>
           </div>
           <div className="border-t mt-8 pt-6 text-center text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} {biz.name}. All rights reserved.
+            &copy; {new Date().getFullYear()} {biz.name}. {t('all_rights_reserved')}.
           </div>
         </div>
       </footer>

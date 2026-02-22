@@ -56,6 +56,9 @@ model Business {
   sales           Sale[]
   settings        BusinessSettings?
   auditLogs       AuditLog[]
+  payments        Payment[]
+  ledgers         LedgerEntry[]
+  reminders       ReminderLog[]
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
@@ -110,6 +113,8 @@ model Supplier {
   businessId    String
   business      Business  @relation(fields: [businessId], references: [id])
   purchases     Purchase[]
+  payments      Payment[]
+  ledgers       LedgerEntry[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -127,6 +132,9 @@ model Customer {
   businessId  String
   business    Business  @relation(fields: [businessId], references: [id])
   sales       Sale[]
+  payments    Payment[]
+  ledgers     LedgerEntry[]
+  reminders   ReminderLog[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -150,6 +158,13 @@ model Sale {
   paymentMethod PaymentMethod @default(CASH)
   paymentStatus PaymentStatus @default(PAID)
   saleDate      DateTime    @default(now())
+  cgst          Float       @default(0)
+  sgst          Float       @default(0)
+  igst          Float       @default(0)
+  amountPaid    Float       @default(0)
+  balanceDue    Float       @default(0)
+  payments      Payment[]
+  ledgers       LedgerEntry[]
   notes         String?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
@@ -180,6 +195,15 @@ model Purchase {
   purchaseItems PurchaseItem[]
   totalAmount   Float
   purchaseDate  DateTime       @default(now())
+  paymentMethod PaymentMethod  @default(CASH)
+  paymentStatus PaymentStatus  @default(PAID)
+  cgst          Float          @default(0)
+  sgst          Float          @default(0)
+  igst          Float          @default(0)
+  amountPaid    Float          @default(0)
+  balanceDue    Float          @default(0)
+  payments      Payment[]
+  ledgers       LedgerEntry[]
   notes         String?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
@@ -253,4 +277,78 @@ enum PaymentStatus {
   PAID
   PARTIALLY_PAID
   FAILED
+}
+
+enum PaymentType {
+  INCOME
+  EXPENSE
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  businessId      String
+  business        Business      @relation(fields: [businessId], references: [id])
+  paymentType     PaymentType
+  amount          Float
+  paymentMethod   PaymentMethod @default(CASH)
+  paymentDate     DateTime      @default(now())
+  referenceNumber String?
+  notes           String?
+  
+  customerId      String?
+  customer        Customer?     @relation(fields: [customerId], references: [id])
+  supplierId      String?
+  supplier        Supplier?     @relation(fields: [supplierId], references: [id])
+  
+  saleId          String?
+  sale            Sale?         @relation(fields: [saleId], references: [id])
+  purchaseId      String?
+  purchase        Purchase?     @relation(fields: [purchaseId], references: [id])
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("payments")
+}
+
+model LedgerEntry {
+  id              String        @id @default(cuid())
+  businessId      String
+  business        Business      @relation(fields: [businessId], references: [id])
+  
+  customerId      String?
+  customer        Customer?     @relation(fields: [customerId], references: [id])
+  supplierId      String?
+  supplier        Supplier?     @relation(fields: [supplierId], references: [id])
+  
+  saleId          String?
+  sale            Sale?         @relation(fields: [saleId], references: [id])
+  purchaseId      String?
+  purchase        Purchase?     @relation(fields: [purchaseId], references: [id])
+  paymentId       String?
+
+  date            DateTime      @default(now())
+  particulars     String
+  debit           Float         @default(0)
+  credit          Float         @default(0)
+  balance         Float         
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("ledger_entries")
+}
+
+model ReminderLog {
+  id              String        @id @default(cuid())
+  businessId      String
+  business        Business      @relation(fields: [businessId], references: [id])
+  customerId      String
+  customer        Customer      @relation(fields: [customerId], references: [id])
+  type            String        // 'SMS', 'WHATSAPP'
+  status          String        // 'SENT', 'FAILED'
+  messageTemplate String?
+  sentAt          DateTime      @default(now())
+
+  @@map("reminder_logs")
 }

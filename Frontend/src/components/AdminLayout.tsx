@@ -14,14 +14,16 @@ import { cn } from '@/lib/utils'
 import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from './AppSidebar'
 import { Separator } from '@/components/ui/separator'
+import { useTranslation } from 'react-i18next'
+import { LanguageSwitcher } from './LanguageSwitcher'
 
 const NAV_ITEMS = [
-  { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-  { name: 'Products', href: '/admin/products', icon: Package },
-  { name: 'Billing', href: '/admin/billing', icon: ShoppingCart },
-  { name: 'Purchase', href: '/admin/purchases', icon: FileText },
-  { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
-  { name: 'Settings', href: '/admin/settings', icon: Settings },
+  { name: 'dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+  { name: 'inventory', href: '/admin/products', icon: Package },
+  { name: 'billing', href: '/admin/billing', icon: ShoppingCart },
+  { name: 'purchase', href: '/admin/purchases', icon: FileText },
+  { name: 'reports', href: '/admin/reports', icon: BarChart3 },
+  { name: 'settings', href: '/admin/settings', icon: Settings },
 ]
 
 export function AdminLayout() {
@@ -31,6 +33,7 @@ export function AdminLayout() {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
+  const { t } = useTranslation()
 
   const handleLogout = () => {
     logout()
@@ -58,7 +61,7 @@ export function AdminLayout() {
             isActive(href) ? "text-primary" : "text-muted-foreground"
           )}
         >
-          {name}
+          {t(name)}
         </Link>
       ))}
     </nav>
@@ -77,7 +80,7 @@ export function AdminLayout() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <Input
                   type="search"
-                  placeholder="Universal Search..."
+                  placeholder={t('search')}
                   className="pl-10 h-8 w-[250px] lg:w-[400px] border-primary/10 bg-muted/30 focus-visible:ring-primary rounded-xl text-xs font-bold transition-all focus:bg-background shadow-sm"
                 />
               </div>
@@ -85,6 +88,7 @@ export function AdminLayout() {
 
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1">
+                <LanguageSwitcher />
                 <ThemeToggle />
                 <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl relative text-muted-foreground hover:text-primary hover:bg-primary/5">
                   <Bell className="h-4 w-4" />
@@ -123,8 +127,23 @@ export function AdminLayout() {
             </div>
           </header>
 
-          <main className="flex-1 p-4 w-full mx-auto animate-in fade-in duration-700">
-            <Outlet />
+          <main className="flex-1 p-4 w-full mx-auto animate-in fade-in duration-700 bg-gradient-to-br from-green-100 via-yellow-50 to-green-200 dark:from-slate-950 dark:via-emerald-950/30 dark:to-slate-950 relative overflow-hidden">
+            {/* Logo Watermark specifically for Admin Content */}
+            {user?.business?.logo && (
+              <div
+                className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-[0.05] dark:opacity-[0.05] z-0"
+                aria-hidden="true"
+              >
+                <img
+                  src={user.business.logo}
+                  alt=""
+                  className="w-1/2 max-w-[500px] object-contain grayscale scale-150 rotate-[-15deg]"
+                />
+              </div>
+            )}
+            <div className="relative z-10 w-full h-full">
+              <Outlet />
+            </div>
           </main>
         </SidebarInset>
       </div>

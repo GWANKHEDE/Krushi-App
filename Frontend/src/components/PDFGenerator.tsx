@@ -46,7 +46,7 @@ export function PDFGenerator({
 
   const calculateProductTotal = (product: any) => {
     const baseTotal = product.quantity * product.sellingPrice;
-    const discountAmount = (baseTotal * product.discount) / 100;
+    const discountAmount = (baseTotal * (product.discount || 0)) / 100;
     return baseTotal - discountAmount;
   };
 

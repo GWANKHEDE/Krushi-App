@@ -8,6 +8,8 @@ import {
     LogOut,
     Sprout,
     Search,
+    Calculator,
+    BookOpen,
 } from "lucide-react"
 
 import {
@@ -30,35 +32,41 @@ import { toast } from '@/lib/toast'
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import { useTranslation } from "react-i18next"
 
 const items = [
     {
-        title: "Dashboard",
+        title: "dashboard",
         url: "/admin/dashboard",
         icon: LayoutDashboard,
     },
     {
-        title: "Products",
+        title: "products",
         url: "/admin/products",
         icon: Package,
     },
     {
-        title: "Billing",
+        title: "billing",
         url: "/admin/billing",
         icon: ShoppingCart,
     },
     {
-        title: "Purchase",
+        title: "khatabook",
+        url: "/admin/khatabook",
+        icon: BookOpen,
+    },
+    {
+        title: "purchase",
         url: "/admin/purchases",
         icon: FileText,
     },
     {
-        title: "Reports",
+        title: "reports",
         url: "/admin/reports",
         icon: BarChart3,
     },
     {
-        title: "Settings",
+        title: "settings",
         url: "/admin/settings",
         icon: Settings,
     },
@@ -68,6 +76,7 @@ export function AppSidebar() {
     const location = useLocation()
     const navigate = useNavigate()
     const { user, logout } = useAuth()
+    const { t } = useTranslation()
 
     const handleLogout = () => {
         logout()
@@ -86,7 +95,7 @@ export function AppSidebar() {
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                         <Sprout className="h-5 w-5" />
                     </div>
-                    <div className="flex flex-col gap-0.5 leading-none group-data-[collapsible=icon]:hidden">
+                    <div className="flex flex-col gap-1 leading-tight group-data-[collapsible=icon]:hidden py-0.5">
                         <span className="text-sm font-black uppercase tracking-tighter">Krushi Kendra</span>
                         <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{user?.business?.name}</span>
                     </div>
@@ -97,7 +106,7 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <SidebarGroup>
-                    <SidebarGroupLabel className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Navigation</SidebarGroupLabel>
+                    <SidebarGroupLabel className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 h-auto py-2">{t('navigation')}</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
                             {items.map((item) => (
@@ -105,7 +114,7 @@ export function AppSidebar() {
                                     <SidebarMenuButton
                                         asChild
                                         isActive={location.pathname === item.url}
-                                        tooltip={item.title}
+                                        tooltip={t(item.title)}
                                         className={cn(
                                             "flex items-center gap-3 px-4 py-6 rounded-xl transition-all duration-300",
                                             location.pathname === item.url
@@ -115,7 +124,7 @@ export function AppSidebar() {
                                     >
                                         <Link to={item.url}>
                                             <item.icon className="h-4 w-4" />
-                                            <span className="font-bold text-xs uppercase tracking-widest leading-none">{item.title}</span>
+                                            <span className="font-bold text-xs uppercase tracking-widest">{t(item.title)}</span>
                                         </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
@@ -138,9 +147,9 @@ export function AppSidebar() {
                                     <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-black">{initial}</AvatarFallback>
                                 </Avatar>
                             </div>
-                            <div className="flex flex-col gap-0.5 leading-none group-data-[collapsible=icon]:hidden">
-                                <span className="text-xs font-bold leading-none">{user?.name}</span>
-                                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Sign Out</span>
+                            <div className="flex flex-col gap-1 leading-tight group-data-[collapsible=icon]:hidden py-0.5">
+                                <span className="text-xs font-bold">{user?.name}</span>
+                                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{t('sign_out')}</span>
                             </div>
                             <LogOut className="ml-auto h-4 w-4 text-muted-foreground group-data-[collapsible=icon]:hidden" />
                         </SidebarMenuButton>

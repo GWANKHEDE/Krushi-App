@@ -13,6 +13,8 @@ import Purchase from "../pages/Purchase"
 import Report from "../pages/Report"
 import Settings from "../pages/Settings"
 import NotFound from "../pages/NotFound"
+import CustomerLedger from "../pages/CustomerLedger"
+import KhatabookList from "../pages/KhatabookList"
 
 export const AppRoutes = () => (
   <Routes>
@@ -33,6 +35,8 @@ export const AppRoutes = () => (
       <Route path="billing" element={<Billing />} />
       <Route path="products" element={<Products />} />
       <Route path="purchases" element={<Purchase />} />
+      <Route path="khatabook" element={<KhatabookList />} />
+      <Route path="ledger/:customerId" element={<CustomerLedger />} />
       <Route path="reports" element={<Report />} />
       <Route path="settings" element={<Settings />} />
     </Route>

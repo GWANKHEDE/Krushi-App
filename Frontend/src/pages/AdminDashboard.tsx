@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -14,6 +15,7 @@ const COLORS = ['#4f46e5', '#22c55e', '#facc15', '#ef4444', '#8b5cf6', '#06b6d4'
 export default function AdminDashboard() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { t } = useTranslation()
   const [refreshKey, setRefreshKey] = useState(0)
 
   const stats = useMemo(() => getDashboardStats(), [refreshKey])
@@ -32,17 +34,17 @@ export default function AdminDashboard() {
   }
 
   const statCards = [
-    { title: 'Total Products', value: stats.totalProducts, desc: 'Active in inventory', icon: Package, color: 'text-blue-600' },
-    { title: "Today's Sales", value: `₹${stats.todaysSales.toLocaleString()}`, desc: 'Revenue today', icon: TrendingUp, color: 'text-green-600' },
-    { title: 'Low Stock', value: stats.lowStockItems, desc: 'Need restocking', icon: AlertTriangle, color: 'text-orange-500' },
-    { title: 'Monthly Profit', value: `₹${stats.monthlyProfit.toLocaleString()}`, desc: 'This month', icon: IndianRupee, color: 'text-emerald-600' },
+    { title: t('total_products'), value: stats.totalProducts, desc: t('inventory'), icon: Package, color: 'text-blue-600' },
+    { title: t('todays_sales'), value: `₹${stats.todaysSales.toLocaleString()}`, desc: t('welcome'), icon: TrendingUp, color: 'text-green-600' },
+    { title: t('low_stock'), value: stats.lowStockItems, desc: t('low_stock_alert'), icon: AlertTriangle, color: 'text-orange-500' },
+    { title: t('monthly_profit'), value: `₹${stats.monthlyProfit.toLocaleString()}`, desc: t('reports'), icon: IndianRupee, color: 'text-emerald-600' },
   ]
 
   const quickActions = [
-    { icon: Plus, label: 'Add Product', path: '/admin/products' },
-    { icon: ShoppingCart, label: 'Create Bill', path: '/admin/billing' },
-    { icon: Package, label: 'Stock Entry', path: '/admin/purchases' },
-    { icon: BarChart3, label: 'Reports', path: '/admin/reports' },
+    { icon: Plus, label: t('add_product_action'), path: '/admin/products' },
+    { icon: ShoppingCart, label: t('create_bill'), path: '/admin/billing' },
+    { icon: Package, label: t('stock_entry'), path: '/admin/purchases' },
+    { icon: BarChart3, label: t('reports'), path: '/admin/reports' },
   ]
 
   return (
@@ -50,15 +52,15 @@ export default function AdminDashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-xl font-bold tracking-tight uppercase text-primary">Welcome, {user?.name}!</h1>
-          <p className="text-xs text-muted-foreground font-medium italic">Store summary for today.</p>
+          <h1 className="text-xl font-bold tracking-tight uppercase text-primary">{t('welcome')}, {user?.name}!</h1>
+          <p className="text-xs text-muted-foreground font-medium italic">{t('dashboard')}.</p>
         </div>
         <div className="flex items-center gap-3">
           <Badge variant="secondary" className="text-[10px] font-bold uppercase tracking-widest hidden sm:flex">
             {new Date().toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric' })}
           </Badge>
           <Button variant="outline" size="sm" onClick={refresh} className="h-8 text-xs font-bold uppercase tracking-widest">
-            <RefreshCw className="h-3.5 w-3.5 mr-2" />Refresh
+            <RefreshCw className="h-3.5 w-3.5 mr-2" />{t('refresh')}
           </Button>
         </div>
       </div>
@@ -94,10 +96,10 @@ export default function AdminDashboard() {
           <CardHeader className="border-b pb-3">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="flex items-center gap-2 text-base"><ShoppingCart className="h-5 w-5 text-primary" />Recent Sales</CardTitle>
-                <CardDescription>Latest transactions</CardDescription>
+                <CardTitle className="flex items-center gap-2 text-base"><ShoppingCart className="h-5 w-5 text-primary" />{t('recent_sales')}</CardTitle>
+                <CardDescription>{t('history')}</CardDescription>
               </div>
-              <Button variant="outline" size="sm" onClick={() => navigate('/admin/reports')}>View All</Button>
+              <Button variant="outline" size="sm" onClick={() => navigate('/admin/reports')}>{t('view_all')}</Button>
             </div>
           </CardHeader>
           <CardContent className="flex-1 overflow-y-auto space-y-2 p-4 hide-scrollbar">
@@ -120,8 +122,8 @@ export default function AdminDashboard() {
           <CardHeader className="border-b pb-3">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="flex items-center gap-2 text-base"><AlertTriangle className="h-5 w-5 text-destructive" />Low Stock Alert</CardTitle>
-                <CardDescription>Products needing restock</CardDescription>
+                <CardTitle className="flex items-center gap-2 text-base"><AlertTriangle className="h-5 w-5 text-destructive" />{t('low_stock_alert')}</CardTitle>
+                <CardDescription>{t('inventory')}</CardDescription>
               </div>
               <Badge variant="destructive">{lowStock.length}</Badge>
             </div>
@@ -147,7 +149,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="border-b pb-3">
-            <CardTitle className="text-base">Sales Trend (7 Days)</CardTitle>
+            <CardTitle className="text-base">{t('sales_trend')}</CardTitle>
             <CardDescription>
               Total: ₹{salesTrend.reduce((s, d) => s + d.sales, 0).toLocaleString()} • {salesTrend.reduce((s, d) => s + d.transactions, 0)} transactions
             </CardDescription>
@@ -169,7 +171,7 @@ export default function AdminDashboard() {
 
         <Card>
           <CardHeader className="border-b pb-3">
-            <CardTitle className="text-base">Product Categories</CardTitle>
+            <CardTitle className="text-base">{t('product_categories')}</CardTitle>
             <CardDescription>{categoryData.length} categories</CardDescription>
           </CardHeader>
           <CardContent className="pt-4">

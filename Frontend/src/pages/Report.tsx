@@ -27,6 +27,10 @@ export default function Report() {
     collected: sales.reduce((s, sale) => s + (sale.totalAmount - sale.totalAmount / 1.18), 0),
     paid: purchases.reduce((s, p) => s + (p.totalAmount - p.totalAmount / 1.18), 0),
     get net() { return this.collected - this.paid },
+    get cgstCollected() { return this.collected / 2 },
+    get sgstCollected() { return this.collected / 2 },
+    get cgstPaid() { return this.paid / 2 },
+    get sgstPaid() { return this.paid / 2 },
   }
 
   const transactions = [
@@ -173,27 +177,72 @@ export default function Report() {
         </TabsContent>
 
         <TabsContent value="gst">
-          <Card>
-            <CardHeader className="border-b pb-3"><CardTitle className="text-base">GST Summary</CardTitle></CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
-                  <p className="text-sm font-medium text-blue-700 dark:text-blue-300">GST Collected</p>
-                  <p className="text-2xl font-bold">₹{gstSummary.collected.toFixed(2)}</p>
-                  <p className="text-xs text-muted-foreground mt-1">From {sales.length} sales</p>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader className="border-b pb-3"><CardTitle className="text-base">GST Summary Overview</CardTitle></CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                    <p className="text-sm font-medium text-blue-700 dark:text-blue-300">Output Tax (Collected)</p>
+                    <p className="text-3xl font-bold mt-2">₹{gstSummary.collected.toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">From {sales.length} sales</p>
+                  </div>
+                  <div className="p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg border border-orange-100 dark:border-orange-900/30">
+                    <p className="text-sm font-medium text-orange-700 dark:text-orange-300">Input Tax (Paid)</p>
+                    <p className="text-3xl font-bold mt-2">₹{gstSummary.paid.toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">From {purchases.length} purchases</p>
+                  </div>
+                  <div className={`p-4 rounded-lg border ${gstSummary.net >= 0 ? 'bg-green-50 dark:bg-green-950/30 border-green-100 dark:border-green-900/30 text-green-800 dark:text-green-300' : 'bg-red-50 dark:bg-red-950/30 border-red-100 dark:border-red-900/30 text-red-800 dark:text-red-300'}`}>
+                    <p className="text-sm font-medium">Net GST Liability</p>
+                    <p className="text-3xl font-bold mt-2">₹{Math.abs(gstSummary.net).toFixed(2)}</p>
+                    <p className="text-sm mt-1 font-semibold">{gstSummary.net >= 0 ? '(Payable to Govt)' : '(Refundable)'}</p>
+                  </div>
                 </div>
-                <div className="p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg">
-                  <p className="text-sm font-medium text-orange-700 dark:text-orange-300">GST Paid</p>
-                  <p className="text-2xl font-bold">₹{gstSummary.paid.toFixed(2)}</p>
-                  <p className="text-xs text-muted-foreground mt-1">From {purchases.length} purchases</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="border-b pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  Tax Component Breakup
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border mt-4 overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b bg-muted/50 text-left">
+                        <th className="p-3 text-muted-foreground font-medium">Component</th>
+                        <th className="p-3 text-muted-foreground font-medium text-right">Collected (Sales)</th>
+                        <th className="p-3 text-muted-foreground font-medium text-right">ITC (Purchases)</th>
+                        <th className="p-3 text-muted-foreground font-medium text-right">Net Payable</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b">
+                        <td className="p-3 font-semibold text-primary">CGST (9%)</td>
+                        <td className="p-3 text-right">₹{gstSummary.cgstCollected.toFixed(2)}</td>
+                        <td className="p-3 text-right">₹{gstSummary.cgstPaid.toFixed(2)}</td>
+                        <td className="p-3 text-right font-bold">₹{(gstSummary.cgstCollected - gstSummary.cgstPaid).toFixed(2)}</td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="p-3 font-semibold text-primary">SGST (9%)</td>
+                        <td className="p-3 text-right">₹{gstSummary.sgstCollected.toFixed(2)}</td>
+                        <td className="p-3 text-right">₹{gstSummary.sgstPaid.toFixed(2)}</td>
+                        <td className="p-3 text-right font-bold">₹{(gstSummary.sgstCollected - gstSummary.sgstPaid).toFixed(2)}</td>
+                      </tr>
+                      <tr>
+                        <td className="p-3 font-semibold text-primary">IGST (18%)</td>
+                        <td className="p-3 text-right text-muted-foreground">₹0.00</td>
+                        <td className="p-3 text-right text-muted-foreground">₹0.00</td>
+                        <td className="p-3 text-right font-bold text-muted-foreground">₹0.00</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
-                <div className={`p-4 rounded-lg ${gstSummary.net >= 0 ? 'bg-green-50 dark:bg-green-950/30' : 'bg-red-50 dark:bg-red-950/30'}`}>
-                  <p className="text-sm font-medium">Net GST</p>
-                  <p className="text-2xl font-bold">₹{Math.abs(gstSummary.net).toFixed(2)}<span className="text-sm ml-1">{gstSummary.net >= 0 ? '(Payable)' : '(Refundable)'}</span></p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="transactions">
