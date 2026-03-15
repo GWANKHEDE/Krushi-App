@@ -14,6 +14,7 @@ const supplierRoutes = require('./routes/suppliers');
 const purchaseRoutes = require('./routes/purchases');
 const reportRoutes = require('./routes/reports');
 const settingsRoutes = require('./routes/settings');
+const imageSearchRoutes = require('./routes/imageSearch');
 
 
 const app = express();
@@ -36,6 +37,7 @@ app.use('/api/suppliers', supplierRoutes);
 app.use('/api/purchases', purchaseRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/image-search', imageSearchRoutes);
 
 
 // Health check
