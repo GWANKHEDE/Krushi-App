@@ -1,91 +1,50 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ThemeToggle } from '@/components/ThemeToggle'
-import { useAuth } from '@/lib/auth'
-import { toast } from '@/lib/toast'
-import { LoginForm } from '@/components/login-form'
-import { SignupForm } from '@/components/signup-form'
+import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import { ThemeToggle } from "@/components/ThemeToggle"
+import { useAuth } from "@/lib/auth"
+import { toast } from "@/lib/toast"
+import { LoginForm } from "@/components/login-form"
+import { SignupForm } from "@/components/signup-form"
 
 export default function AdminLogin() {
-  const [isLogin, setIsLogin] = useState(true)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [name, setName] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isLogin,setIsLogin]=useState(true)
+  const [email,setEmail]=useState("")
+  const [password,setPassword]=useState("")
+  const [name,setName]=useState("")
+  const [loading,setLoading]=useState(false)
+  const [errors,setErrors]=useState<Record<string,string>>({})
+  const navigate=useNavigate()
+  const {login,isAuthenticated}=useAuth()
 
-  const navigate = useNavigate()
-  const { login, isAuthenticated } = useAuth()
+  useEffect(()=>{if(isAuthenticated)navigate("/admin/dashboard",{replace:true})},[isAuthenticated,navigate])
 
-  useEffect(() => {
-    if (isAuthenticated) navigate('/admin/dashboard', { replace: true })
-  }, [isAuthenticated, navigate])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (loading) return
-    setErrors({})
-
-    const newErrors: Record<string, string> = {}
-    if (!email.trim()) newErrors.email = 'Email is required'
-    if (!password) newErrors.password = 'Password is required'
-    if (!isLogin && !name.trim()) newErrors.name = 'Full name is required'
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
-      toast.error('Please fill in all required fields')
-      return
-    }
-
+  const handleSubmit=async(e:React.FormEvent)=>{
+    e.preventDefault(); if(loading)return; setErrors({})
+    const errs:Record<string,string>={}
+    if(!email.trim())errs.email="Email required"
+    if(!password)errs.password="Password required"
+    if(!isLogin&&!name.trim())errs.name="Name required"
+    if(Object.keys(errs).length){setErrors(errs);return}
     setLoading(true)
-    try {
-      const loggedInUser = login(email, password)
-      if (loggedInUser) {
-        toast.success(`Welcome back, ${loggedInUser.name}!`)
-        navigate('/admin/dashboard', { replace: true })
-      } else {
-        toast.error('Invalid credentials. Please try again.')
-        setErrors({ general: 'Invalid credentials' })
-      }
-    } finally {
-      setLoading(false)
-    }
+    try{
+      const u=login(email,password)
+      if(u){toast.success(`Welcome back, ${u.name}!`);navigate("/admin/dashboard",{replace:true})}
+      else{toast.error("Invalid credentials");setErrors({general:"Invalid credentials"})}
+    }finally{setLoading(false)}
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-primary/5 flex flex-col">
-      {/* Top bar */}
-      <div className="flex items-center justify-end p-4 md:p-6">
+    /* systemGroupedBackground + mesh gradient behind glass */
+    <div className="min-h-screen page-bg flex flex-col">
+      <div style={{display:"flex",justifyContent:"flex-end",padding:"12px 16px"}}>
         <ThemeToggle />
       </div>
-
-      {/* Center content */}
-      <div className="flex-1 flex items-center justify-center px-4 pb-12">
-        <div className="w-full max-w-sm md:max-w-3xl animate-fade-up">
-          {isLogin ? (
-            <LoginForm
-              email={email}
-              setEmail={setEmail}
-              password={password}
-              setPassword={setPassword}
-              loading={loading}
-              onLogin={handleSubmit}
-              onSwitchToSignup={() => { setIsLogin(false); setErrors({}) }}
-              errors={errors}
-            />
-          ) : (
-            <SignupForm
-              name={name}
-              setName={setName}
-              email={email}
-              setEmail={setEmail}
-              password={password}
-              setPassword={setPassword}
-              loading={loading}
-              onSignup={handleSubmit}
-              onSwitchToLogin={() => { setIsLogin(true); setErrors({}) }}
-              errors={errors}
-            />
+      <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 16px 48px"}}>
+        <div style={{width:"100%",maxWidth:340}} className="md:max-w-[780px]">
+          {isLogin?(
+            <LoginForm email={email} setEmail={setEmail} password={password} setPassword={setPassword} loading={loading} onLogin={handleSubmit} onSwitchToSignup={()=>{setIsLogin(false);setErrors({})}} errors={errors}/>
+          ):(
+            <SignupForm name={name} setName={setName} email={email} setEmail={setEmail} password={password} setPassword={setPassword} loading={loading} onSignup={handleSubmit} onSwitchToLogin={()=>{setIsLogin(true);setErrors({})}} errors={errors}/>
           )}
         </div>
       </div>

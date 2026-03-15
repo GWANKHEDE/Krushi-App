@@ -1,107 +1,102 @@
-import { useState } from 'react'
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { ThemeToggle } from '@/components/ThemeToggle'
-import { useAuth } from '@/lib/auth'
-import { toast } from '@/lib/toast'
-import { Sprout, LayoutDashboard, Package, ShoppingCart, FileText, BarChart3, Settings, LogOut, Bell, Search, User as UserIcon } from 'lucide-react'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
-import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar'
-import { AppSidebar } from './AppSidebar'
-import { Separator } from '@/components/ui/separator'
-import { useTranslation } from 'react-i18next'
-import { LanguageSwitcher } from './LanguageSwitcher'
+import { Outlet, useLocation, useNavigate } from "react-router-dom"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { ThemeToggle } from "@/components/ThemeToggle"
+import { useAuth } from "@/lib/auth"
+import { toast } from "@/lib/toast"
+import { Settings, LogOut, User as UserIcon, Bell, Search } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar"
+import { AppSidebar } from "./AppSidebar"
+import { useTranslation } from "react-i18next"
+import { LanguageSwitcher } from "./LanguageSwitcher"
 
 export function AdminLayout() {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { t } = useTranslation()
-
-  const handleLogout = () => {
-    logout()
-    toast.success('Signed out successfully')
-    navigate('/admin/login')
-  }
-
-  const initial = user?.name?.charAt(0).toUpperCase() || 'A'
-
-  // Page title from pathname
-  const getPageTitle = () => {
-    const path = location.pathname.split('/').pop() || 'dashboard'
-    return t(path) || path.charAt(0).toUpperCase() + path.slice(1)
-  }
+  const handleLogout = () => { logout(); toast.success("Signed out"); navigate("/admin/login") }
+  const initial = user?.name?.charAt(0).toUpperCase() || "A"
+  const segment = location.pathname.split("/").pop() || "dashboard"
+  const pageTitle = t(segment) || segment.charAt(0).toUpperCase() + segment.slice(1)
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background">
+      <div className="flex min-h-screen w-full page-bg">
         <AppSidebar />
         <SidebarInset className="flex flex-col min-w-0">
 
-          {/* iOS-style sticky top bar */}
-          <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border/50 bg-card/80 backdrop-blur-xl px-4 md:px-6">
-            <div className="flex items-center gap-3">
-              <SidebarTrigger className="h-8 w-8 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" />
-              <Separator orientation="vertical" className="h-4 bg-border/50" />
-              <div className="hidden md:flex items-center relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder={t('search') + '...'}
-                  className="pl-9 h-8 w-56 lg:w-80 bg-muted/60 border-transparent rounded-xl text-sm focus-visible:ring-primary/20 focus-visible:bg-background focus-visible:border-primary/30 transition-all"
-                />
+          {/* ── iOS Navigation Bar — glass-thin, 44px ── */}
+          <header className="glass-thin sticky top-0 z-40"
+            style={{height:44,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 16px",gap:8}}>
+
+            {/* Left */}
+            <div style={{display:"flex",alignItems:"center",gap:8,flex:1}}>
+              <SidebarTrigger style={{width:32,height:32,borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",color:"hsl(var(--muted-foreground))"}} className="hover:bg-black/5 dark:hover:bg-white/8 transition-colors" />
+              <div style={{width:"0.5px",height:16,background:"rgba(60,60,67,0.22)"}} className="hidden sm:block" />
+              <div className="hig-search hidden md:flex flex-1 max-w-64">
+                <Search style={{width:15,height:15,color:"hsl(var(--muted-foreground))",flexShrink:0}} />
+                <input placeholder={`${t("search")}…`} />
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* Center — page title */}
+            <p className="hidden sm:block absolute left-1/2 -translate-x-1/2 pointer-events-none"
+               style={{fontSize:17,fontWeight:600,color:"hsl(var(--foreground))",letterSpacing:"-0.01em",whiteSpace:"nowrap"}}>
+              {pageTitle}
+            </p>
+
+            {/* Right */}
+            <div style={{display:"flex",alignItems:"center",gap:4,flex:1,justifyContent:"flex-end"}}>
               <LanguageSwitcher />
               <ThemeToggle />
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl relative text-muted-foreground hover:text-foreground hover:bg-muted">
-                <Bell className="h-4 w-4" />
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary"></span>
-              </Button>
-
+              {/* Notification dot */}
+              <button style={{width:32,height:32,borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",position:"relative",color:"hsl(var(--muted-foreground))"}}
+                className="hover:bg-black/5 dark:hover:bg-white/8 transition-colors">
+                <Bell style={{width:18,height:18}} />
+                <span style={{position:"absolute",top:7,right:7,width:7,height:7,borderRadius:"50%",background:"#FF3B30",border:"1.5px solid rgba(242,242,247,0.9)"}} />
+              </button>
+              {/* Avatar */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full p-0 overflow-hidden ring-2 ring-border hover:ring-primary/40 transition-all">
-                    <Avatar className="h-full w-full">
-                      <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">{initial}</AvatarFallback>
+                  <button style={{width:28,height:28,borderRadius:"50%",overflow:"hidden",border:"1.5px solid rgba(60,60,67,0.18)",marginLeft:2,outline:"none"}} className="hover:opacity-80 transition-opacity">
+                    <Avatar style={{width:"100%",height:"100%"}}>
+                      <AvatarFallback style={{background:"hsl(var(--primary)/.12)",color:"hsl(var(--primary))",fontSize:11,fontWeight:700}}>{initial}</AvatarFallback>
                     </Avatar>
-                  </Button>
+                  </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 rounded-2xl border-border/60 shadow-strong p-2">
-                  <DropdownMenuLabel className="px-3 py-2">
-                    <p className="text-sm font-semibold">{user?.name}</p>
-                    <p className="text-xs text-muted-foreground">{user?.email}</p>
+                <DropdownMenuContent align="end" sideOffset={8}
+                  style={{width:220,borderRadius:16,border:"0.5px solid rgba(60,60,67,0.18)",boxShadow:"0 20px 60px rgba(0,0,0,0.15)",backdropFilter:"blur(20px)",background:"rgba(255,255,255,0.88)"}}
+                  className="p-1.5 dark:[background:rgba(28,28,30,0.88)] dark:[border-color:rgba(84,84,88,0.55)]">
+                  <DropdownMenuLabel style={{padding:"10px 12px",borderRadius:10}}>
+                    <p style={{fontSize:14,fontWeight:600}}>{user?.name}</p>
+                    <p style={{fontSize:12,color:"hsl(var(--muted-foreground))",marginTop:1}}>{user?.email}</p>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-border/50" />
-                  <DropdownMenuItem className="rounded-xl px-3 py-2.5 text-sm cursor-pointer" onClick={() => navigate('/admin/settings')}>
-                    <Settings className="mr-2.5 h-4 w-4" /> Settings
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="rounded-xl px-3 py-2.5 text-sm cursor-pointer" onClick={() => navigate('/admin/profile')}>
-                    <UserIcon className="mr-2.5 h-4 w-4" /> Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-border/50" />
-                  <DropdownMenuItem className="rounded-xl px-3 py-2.5 text-sm text-destructive focus:text-destructive cursor-pointer" onClick={handleLogout}>
-                    <LogOut className="mr-2.5 h-4 w-4" /> Sign Out
+                  <DropdownMenuSeparator style={{background:"rgba(60,60,67,0.12)",margin:"4px 0"}} />
+                  {[{l:"Settings",I:Settings,p:"/admin/settings"},{l:"Profile",I:UserIcon,p:"/admin/profile"}].map(({l,I,p}) => (
+                    <DropdownMenuItem key={l} onClick={()=>navigate(p)}
+                      style={{borderRadius:10,padding:"10px 12px",fontSize:14,gap:10,cursor:"pointer"}} className="hover:bg-black/5 dark:hover:bg-white/5">
+                      <I style={{width:16,height:16,color:"hsl(var(--muted-foreground))"}} />{l}
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator style={{background:"rgba(60,60,67,0.12)",margin:"4px 0"}} />
+                  <DropdownMenuItem onClick={handleLogout}
+                    style={{borderRadius:10,padding:"10px 12px",fontSize:14,gap:10,cursor:"pointer",color:"#FF3B30"}} className="focus:text-[#FF3B30]">
+                    <LogOut style={{width:16,height:16}} />Sign Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           </header>
 
-          {/* Main content area */}
-          <main className="flex-1 overflow-auto bg-background">
+          {/* ── Main page content — page-bg gradient ── */}
+          <main className="flex-1 overflow-auto page-bg" style={{minHeight:0}}>
             {user?.business?.logo && (
-              <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-[0.03] z-0" aria-hidden="true">
-                <img src={user.business.logo} alt="" className="w-1/2 max-w-[400px] object-contain grayscale" />
+              <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-0" aria-hidden>
+                <img src={user.business.logo} alt="" style={{width:"25%",maxWidth:240,objectFit:"contain",filter:"grayscale(1)",opacity:.02}} />
               </div>
             )}
-            <div className="relative z-10 p-4 md:p-6 page-enter">
+            <div className="relative z-10 p-4 md:p-5 hig-page-enter">
               <Outlet />
             </div>
           </main>
