@@ -2,3 +2,15 @@ DATABASE_URL="postgresql://postgres:root@localhost:5432/DatabseName?schema=publi
 JWT_SECRET="your-super-secret-jwt-key"
 PORT=5000
 NODE_ENV=development
+
+# Google Custom Search API — for dynamic product images
+# Setup guide:
+#   1. Go to https://console.developers.google.com
+#   2. Create a project → Enable "Custom Search API"
+#   3. Create an API Key → paste below as GOOGLE_API_KEY
+#   4. Go to https://cse.google.com → Create search engine
+#      → Search the entire web → Enable "Image search"
+#      → Copy the cx ID → paste below as GOOGLE_CX
+# Free tier: 100 queries/day (results cached 24h so this goes far)
+GOOGLE_API_KEY="your-google-api-key-here"
+GOOGLE_CX="your-custom-search-engine-cx-id"
