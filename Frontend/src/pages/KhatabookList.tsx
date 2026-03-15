@@ -155,48 +155,44 @@ export default function KhatabookList() {
     const totalPayable = data.filter(c => c.balance < 0).reduce((acc, c) => acc + Math.abs(c.balance), 0);
 
     return (
-        <div className="container px-2 sm:px-4 py-4 space-y-4 max-w-xl md:max-w-3xl lg:max-w-5xl xl:max-w-screen-xl mx-auto">
+        <div className="space-y-5 hig-page-enter">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <div>
-                    <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight flex items-center gap-2">
-                        <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-primary" /> Khatabook
-                    </h1>
-                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">Manage outstanding customer balances and ledgers.</p>
+                    <h1 className="ios-title-1" style={{ color: "hsl(var(--foreground))" }}>Khatabook</h1>
+                    <p style={{ fontSize: 13, color: "hsl(var(--muted-foreground))", marginTop: 2 }}>Manage outstanding customer balances and ledgers.</p>
                 </div>
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-2 gap-2 sm:gap-4">
-                <Card className="bg-red-50 dark:bg-red-950/10 border-red-100 dark:border-red-900/30">
-                    <CardContent className="p-3 sm:p-4">
-                        <p className="text-xs sm:text-sm font-semibold text-red-600 dark:text-red-400 mb-1">Total Receivable</p>
-                        <p className="text-lg sm:text-xl md:text-2xl font-bold text-red-700 dark:text-red-500">₹{totalReceivable.toLocaleString()}</p>
-                    </CardContent>
-                </Card>
-                <Card className="bg-green-50 dark:bg-green-950/10 border-green-100 dark:border-green-900/30">
-                    <CardContent className="p-3 sm:p-4">
-                        <p className="text-xs sm:text-sm font-semibold text-green-600 dark:text-green-400 mb-1">Total Advance</p>
-                        <p className="text-lg sm:text-xl md:text-2xl font-bold text-green-700 dark:text-green-500">₹{totalPayable.toLocaleString()}</p>
-                    </CardContent>
-                </Card>
+            <div className="grid grid-cols-2 gap-3">
+                <div className="glass-widget glass-red" style={{padding:"16px 14px 14px"}}>
+                    <div style={{position:"absolute",top:0,left:0,right:0,height:3,borderRadius:"22px 22px 0 0",background:"linear-gradient(90deg,#FF3B30cc,#FF3B3044)",zIndex:2}} />
+                    <p style={{fontSize:11,color:"#FF3B30",marginBottom:6,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.04em"}}>Total Receivable</p>
+                    <p style={{fontSize:24,fontWeight:700,color:"#FF3B30",letterSpacing:"-0.022em",lineHeight:1}}>₹{totalReceivable.toLocaleString()}</p>
+                </div>
+                <div className="glass-widget glass-green" style={{padding:"16px 14px 14px"}}>
+                    <div style={{position:"absolute",top:0,left:0,right:0,height:3,borderRadius:"22px 22px 0 0",background:"linear-gradient(90deg,#34C759cc,#34C75944)",zIndex:2}} />
+                    <p style={{fontSize:11,color:"#34C759",marginBottom:6,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.04em"}}>Total Advance</p>
+                    <p style={{fontSize:24,fontWeight:700,color:"#34C759",letterSpacing:"-0.022em",lineHeight:1}}>₹{totalPayable.toLocaleString()}</p>
+                </div>
             </div>
 
+            {/* Search + column toggle */}
             <div className="flex items-center gap-2">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        className="pl-9 h-9 sm:h-10 text-xs sm:text-sm rounded-lg shadow-sm border-primary/20"
-                        placeholder="Search by customer name or mobile number..."
+                <div className="hig-search flex-1">
+                    <Search style={{ width: 15, height: 15, color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
+                    <input
+                        placeholder="Search by customer name or mobile..."
                         value={globalFilter ?? ''}
                         onChange={(e) => setGlobalFilter(e.target.value)}
                     />
                 </div>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="h-9 sm:h-10">
-                            <Settings2 className="h-4 w-4 mr-2" />
-                            View
-                        </Button>
+                        <button className="hig-btn hig-btn-glass hig-btn-sm flex items-center gap-2" style={{ height: 36, borderRadius: 10, paddingLeft: 12, paddingRight: 12 }}>
+                            <Settings2 style={{ width: 14, height: 14 }} />
+                            <span className="hidden sm:inline" style={{ fontSize: 13 }}>View</span>
+                        </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-[150px]">
                         {table.getAllColumns()
@@ -217,7 +213,7 @@ export default function KhatabookList() {
                 </DropdownMenu>
             </div>
 
-            <div className="bg-card rounded-lg border shadow-sm overflow-hidden flex flex-col">
+            <div className="glass" style={{borderRadius:18,overflow:"hidden"}}>
                 <Table>
                     <TableHeader className="bg-muted/50">
                         {table.getHeaderGroups().map((headerGroup) => (
