@@ -1,13 +1,4 @@
-/**
- * ProductImage component
- *
- * Shows a Google-sourced image for the product name.
- * Renders the agriculture placeholder instantly, then upgrades
- * to the Google result when it arrives (cached for 7 days).
- */
-import { useProductImage } from '@/hooks/useProductImage'
-import { useState } from 'react'
-import { getProductPlaceholder } from '@/hooks/useProductImage'
+import { useProductImage, getProductPlaceholder } from '@/hooks/useProductImage'
 
 interface Props {
   name: string
