@@ -13,6 +13,7 @@ import { mockApi } from '@/services/mockApi';
 import Loader from '@/services/Loader';
 import CustomerLedger from './CustomerLedger';
 import { cn } from '@/lib/utils';
+import { useSearch } from '@/lib/SearchContext';
 import {
     ColumnDef,
     flexRender,
@@ -30,7 +31,7 @@ export default function KhatabookList() {
     const navigate = useNavigate();
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [balances, setBalances] = useState<Record<string, { balance: number, dueDate?: string }> | null>(null);
-    const [globalFilter, setGlobalFilter] = useState('');
+    const { query: globalFilter, setQuery: setGlobalFilter } = useSearch(); // synced with navbar
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnVisibility, setColumnVisibility] = useState({});
     const [viewingCustomerId, setViewingCustomerId] = useState<string | null>(null);
@@ -177,16 +178,14 @@ export default function KhatabookList() {
                 </div>
             </div>
 
-            {/* Search + column toggle */}
-            <div className="flex items-center gap-2">
-                <div className="hig-search flex-1">
-                    <Search style={{ width: 15, height: 15, color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
-                    <input
-                        placeholder="Search by customer name or mobile..."
-                        value={globalFilter ?? ''}
-                        onChange={(e) => setGlobalFilter(e.target.value)}
-                    />
-                </div>
+            {/* Column toggle only — search is in the top navbar */}
+            <div className="flex items-center justify-between gap-2">
+                {globalFilter && (
+                  <p style={{ fontSize: 13, color: "hsl(var(--muted-foreground))", flex: 1 }}>
+                    Results for "<span style={{ fontWeight: 600, color: "hsl(var(--foreground))" }}>{globalFilter}</span>"
+                  </p>
+                )}
+                <div className="ml-auto">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <button className="hig-btn hig-btn-glass hig-btn-sm flex items-center gap-2" style={{ height: 36, borderRadius: 10, paddingLeft: 12, paddingRight: 12 }}>
@@ -211,6 +210,7 @@ export default function KhatabookList() {
                             })}
                     </DropdownMenuContent>
                 </DropdownMenu>
+                </div>
             </div>
 
             <div className="glass" style={{borderRadius:18,overflow:"hidden"}}>

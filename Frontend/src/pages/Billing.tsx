@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useSearch } from '@/lib/SearchContext'
 import { useTranslation } from 'react-i18next'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -31,7 +32,7 @@ export default function Billing() {
   const [paymentType, setPaymentType] = useState<'full' | 'partial'>('full')
   const [dueDate, setDueDate] = useState<string>('')
   const [processing, setProcessing] = useState(false)
-  const [search, setSearch] = useState('')
+  const { query: search } = useSearch() // synced with navbar
 
   const available = useMemo(() =>
     products.filter(p => p.isActive && p.currentStock > 0 &&
@@ -127,11 +128,12 @@ export default function Billing() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           {/* Product grid */}
           <div className="lg:col-span-2 space-y-4">
-            {/* Search */}
-            <div className="hig-search">
-              <Search style={{ width: 15, height: 15, color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
-              <input placeholder={t('search') + ' products…'} value={search} onChange={e => setSearch(e.target.value)} />
-            </div>
+            {/* Search hint when active */}
+            {search && (
+              <p style={{ fontSize: 13, color: "hsl(var(--muted-foreground))", paddingLeft: 2 }}>
+                Showing products matching "<span style={{ fontWeight: 600, color: "hsl(var(--foreground))" }}>{search}</span>"
+              </p>
+            )}
 
             {/* Products glass grid */}
             <div className="glass" style={{ padding: 16, borderRadius: 18 }}>
@@ -172,7 +174,7 @@ export default function Billing() {
                   <div className="col-span-full" style={{ padding: "48px 0", textAlign: "center" }}>
                     <Package style={{ width: 40, height: 40, margin: "0 auto 10px", opacity: 0.2 }} />
                     <p style={{ fontSize: 15, color: "hsl(var(--muted-foreground))" }}>No products found</p>
-                    <button onClick={() => setSearch('')} style={{ fontSize: 13, color: "#007AFF", background: "none", border: "none", cursor: "pointer", marginTop: 6 }}>Clear search</button>
+                    <button onClick={() => {}} style={{ fontSize: 13, color: "#007AFF", background: "none", border: "none", cursor: "pointer", marginTop: 6 }}>Use navbar to clear search</button>
                   </div>
                 )}
               </div>

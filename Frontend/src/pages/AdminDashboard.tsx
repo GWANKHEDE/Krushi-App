@@ -2,11 +2,12 @@ import { useState, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/lib/auth"
-import { getDashboardStats, getSalesTrend, getLowStockProducts, getRecentSales, getCategories } from "@/lib/store"
+import { getDashboardStats, getSalesTrend, getLowStockProducts, getRecentSales, getCategories, getProducts, getCustomers, getSales } from "@/lib/store"
 import { toast } from "@/lib/toast"
+import { useSearch } from "@/lib/SearchContext"
 import {
   Package, TrendingUp, AlertTriangle, ShoppingCart,
-  BarChart3, Plus, IndianRupee, RefreshCw, ChevronRight
+  BarChart3, Plus, IndianRupee, RefreshCw, ChevronRight, Search
 } from "lucide-react"
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -79,6 +80,7 @@ export default function AdminDashboard() {
   const navigate  = useNavigate()
   const { user }  = useAuth()
   const { t }     = useTranslation()
+  const { query } = useSearch()
   const [k, setK] = useState(0)
 
   const stats    = useMemo(() => getDashboardStats(),    [k])
@@ -91,6 +93,35 @@ export default function AdminDashboard() {
       .filter(c => c.value > 0),
     [k]
   )
+
+  /* ── Global search results (dashboard only) ── */
+  const q = query.toLowerCase().trim()
+  const allProducts  = useMemo(() => getProducts(),   [k])
+  const allCustomers = useMemo(() => getCustomers(),  [k])
+  const allSales     = useMemo(() => getSales(),      [k])
+
+  const searchResults = useMemo(() => {
+    if (!q) return null
+    return {
+      products:  allProducts.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.sku.toLowerCase().includes(q) ||
+        (p.category?.name || '').toLowerCase().includes(q)
+      ).slice(0, 5),
+      customers: allCustomers.filter(c =>
+        c.name.toLowerCase().includes(q) ||
+        (c.phone || '').includes(q) ||
+        (c.email || '').toLowerCase().includes(q)
+      ).slice(0, 5),
+      sales: allSales.filter(s =>
+        (s.invoiceNumber || '').toLowerCase().includes(q) ||
+        (s.customerName || '').toLowerCase().includes(q)
+      ).slice(0, 5),
+    }
+  }, [q, allProducts, allCustomers, allSales])
+
+  const hasResults = searchResults &&
+    (searchResults.products.length + searchResults.customers.length + searchResults.sales.length) > 0
 
   const greet   = () => { const h = new Date().getHours(); return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening" }
   const dateStr = new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })
@@ -113,13 +144,80 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-5 hig-page-enter">
 
+      {/* ── Global search results panel ── */}
+      {searchResults && (
+        <div className="hig-section">
+          <div className="px-4 py-3 border-b border-border/50 flex items-center gap-2">
+            <Search className="h-4 w-4 text-muted-foreground" />
+            <p className="text-sm font-semibold text-foreground">
+              Search results for <span className="text-primary">"{query}"</span>
+            </p>
+            {!hasResults && (
+              <span className="text-xs text-muted-foreground ml-auto">No results found</span>
+            )}
+          </div>
+
+          {/* Products */}
+          {searchResults.products.length > 0 && (
+            <>
+              <p className="px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Products</p>
+              {searchResults.products.map(p => (
+                <div key={p.id} className="hig-cell cursor-pointer" onClick={() => navigate("/admin/products")}>
+                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <Package className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="hig-cell-title truncate">{p.name}</p>
+                    <p className="hig-cell-subtitle">{p.category?.name} · SKU: {p.sku}</p>
+                  </div>
+                  <span className="text-sm font-semibold text-primary shrink-0">₹{p.sellingPrice.toLocaleString()}</span>
+                </div>
+              ))}
+            </>
+          )}
+
+          {/* Customers */}
+          {searchResults.customers.length > 0 && (
+            <>
+              <p className="px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Customers</p>
+              {searchResults.customers.map(c => (
+                <div key={c.id} className="hig-cell cursor-pointer" onClick={() => navigate("/admin/khatabook")}>
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-primary text-sm font-bold">
+                    {c.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="hig-cell-title truncate">{c.name}</p>
+                    <p className="hig-cell-subtitle">{c.phone || "No phone"}</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0" />
+                </div>
+              ))}
+            </>
+          )}
+
+          {/* Sales */}
+          {searchResults.sales.length > 0 && (
+            <>
+              <p className="px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Invoices</p>
+              {searchResults.sales.map(s => (
+                <div key={s.id} className="hig-cell cursor-pointer" onClick={() => navigate("/admin/reports")}>
+                  <div className="h-8 w-8 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
+                    <IndianRupee className="h-4 w-4 text-green-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="hig-cell-title truncate">#{s.invoiceNumber}</p>
+                    <p className="hig-cell-subtitle">{s.customerName} · {new Date(s.saleDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</p>
+                  </div>
+                  <span className="text-sm font-semibold text-green-500 shrink-0">₹{s.totalAmount.toLocaleString()}</span>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+      )}
+
       {/* ══════════════════════════════════════════════════════
           HEADER ROW
-          • "Good morning, Name" on left
-          • Refresh icon button immediately to the right of name
-            (inline, not pushed to far right)
-          • On mobile: compact, inline
-          • On desktop: same layout, larger type
           ══════════════════════════════════════════════════════ */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
         {/* Left: greeting + refresh side-by-side */}
