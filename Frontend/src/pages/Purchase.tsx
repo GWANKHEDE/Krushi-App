@@ -1,23 +1,17 @@
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
-import { Plus, Calendar, DollarSign, Package, UserPlus, Info, Loader2 } from 'lucide-react'
-import { getProducts, getSuppliers, createPurchase, type Product, type Supplier } from '@/lib/store'
+import { Plus, Package, UserPlus, Info, Loader2, Calendar } from 'lucide-react'
+import { getProducts, getSuppliers, createPurchase } from '@/lib/store'
 import AddSupplierDialog from '@/components/AddSupplierDialog'
 import { toast } from '@/lib/toast'
 
 interface PurchaseForm { productId: string; quantity: string; costPrice: string; supplierId: string; purchaseDate: string; notes: string }
 
 export default function Purchase() {
-  const [form, setForm] = useState<PurchaseForm>({
-    productId: '', quantity: '', costPrice: '', supplierId: '',
-    purchaseDate: new Date().toISOString().split('T')[0], notes: '',
-  })
+  const [form, setForm] = useState<PurchaseForm>({ productId: '', quantity: '', costPrice: '', supplierId: '', purchaseDate: new Date().toISOString().split('T')[0], notes: '' })
   const [products, setProducts] = useState(getProducts())
   const [suppliers, setSuppliers] = useState(getSuppliers())
   const [loading, setLoading] = useState(false)
@@ -25,7 +19,6 @@ export default function Purchase() {
 
   const set = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }))
   const selectedProduct = products.find(p => p.id === form.productId)
-  const selectedSupplier = suppliers.find(s => s.id === form.supplierId)
   const totalCost = (parseFloat(form.quantity) || 0) * (parseFloat(form.costPrice) || 0)
 
   const handleProductChange = (id: string) => {
@@ -36,202 +29,168 @@ export default function Purchase() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.productId || !form.quantity || !form.costPrice || !form.supplierId) {
-      toast.error('Fill all required fields'); return
-    }
-    if (parseFloat(form.quantity) <= 0 || parseFloat(form.costPrice) <= 0) {
-      toast.error('Values must be positive'); return
-    }
+    if (!form.productId || !form.quantity || !form.costPrice || !form.supplierId) { toast.error('Fill all required fields'); return }
+    if (parseFloat(form.quantity) <= 0 || parseFloat(form.costPrice) <= 0) { toast.error('Values must be positive'); return }
     setLoading(true)
     try {
-      createPurchase({
-        supplierId: form.supplierId,
-        purchaseItems: [{ productId: form.productId, quantity: parseInt(form.quantity), costPrice: parseFloat(form.costPrice), totalCost }],
-        totalAmount: totalCost, purchaseDate: form.purchaseDate, notes: form.notes,
-      })
-      toast.success('Purchase recorded successfully')
+      createPurchase({ supplierId: form.supplierId, purchaseItems: [{ productId: form.productId, quantity: parseInt(form.quantity), costPrice: parseFloat(form.costPrice), totalCost }], totalAmount: totalCost, purchaseDate: form.purchaseDate, notes: form.notes })
+      toast.success('Purchase recorded')
       setForm({ productId: '', quantity: '', costPrice: '', supplierId: '', purchaseDate: new Date().toISOString().split('T')[0], notes: '' })
-      setProducts(getProducts()) // refresh stock
-    } catch { toast.error('Failed to record purchase') }
+      setProducts(getProducts())
+    } catch { toast.error('Failed') }
     finally { setLoading(false) }
   }
 
+  const fieldLabel = (text: string) => (
+    <p style={{ fontSize: 11, fontWeight: 600, color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>{text}</p>
+  )
+
   return (
-    <div className="container px-4 py-6 md:py-8 space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="space-y-1">
-          <h1 className="text-xl font-bold tracking-tight text-primary uppercase">Purchase Entry</h1>
-          <p className="text-xs text-muted-foreground font-medium italic">Record incoming agricultural stock.</p>
+    <div className="space-y-5 hig-page-enter">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="ios-title-1" style={{ color: "hsl(var(--foreground))" }}>Purchase Entry</h1>
+          <p style={{ fontSize: 13, color: "hsl(var(--muted-foreground))", marginTop: 2 }}>Record incoming agricultural stock</p>
         </div>
-        <div className="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-xl border border-primary/20">
-          <Calendar className="h-4 w-4 text-primary" />
-          <span className="text-[10px] font-bold text-primary uppercase tracking-widest">
-            {new Date().toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric' })}
-          </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 10, background: "rgba(0,122,255,0.08)" }}>
+          <Calendar style={{ width: 13, height: 13, color: "#007AFF" }} />
+          <span style={{ fontSize: 12, color: "#007AFF", fontWeight: 500 }}>{new Date().toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Main form */}
         <div className="lg:col-span-2">
-          <Card className="border-none shadow-medium bg-card/60 backdrop-blur-md rounded-[2.5rem] overflow-hidden ring-1 ring-primary/5">
-            <CardHeader className="bg-secondary/20 border-b border-primary/5 pb-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-primary/10">
-                  <Package className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg font-bold text-primary uppercase tracking-tight">Stock Details</CardTitle>
-                  <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Inventory Entry Form</CardDescription>
+          <div className="glass" style={{ padding: "20px 18px", borderRadius: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, paddingBottom: 16, borderBottom: "0.5px solid rgba(60,60,67,0.12)" }}>
+              <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(0,122,255,0.10)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Package style={{ width: 18, height: 18, color: "#007AFF" }} />
+              </div>
+              <div>
+                <p style={{ fontSize: 15, fontWeight: 600, color: "hsl(var(--foreground))" }}>Stock Details</p>
+                <p style={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}>Inventory entry form</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {/* Supplier */}
+              <div>
+                {fieldLabel("Distributor / Supplier")}
+                <div style={{ display: "flex", gap: 8 }}>
+                  <Select value={form.supplierId} onValueChange={v => set('supplierId', v)}>
+                    <SelectTrigger className="h-11 rounded-xl border-0 bg-black/5 dark:bg-white/8 text-sm flex-1">
+                      <SelectValue placeholder="Select supplier…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <button type="button" onClick={() => setAddSupplierOpen(true)} style={{ width: 44, height: 44, borderRadius: 11, background: "rgba(52,199,89,0.10)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#34C759", flexShrink: 0 }} className="hover:bg-[rgba(52,199,89,0.18)] transition-colors">
+                    <UserPlus style={{ width: 17, height: 17 }} />
+                  </button>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent className="pt-8">
-              <form className="space-y-8" onSubmit={handleSubmit}>
-                {/* Supplier Selection */}
-                <div className="space-y-4">
-                  <Label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Distributor / Supplier</Label>
-                  <div className="flex gap-4">
-                    <div className="flex-1">
-                      <Select value={form.supplierId} onValueChange={v => set('supplierId', v)}>
-                        <SelectTrigger className="h-8 rounded-xl border-primary/10 bg-muted/30 focus-visible:ring-primary shadow-sm font-bold text-sm">
-                          <SelectValue placeholder="Select supplier..." />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                          {suppliers.map(s => <SelectItem key={s.id} value={s.id} className="font-medium">{s.name}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button type="button" variant="outline" className="h-8 w-8 p-0 rounded-xl border-dashed border-primary/30 hover:bg-primary/5 text-primary flex items-center justify-center" onClick={() => setAddSupplierOpen(true)}>
-                      <UserPlus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  {selectedSupplier && (
-                    <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 text-sm flex gap-6 animate-in slide-in-from-top-2">
-                      {selectedSupplier.contactPerson && <div className="flex items-center gap-2"><span className="opacity-40">👤</span> <span className="font-bold">{selectedSupplier.contactPerson}</span></div>}
-                      {selectedSupplier.phone && <div className="flex items-center gap-2"><span className="opacity-40">📞</span> <span className="font-bold">{selectedSupplier.phone}</span></div>}
-                    </div>
-                  )}
-                </div>
 
-                <div className="h-px bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
+              {/* Product */}
+              <div>
+                {fieldLabel("Product")}
+                <Select value={form.productId} onValueChange={handleProductChange}>
+                  <SelectTrigger className="h-11 rounded-xl border-0 bg-black/5 dark:bg-white/8 text-sm">
+                    <SelectValue placeholder="Choose product…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {products.map(p => (
+                      <SelectItem key={p.id} value={p.id}>
+                        <span>{p.name}</span>
+                        <span style={{ marginLeft: 8, fontSize: 11, color: "hsl(var(--muted-foreground))" }}>Stock: {p.currentStock}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-                {/* Product Selection */}
-                <div className="space-y-6">
-                  <div className="space-y-3">
-                    <Label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Target Product</Label>
-                    <Select value={form.productId} onValueChange={handleProductChange}>
-                      <SelectTrigger className="h-8 rounded-xl border-primary/10 bg-muted/30 focus-visible:ring-primary shadow-sm font-bold text-sm">
-                        <SelectValue placeholder="Choose product..." />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl">
-                        {products.map(p => (
-                          <SelectItem key={p.id} value={p.id}>
-                            <div className="flex justify-between items-center w-full min-w-[300px]">
-                              <span className="font-bold">{p.name}</span>
-                              <Badge variant="secondary" className="text-[10px] ml-4 font-black">Stock: {p.currentStock}</Badge>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <Label htmlFor="qty" className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Entry Quantity</Label>
-                      <div className="relative">
-                        <Input id="qty" type="number" min="1" className="h-8 px-4 rounded-xl border-primary/10 bg-muted/30 focus-visible:ring-primary shadow-sm font-bold text-sm pr-16" value={form.quantity} onChange={e => set('quantity', e.target.value)} placeholder="0" required />
-                        {selectedProduct && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-bold uppercase text-primary/40 leading-none">{selectedProduct.unit}s</span>}
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <Label htmlFor="cost" className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Landing Cost (₹)</Label>
-                      <div className="relative group">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/30 font-bold text-sm flex items-center justify-center leading-none">₹</div>
-                        <Input id="cost" type="number" step="0.01" className="h-8 pl-8 px-4 rounded-xl border-primary/10 bg-muted/30 focus-visible:ring-primary shadow-sm font-bold text-sm" value={form.costPrice} onChange={e => set('costPrice', e.target.value)} placeholder="0.00" required />
-                      </div>
-                    </div>
+              {/* Qty + Cost */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  {fieldLabel("Quantity")}
+                  <div className="hig-field-wrap">
+                    <input type="number" min="1" value={form.quantity} onChange={e => set('quantity', e.target.value)} placeholder="0" required />
+                    {selectedProduct && <span style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>{selectedProduct.unit}s</span>}
                   </div>
                 </div>
-
-                <div className="h-px bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div className="space-y-3">
-                    <Label htmlFor="date" className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Invoice Date</Label>
-                    <Input id="date" type="date" className="h-8 px-4 rounded-xl border-primary/10 bg-muted/30 focus-visible:ring-primary shadow-sm font-bold text-sm" value={form.purchaseDate} onChange={e => set('purchaseDate', e.target.value)} required />
-                  </div>
-                  <div className="space-y-3">
-                    <Label htmlFor="notes" className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Additional Notes</Label>
-                    <Textarea id="notes" className="min-h-[32px] h-8 py-2 px-4 rounded-xl border-primary/10 bg-muted/30 focus-visible:ring-primary shadow-sm font-medium text-sm resize-none" value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="Remarks..." />
+                <div>
+                  {fieldLabel("Landing Cost (₹)")}
+                  <div className="hig-field-wrap">
+                    <span style={{ fontSize: 14, color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>₹</span>
+                    <input type="number" step="0.01" value={form.costPrice} onChange={e => set('costPrice', e.target.value)} placeholder="0.00" required />
                   </div>
                 </div>
+              </div>
 
-                <Button type="submit" className="w-full h-8 rounded-xl text-sm font-bold uppercase tracking-widest shadow-lg shadow-primary/10 transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center" disabled={loading}>
-                  {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processing...</> : <><Plus className="mr-2 h-4 w-4" />Update Stock</>}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+              {/* Date + Notes */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  {fieldLabel("Invoice Date")}
+                  <div className="hig-field-wrap">
+                    <input type="date" value={form.purchaseDate} onChange={e => set('purchaseDate', e.target.value)} required style={{ fontSize: 14 }} />
+                  </div>
+                </div>
+                <div>
+                  {fieldLabel("Notes (optional)")}
+                  <div className="hig-field-wrap" style={{ height: "auto", alignItems: "flex-start", paddingTop: 10, paddingBottom: 10 }}>
+                    <textarea value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="Remarks…" rows={2} style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: 14, color: "hsl(var(--foreground))", resize: "none", fontFamily: "inherit" }} className="placeholder:text-muted-foreground/60" />
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" disabled={loading} className="hig-btn hig-btn-filled w-full" style={{ borderRadius: 14, height: 48, marginTop: 4 }}>
+                {loading ? <><Loader2 style={{ width: 16, height: 16 }} className="animate-spin mr-2" />Processing…</> : <><Plus style={{ width: 16, height: 16, marginRight: 6 }} />Update Stock</>}
+              </button>
+            </form>
+          </div>
         </div>
 
-        {/* Status Panels */}
-        <div className="space-y-6">
-          <Card className="border-none shadow-medium bg-gradient-to-br from-primary to-primary-foreground p-px rounded-[2rem] overflow-hidden">
-            <div className="bg-card/95 backdrop-blur-sm rounded-[calc(2rem-1px)] h-full overflow-hidden">
-              <CardHeader className="pb-2 border-b border-primary/5"><CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-primary/40">Financial Summary</CardTitle></CardHeader>
-              <CardContent className="space-y-4 pt-6 pb-8">
-                <div className="space-y-1">
-                  <div className="flex justify-between items-center px-1">
-                    <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Total Valuation</span>
-                  </div>
-                  <div className="p-5 rounded-3xl bg-primary/5 border border-primary/10 flex flex-col">
-                    <span className="text-2xl font-bold text-primary tabular-nums tracking-tighter italic">₹{totalCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                    <span className="text-[10px] font-bold text-muted-foreground mt-1 uppercase">Computed Landing Cost</span>
-                  </div>
+        {/* Side panels */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* Cost summary */}
+          <div className="glass-widget glass-blue" style={{ padding: "16px 14px" }}>
+            <p style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>Financial Summary</p>
+            <p style={{ fontSize: 28, fontWeight: 700, color: "#007AFF", letterSpacing: "-0.025em", marginBottom: 4 }}>
+              ₹{totalCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            </p>
+            <p style={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}>Total landing cost</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 12 }}>
+              {[["Unit Price", `₹${(parseFloat(form.costPrice) || 0).toLocaleString()}`], ["Volume", `${form.quantity || 0} ${selectedProduct?.unit || 'units'}`]].map(([k, v]) => (
+                <div key={String(k)} style={{ background: "rgba(120,120,128,0.08)", borderRadius: 10, padding: "10px 10px" }}>
+                  <p style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.04em" }}>{k}</p>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: "hsl(var(--foreground))", marginTop: 2 }}>{v}</p>
                 </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 rounded-2xl bg-secondary/30 space-y-1">
-                    <span className="text-[8px] font-black text-muted-foreground uppercase leading-none">Unit Price</span>
-                    <p className="font-black text-sm">₹{(parseFloat(form.costPrice) || 0).toLocaleString()}</p>
-                  </div>
-                  <div className="p-4 rounded-2xl bg-secondary/30 space-y-1">
-                    <span className="text-[8px] font-black text-muted-foreground uppercase leading-none">Net Volume</span>
-                    <p className="font-black text-sm">{form.quantity || 0} <span className="text-[10px] font-bold opacity-60 uppercase">{selectedProduct?.unit || 'units'}</span></p>
-                  </div>
-                </div>
-              </CardContent>
+              ))}
             </div>
-          </Card>
+          </div>
 
-          <Card className="border-none shadow-soft bg-blue-50 dark:bg-blue-950/20 rounded-[2rem] overflow-hidden">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400 flex items-center gap-2 px-1">
-                <Info className="h-3 w-3" /> Predictive Stock Impact
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pb-8">
-              {selectedProduct ? (
-                <div className="space-y-4 pt-2">
-                  <div className="flex justify-between items-center p-3 rounded-xl bg-white/50 dark:bg-black/20">
-                    <span className="text-xs font-bold text-muted-foreground uppercase">Current Level</span>
-                    <Badge variant="secondary" className="h-6 font-black rounded-lg">{selectedProduct.currentStock}</Badge>
-                  </div>
-                  <div className="flex justify-between items-center p-3 rounded-xl bg-blue-600 shadow-lg shadow-blue-500/20 transition-all">
-                    <span className="text-xs font-black text-white uppercase tracking-widest">Projected New Total</span>
-                    <Badge className="h-8 px-3 font-black bg-white text-blue-600 rounded-lg text-sm tabular-nums">
-                      {selectedProduct.currentStock + (parseInt(form.quantity) || 0)}
-                    </Badge>
-                  </div>
+          {/* Stock impact */}
+          <div className="glass" style={{ padding: "16px 14px", borderRadius: 18 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+              <Info style={{ width: 14, height: 14, color: "#007AFF" }} />
+              <p style={{ fontSize: 12, fontWeight: 600, color: "#007AFF" }}>Stock Impact Preview</p>
+            </div>
+            {selectedProduct ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", background: "rgba(120,120,128,0.07)", borderRadius: 10 }}>
+                  <span style={{ fontSize: 13, color: "hsl(var(--muted-foreground))" }}>Current stock</span>
+                  <span style={{ fontSize: 13, fontWeight: 600 }}>{selectedProduct.currentStock}</span>
                 </div>
-              ) : (
-                <div className="py-8 text-center px-4">
-                  <p className="text-xs font-bold text-muted-foreground italic">Select a product to preview the inventory projection path.</p>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 12px", background: "rgba(52,199,89,0.10)", borderRadius: 10, border: "0.5px solid rgba(52,199,89,0.2)" }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "#34C759" }}>After entry</span>
+                  <span style={{ fontSize: 16, fontWeight: 700, color: "#34C759" }}>{selectedProduct.currentStock + (parseInt(form.quantity) || 0)}</span>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+            ) : (
+              <p style={{ fontSize: 13, color: "hsl(var(--muted-foreground))", textAlign: "center", padding: "20px 0" }}>Select a product to preview</p>
+            )}
+          </div>
         </div>
       </div>
 

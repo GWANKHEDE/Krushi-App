@@ -1,18 +1,19 @@
 import { useState, useMemo } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts'
 import { IndianRupee, Percent, Receipt, History, PieChart as PieChartIcon, BarChart3, TrendingUp, Package, Users, ShoppingCart, RefreshCw } from 'lucide-react'
-import { getDashboardStats, getSalesTrend, getSales, getPurchases, getCategories, type Sale, type Purchase } from '@/lib/store'
+import { getDashboardStats, getSalesTrend, getSales, getPurchases, getCategories } from '@/lib/store'
 import { toast } from '@/lib/toast'
 
-const COLORS = ['#4f46e5', '#16a34a', '#f97316', '#e11d48', '#8b5cf6', '#06b6d4']
+const CHART_COLORS = ['#34C759','#007AFF','#FF9500','#FF3B30','#AF52DE','#5AC8FA']
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return <p style={{ fontSize: 20, fontWeight: 700, color: "hsl(var(--foreground))", letterSpacing: "-0.015em", marginBottom: 8 }}>{children}</p>
+}
 
 export default function Report() {
   const [chartType, setChartType] = useState<'bar' | 'pie' | 'line'>('bar')
+  const [activeTab, setActiveTab] = useState<'billing' | 'purchases' | 'gst' | 'all'>('billing')
   const [refreshKey, setRefreshKey] = useState(0)
 
   const stats = useMemo(() => getDashboardStats(), [refreshKey])
@@ -20,253 +21,275 @@ export default function Report() {
   const sales = useMemo(() => getSales().slice(0, 50), [refreshKey])
   const purchases = useMemo(() => getPurchases().slice(0, 50), [refreshKey])
   const categories = useMemo(() => getCategories(), [refreshKey])
-
   const categoryData = categories.map(c => ({ name: c.name, value: c._count?.products || 0 })).filter(c => c.value > 0)
 
-  const gstSummary = {
+  const gst = {
     collected: sales.reduce((s, sale) => s + (sale.totalAmount - sale.totalAmount / 1.18), 0),
     paid: purchases.reduce((s, p) => s + (p.totalAmount - p.totalAmount / 1.18), 0),
     get net() { return this.collected - this.paid },
-    get cgstCollected() { return this.collected / 2 },
-    get sgstCollected() { return this.collected / 2 },
-    get cgstPaid() { return this.paid / 2 },
-    get sgstPaid() { return this.paid / 2 },
+    get cgstC() { return this.collected / 2 }, get sgstC() { return this.collected / 2 },
+    get cgstP() { return this.paid / 2 }, get sgstP() { return this.paid / 2 },
   }
 
   const transactions = [
     ...sales.slice(0, 10).map(s => ({ id: s.id, type: 'sale' as const, amount: s.totalAmount, date: s.saleDate, desc: `Sale #${s.invoiceNumber}` })),
-    ...purchases.slice(0, 10).map(p => ({ id: p.id, type: 'purchase' as const, amount: p.totalAmount, date: p.purchaseDate, desc: `Purchase from ${p.supplier.name}` })),
-  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 10)
+    ...purchases.slice(0, 10).map(p => ({ id: p.id, type: 'purchase' as const, amount: p.totalAmount, date: p.purchaseDate, desc: `Purchase – ${p.supplier.name}` })),
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 12)
 
-  const refresh = () => { setRefreshKey(k => k + 1); toast.success('Report refreshed') }
+  const refresh = () => { setRefreshKey(k => k + 1); toast.success('Refreshed') }
+
+  const tooltipStyle = { borderRadius: 14, border: "0.5px solid rgba(60,60,67,0.18)", boxShadow: "0 12px 40px rgba(0,0,0,0.12)", background: "rgba(255,255,255,0.92)", backdropFilter: "blur(20px)", color: "hsl(var(--foreground))", fontSize: 13, fontFamily: "Inter" }
 
   const statCards = [
-    { title: 'Total Sales', value: `₹${stats.todaysSales.toLocaleString()}`, sub: `${sales.length} transactions`, icon: IndianRupee, color: 'text-green-600' },
-    { title: 'Monthly Profit', value: `₹${stats.monthlyProfit.toLocaleString()}`, sub: 'Net revenue', icon: TrendingUp, color: 'text-emerald-600' },
-    { title: 'Products', value: stats.totalProducts, sub: `${stats.lowStockItems} low stock`, icon: Package, color: 'text-blue-600' },
-    { title: 'Customers', value: stats.totalCustomers, sub: 'Active', icon: Users, color: 'text-purple-600' },
+    { title: 'Total Sales',     value: `₹${stats.todaysSales.toLocaleString()}`,   sub: `${sales.length} transactions`, icon: IndianRupee, color: "#34C759", bg: "rgba(52,199,89,0.10)"  },
+    { title: 'Monthly Profit',  value: `₹${stats.monthlyProfit.toLocaleString()}`, sub: 'Net revenue',                  icon: TrendingUp,  color: "#007AFF", bg: "rgba(0,122,255,0.10)"  },
+    { title: 'Products',        value: stats.totalProducts,                         sub: `${stats.lowStockItems} low`,    icon: Package,     color: "#FF9500", bg: "rgba(255,149,0,0.10)"  },
+    { title: 'Customers',       value: stats.totalCustomers,                        sub: 'Active',                        icon: Users,       color: "#AF52DE", bg: "rgba(175,82,222,0.10)" },
   ]
 
-  const ChartToggle = () => (
-    <div className="flex gap-1">
-      {([['bar', BarChart3], ['line', TrendingUp], ['pie', PieChartIcon]] as const).map(([t, Icon]) => (
-        <button key={t} onClick={() => setChartType(t)} className={`p-2 rounded border transition-colors ${chartType === t ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>
-          <Icon className="h-4 w-4" />
-        </button>
-      ))}
-    </div>
-  )
-
   return (
-    <div className="container px-4 py-6 md:py-8 space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-xl font-bold tracking-tight uppercase text-primary">Business Reports</h1>
-        <Button variant="outline" size="sm" onClick={refresh} className="h-8 text-xs font-bold uppercase tracking-widest"><RefreshCw className="h-3.5 w-3.5 mr-2" />Refresh</Button>
+    <div className="space-y-5 hig-page-enter">
+      {/* Header */}
+      {/* Header — refresh icon inline next to title (same as dashboard) */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+        <div>
+          <p style={{ fontSize: 13, color: "hsl(var(--muted-foreground))", fontWeight: 400 }}>
+            {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}
+          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 3 }}>
+            <h1 className="ios-large-title" style={{ color: "hsl(var(--foreground))", lineHeight: 1 }}>Reports</h1>
+            {/* Inline refresh — right next to title, same as dashboard */}
+            <button
+              onClick={refresh}
+              className="glass hig-pop"
+              style={{ width: 32, height: 32, borderRadius: 9, padding: 0, border: "none", display: "flex", alignItems: "center", justifyContent: "center", color: "hsl(var(--muted-foreground))", cursor: "pointer", flexShrink: 0 }}
+            >
+              <RefreshCw style={{ width: 14, height: 14 }} />
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stat widgets */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 hig-list">
         {statCards.map((s, i) => (
-          <Card key={i}>
-            <CardContent className="p-4 md:p-5">
-              <div className="flex items-center justify-between mb-1.5">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{s.title}</p>
-                <s.icon className={`h-4 w-4 ${s.color}`} />
-              </div>
-              <p className="text-xl font-bold tracking-tight">{s.value}</p>
-              <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60 mt-0.5">{s.sub}</p>
-            </CardContent>
-          </Card>
+          <div key={i} className="glass-widget" style={{ padding: "16px 14px 12px" }}>
+            <div style={{ width: 36, height: 36, borderRadius: 9, background: s.bg, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
+              <s.icon style={{ width: 18, height: 18, color: s.color }} />
+            </div>
+            <p style={{ fontSize: 22, fontWeight: 700, color: "hsl(var(--foreground))", letterSpacing: "-0.025em", lineHeight: 1 }}>{s.value}</p>
+            <p style={{ fontSize: 12, fontWeight: 500, color: "hsl(var(--foreground))", marginTop: 5, opacity: 0.72 }}>{s.title}</p>
+            <p style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", marginTop: 1 }}>{s.sub}</p>
+          </div>
         ))}
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row justify-between items-center border-b pb-3">
-            <CardTitle className="text-base">Sales Overview</CardTitle>
-            <ChartToggle />
-          </CardHeader>
-          <CardContent className="pt-4">
-            <ResponsiveContainer width="100%" height={300}>
+      {/* Charts row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <SectionTitle>Sales Overview</SectionTitle>
+            <div className="hig-segmented" style={{ width: 120 }}>
+              {([['bar', BarChart3], ['line', TrendingUp], ['pie', PieChartIcon]] as const).map(([type, Icon]) => (
+                <button key={type} className={`hig-seg ${chartType === type ? 'active' : ''}`} onClick={() => setChartType(type)} style={{ padding: "0 6px" }}>
+                  <Icon style={{ width: 13, height: 13 }} />
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="glass" style={{ padding: "16px 14px", borderRadius: 18 }}>
+            <ResponsiveContainer width="100%" height={260}>
               {chartType === 'bar' ? (
-                <BarChart data={salesTrend}>
-                  <CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" /><YAxis /><Tooltip formatter={(v: number) => [`₹${v.toLocaleString()}`, 'Sales']} />
-                  <Legend /><Bar dataKey="sales" fill="#4f46e5" radius={[5, 5, 0, 0]} name="Sales" />
+                <BarChart data={salesTrend} barSize={20} barCategoryGap="38%">
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(60,60,67,0.10)" vertical={false} />
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={v => `₹${v / 1000}k`} width={46} />
+                  <Tooltip formatter={(v: number) => [`₹${v.toLocaleString()}`, 'Sales']} contentStyle={tooltipStyle} cursor={{ fill: "rgba(52,199,89,0.05)", radius: 6 }} />
+                  <Bar dataKey="sales" fill="#34C759" radius={[6, 6, 0, 0]} />
                 </BarChart>
               ) : chartType === 'line' ? (
                 <LineChart data={salesTrend}>
-                  <CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" /><YAxis /><Tooltip formatter={(v: number) => [`₹${v.toLocaleString()}`, 'Sales']} />
-                  <Legend /><Line type="monotone" dataKey="sales" stroke="#4f46e5" strokeWidth={2} name="Sales Trend" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(60,60,67,0.10)" vertical={false} />
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={v => `₹${v / 1000}k`} width={46} />
+                  <Tooltip formatter={(v: number) => [`₹${v.toLocaleString()}`, 'Sales']} contentStyle={tooltipStyle} />
+                  <Legend />
+                  <Line type="monotone" dataKey="sales" stroke="#007AFF" strokeWidth={2.5} dot={{ fill: "#007AFF", r: 3 }} name="Sales" />
                 </LineChart>
               ) : (
                 <PieChart>
-                  <Pie data={categoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} innerRadius={60}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                    {categoryData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                  </Pie><Tooltip />
+                  <Pie data={categoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} innerRadius={55} paddingAngle={3} strokeWidth={0} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                    {categoryData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip contentStyle={tooltipStyle} />
                 </PieChart>
               )}
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card className="max-h-96 flex flex-col">
-          <CardHeader className="border-b pb-3"><CardTitle className="text-base">Recent Transactions</CardTitle></CardHeader>
-          <CardContent className="flex-1 overflow-y-auto space-y-2 pr-2 hide-scrollbar">
-            {transactions.length > 0 ? transactions.map(t => (
-              <div key={t.id} className="flex justify-between items-center p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                <div>
-                  <p className="font-semibold text-sm capitalize">{t.type}</p>
-                  <p className="text-xs text-muted-foreground">{t.desc}</p>
-                  <p className="text-xs text-muted-foreground">{new Date(t.date).toLocaleDateString()}</p>
+        {/* Recent transactions */}
+        <div>
+          <SectionTitle>Recent Transactions</SectionTitle>
+          <div className="hig-section" style={{ maxHeight: 320, overflowY: "auto" }} >
+            {transactions.map(txn => (
+              <div key={txn.id} className="hig-cell">
+                <div style={{ width: 34, height: 34, borderRadius: 9, background: txn.type === 'sale' ? "rgba(52,199,89,0.10)" : "rgba(255,149,0,0.10)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  {txn.type === 'sale' ? <TrendingUp style={{ width: 16, height: 16, color: "#34C759" }} /> : <Package style={{ width: 16, height: 16, color: "#FF9500" }} />}
                 </div>
-                <Badge variant={t.type === 'sale' ? 'default' : 'secondary'}>{t.type === 'sale' ? '+' : '-'}₹{t.amount.toLocaleString()}</Badge>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 13, fontWeight: 500 }} className="truncate">{txn.desc}</p>
+                  <p style={{ fontSize: 11, color: "hsl(var(--muted-foreground))" }}>{new Date(txn.date).toLocaleDateString()}</p>
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 600, color: txn.type === 'sale' ? "#34C759" : "#FF9500", flexShrink: 0 }}>
+                  {txn.type === 'sale' ? '+' : '-'}₹{txn.amount.toLocaleString()}
+                </span>
               </div>
-            )) : <p className="text-center py-8 text-muted-foreground">No transactions yet</p>}
-          </CardContent>
-        </Card>
+            ))}
+            {transactions.length === 0 && <div style={{ padding: "32px 16px", textAlign: "center", color: "hsl(var(--muted-foreground))", fontSize: 14 }}>No transactions yet</div>}
+          </div>
+        </div>
       </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="billing">
-        <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full">
-          <TabsTrigger value="billing" className="gap-1"><Receipt className="h-4 w-4" /><span className="hidden sm:inline">Bills</span></TabsTrigger>
-          <TabsTrigger value="purchases" className="gap-1"><ShoppingCart className="h-4 w-4" /><span className="hidden sm:inline">Purchases</span></TabsTrigger>
-          <TabsTrigger value="gst" className="gap-1"><Percent className="h-4 w-4" /><span className="hidden sm:inline">GST</span></TabsTrigger>
-          <TabsTrigger value="transactions" className="gap-1"><History className="h-4 w-4" /><span className="hidden sm:inline">All</span></TabsTrigger>
-        </TabsList>
+      {/* Tabs section */}
+      <div>
+        {/* Tab bar — icon always visible, label on sm+, no overflow */}
+        <div
+          className="mb-4 w-full"
+          style={{ display: "flex", gap: 4, background: "rgba(118,118,128,0.12)", borderRadius: 12, padding: 3 }}
+        >
+          {([
+            ['billing',   'Bills',     Receipt,      '#007AFF'],
+            ['purchases', 'Purchases', ShoppingCart, '#34C759'],
+            ['gst',       'GST',       Percent,      '#FF9500'],
+            ['all',       'All',       History,      '#AF52DE'],
+          ] as const).map(([key, label, Icon, col]) => {
+            const active = activeTab === key
+            return (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                style={{
+                  flex: 1, minWidth: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                  padding: "8px 4px", borderRadius: 9, border: "none", cursor: "pointer",
+                  background: active ? "hsl(var(--card))" : "transparent",
+                  color: active ? col : "hsl(var(--muted-foreground))",
+                  fontWeight: active ? 600 : 400, fontSize: 13,
+                  boxShadow: active ? "0 1px 3px rgba(0,0,0,0.10)" : "none",
+                  transition: "all 0.15s ease",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                <Icon style={{ width: 14, height: 14, flexShrink: 0 }} />
+                <span className="hidden sm:inline" style={{ overflow: "hidden", textOverflow: "ellipsis", fontSize: 12 }}>{label}</span>
+              </button>
+            )
+          })}
+        </div>
 
-        <TabsContent value="billing">
-          <Card className="max-h-96 flex flex-col">
-            <CardHeader className="border-b pb-3"><CardTitle className="text-base">Recent Bills ({sales.length})</CardTitle></CardHeader>
-            <CardContent className="flex-1 overflow-y-auto space-y-2 hide-scrollbar">
+        {activeTab === 'billing' && (
+          <div>
+            <SectionTitle>Recent Bills ({sales.length})</SectionTitle>
+            <div className="hig-section" style={{ maxHeight: 380, overflowY: "auto" }}>
               {sales.slice(0, 20).map(s => (
-                <div key={s.id} className="flex justify-between items-center p-3 border rounded-lg">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-semibold text-sm">#{s.invoiceNumber}</p>
-                      <Badge variant={s.paymentStatus === 'PAID' ? 'default' : 'secondary'} className="text-xs">{s.paymentStatus}</Badge>
+                <div key={s.id} className="hig-cell">
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                      <p style={{ fontSize: 14, fontWeight: 500 }}>#{s.invoiceNumber}</p>
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: "1px 7px", borderRadius: 99, background: s.paymentStatus === 'PAID' ? "rgba(52,199,89,0.12)" : "rgba(255,149,0,0.12)", color: s.paymentStatus === 'PAID' ? "#34C759" : "#FF9500" }}>{s.paymentStatus}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground">{s.customerName || 'Walk-in'} • {new Date(s.saleDate).toLocaleDateString()}</p>
+                    <p style={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}>{s.customerName || 'Walk-in'} · {new Date(s.saleDate).toLocaleDateString()}</p>
                   </div>
-                  <p className="font-bold">₹{s.totalAmount.toLocaleString()}</p>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: "#34C759", flexShrink: 0 }}>₹{s.totalAmount.toLocaleString()}</p>
                 </div>
               ))}
-              {sales.length === 0 && <p className="text-center py-8 text-muted-foreground">No bills yet</p>}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="purchases">
-          <Card className="max-h-96 flex flex-col">
-            <CardHeader className="border-b pb-3"><CardTitle className="text-base">Purchases ({purchases.length})</CardTitle></CardHeader>
-            <CardContent className="flex-1 overflow-y-auto space-y-2 hide-scrollbar">
-              {purchases.slice(0, 20).map(p => (
-                <div key={p.id} className="flex justify-between items-center p-3 border rounded-lg">
-                  <div>
-                    <p className="font-semibold text-sm">{p.supplier.name}</p>
-                    <p className="text-xs text-muted-foreground">{p.purchaseItems.length} items • {new Date(p.purchaseDate).toLocaleDateString()}</p>
-                  </div>
-                  <p className="font-bold text-orange-600">₹{p.totalAmount.toLocaleString()}</p>
-                </div>
-              ))}
-              {purchases.length === 0 && <p className="text-center py-8 text-muted-foreground">No purchases yet</p>}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="gst">
-          <div className="space-y-6">
-            <Card>
-              <CardHeader className="border-b pb-3"><CardTitle className="text-base">GST Summary Overview</CardTitle></CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                  <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-100 dark:border-blue-900/30">
-                    <p className="text-sm font-medium text-blue-700 dark:text-blue-300">Output Tax (Collected)</p>
-                    <p className="text-3xl font-bold mt-2">₹{gstSummary.collected.toFixed(2)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">From {sales.length} sales</p>
-                  </div>
-                  <div className="p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg border border-orange-100 dark:border-orange-900/30">
-                    <p className="text-sm font-medium text-orange-700 dark:text-orange-300">Input Tax (Paid)</p>
-                    <p className="text-3xl font-bold mt-2">₹{gstSummary.paid.toFixed(2)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">From {purchases.length} purchases</p>
-                  </div>
-                  <div className={`p-4 rounded-lg border ${gstSummary.net >= 0 ? 'bg-green-50 dark:bg-green-950/30 border-green-100 dark:border-green-900/30 text-green-800 dark:text-green-300' : 'bg-red-50 dark:bg-red-950/30 border-red-100 dark:border-red-900/30 text-red-800 dark:text-red-300'}`}>
-                    <p className="text-sm font-medium">Net GST Liability</p>
-                    <p className="text-3xl font-bold mt-2">₹{Math.abs(gstSummary.net).toFixed(2)}</p>
-                    <p className="text-sm mt-1 font-semibold">{gstSummary.net >= 0 ? '(Payable to Govt)' : '(Refundable)'}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="border-b pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  Tax Component Breakup
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="rounded-md border mt-4 overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b bg-muted/50 text-left">
-                        <th className="p-3 text-muted-foreground font-medium">Component</th>
-                        <th className="p-3 text-muted-foreground font-medium text-right">Collected (Sales)</th>
-                        <th className="p-3 text-muted-foreground font-medium text-right">ITC (Purchases)</th>
-                        <th className="p-3 text-muted-foreground font-medium text-right">Net Payable</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-b">
-                        <td className="p-3 font-semibold text-primary">CGST (9%)</td>
-                        <td className="p-3 text-right">₹{gstSummary.cgstCollected.toFixed(2)}</td>
-                        <td className="p-3 text-right">₹{gstSummary.cgstPaid.toFixed(2)}</td>
-                        <td className="p-3 text-right font-bold">₹{(gstSummary.cgstCollected - gstSummary.cgstPaid).toFixed(2)}</td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="p-3 font-semibold text-primary">SGST (9%)</td>
-                        <td className="p-3 text-right">₹{gstSummary.sgstCollected.toFixed(2)}</td>
-                        <td className="p-3 text-right">₹{gstSummary.sgstPaid.toFixed(2)}</td>
-                        <td className="p-3 text-right font-bold">₹{(gstSummary.sgstCollected - gstSummary.sgstPaid).toFixed(2)}</td>
-                      </tr>
-                      <tr>
-                        <td className="p-3 font-semibold text-primary">IGST (18%)</td>
-                        <td className="p-3 text-right text-muted-foreground">₹0.00</td>
-                        <td className="p-3 text-right text-muted-foreground">₹0.00</td>
-                        <td className="p-3 text-right font-bold text-muted-foreground">₹0.00</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
+              {sales.length === 0 && <div style={{ padding: "32px 16px", textAlign: "center", fontSize: 14, color: "hsl(var(--muted-foreground))" }}>No bills yet</div>}
+            </div>
           </div>
-        </TabsContent>
+        )}
 
-        <TabsContent value="transactions">
-          <Card className="max-h-96 flex flex-col">
-            <CardHeader className="border-b pb-3"><CardTitle className="text-base">All Transactions ({transactions.length})</CardTitle></CardHeader>
-            <CardContent className="flex-1 overflow-y-auto space-y-2 hide-scrollbar">
-              {transactions.map(t => (
-                <div key={t.id} className="flex justify-between items-center p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-full ${t.type === 'sale' ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300' : 'bg-orange-100 text-orange-600 dark:bg-orange-900 dark:text-orange-300'}`}>
-                      {t.type === 'sale' ? <TrendingUp className="h-4 w-4" /> : <Package className="h-4 w-4" />}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-sm capitalize">{t.type}</p>
-                      <p className="text-xs text-muted-foreground">{t.desc}</p>
-                    </div>
+        {activeTab === 'purchases' && (
+          <div>
+            <SectionTitle>Purchases ({purchases.length})</SectionTitle>
+            <div className="hig-section" style={{ maxHeight: 380, overflowY: "auto" }}>
+              {purchases.slice(0, 20).map(p => (
+                <div key={p.id} className="hig-cell">
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 14, fontWeight: 500 }}>{p.supplier.name}</p>
+                    <p style={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}>{p.purchaseItems.length} items · {new Date(p.purchaseDate).toLocaleDateString()}</p>
                   </div>
-                  <Badge variant={t.type === 'sale' ? 'default' : 'secondary'} className="text-sm">{t.type === 'sale' ? '+' : '-'}₹{t.amount.toLocaleString()}</Badge>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: "#FF9500", flexShrink: 0 }}>₹{p.totalAmount.toLocaleString()}</p>
                 </div>
               ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              {purchases.length === 0 && <div style={{ padding: "32px 16px", textAlign: "center", fontSize: 14, color: "hsl(var(--muted-foreground))" }}>No purchases yet</div>}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'gst' && (
+          <div className="space-y-4">
+            <SectionTitle>GST Summary</SectionTitle>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                { label: "Output Tax (Collected)", value: gst.collected, sub: `From ${sales.length} sales`, color: "#007AFF", bg: "rgba(0,122,255,0.08)" },
+                { label: "Input Tax (Paid)",        value: gst.paid,      sub: `From ${purchases.length} purchases`, color: "#FF9500", bg: "rgba(255,149,0,0.08)" },
+                { label: "Net GST Liability",        value: Math.abs(gst.net), sub: gst.net >= 0 ? "Payable to Govt" : "Refundable", color: gst.net >= 0 ? "#34C759" : "#FF3B30", bg: gst.net >= 0 ? "rgba(52,199,89,0.08)" : "rgba(255,59,48,0.08)" },
+              ].map((g, i) => (
+                <div key={i} className="glass-widget" style={{ padding: "16px 14px" }}>
+                  <p style={{ fontSize: 12, color: "hsl(var(--muted-foreground))", marginBottom: 6 }}>{g.label}</p>
+                  <p style={{ fontSize: 24, fontWeight: 700, color: g.color, letterSpacing: "-0.022em" }}>₹{g.value.toFixed(2)}</p>
+                  <p style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", marginTop: 4 }}>{g.sub}</p>
+                </div>
+              ))}
+            </div>
+            <div className="glass" style={{ borderRadius: 18, overflow: "hidden" }}>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ borderBottom: "0.5px solid rgba(60,60,67,0.12)" }}>
+                      {["Component", "Collected", "ITC", "Net Payable"].map(h => (
+                        <th key={h} style={{ padding: "10px 14px", textAlign: h === "Component" ? "left" : "right", fontWeight: 600, color: "hsl(var(--muted-foreground))", fontSize: 12 }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[["CGST (9%)", gst.cgstC, gst.cgstP], ["SGST (9%)", gst.sgstC, gst.sgstP], ["IGST (18%)", 0, 0]].map(([name, c, p]) => (
+                      <tr key={String(name)} style={{ borderBottom: "0.5px solid rgba(60,60,67,0.08)" }}>
+                        <td style={{ padding: "10px 14px", fontWeight: 600, color: "hsl(var(--primary))" }}>{name}</td>
+                        <td style={{ padding: "10px 14px", textAlign: "right" }}>₹{Number(c).toFixed(2)}</td>
+                        <td style={{ padding: "10px 14px", textAlign: "right" }}>₹{Number(p).toFixed(2)}</td>
+                        <td style={{ padding: "10px 14px", textAlign: "right", fontWeight: 700 }}>₹{(Number(c) - Number(p)).toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'all' && (
+          <div>
+            <SectionTitle>All Transactions ({transactions.length})</SectionTitle>
+            <div className="hig-section" style={{ maxHeight: 400, overflowY: "auto" }}>
+              {transactions.map(txn => (
+                <div key={txn.id} className="hig-cell">
+                  <div style={{ width: 34, height: 34, borderRadius: 9, background: txn.type === 'sale' ? "rgba(52,199,89,0.10)" : "rgba(255,149,0,0.10)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    {txn.type === 'sale' ? <TrendingUp style={{ width: 16, height: 16, color: "#34C759" }} /> : <Package style={{ width: 16, height: 16, color: "#FF9500" }} />}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 14, fontWeight: 500, textTransform: "capitalize" }}>{txn.type}</p>
+                    <p style={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}>{txn.desc}</p>
+                  </div>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: txn.type === 'sale' ? "#34C759" : "#FF9500", flexShrink: 0 }}>
+                    {txn.type === 'sale' ? '+' : '-'}₹{txn.amount.toLocaleString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
