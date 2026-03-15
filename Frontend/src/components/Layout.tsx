@@ -1,16 +1,11 @@
-/*
-  Layout — public pages (Home, Products, About, Contact)
-  Admin Login button: REMOVED from desktop navbar and mobile sheet.
-  It lives only on the login page itself — farmers don't need to see it.
-  Language switcher + theme toggle remain in navbar.
-*/
 import { useState, useEffect } from "react"
 import { Outlet, Link, useLocation } from "react-router-dom"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { ThemeToggle } from "@/components/ThemeToggle"
-import { Menu, Sprout, House, ShoppingCart, User, X, ChevronRight, Phone } from "lucide-react"
+import { Menu, Sprout, House, ShoppingCart, User, X, ChevronRight, Phone, LogIn } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { LanguageSwitcher } from "./LanguageSwitcher"
+import { cn } from "@/lib/utils"
 
 const NAV = [
   { name: "home",     href: "/",         icon: House },
@@ -28,11 +23,11 @@ const defaultBiz = {
 }
 
 export function Layout() {
-  const [open, setOpen]       = useState(false)
+  const [open, setOpen]         = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const location              = useLocation()
-  const { t }                 = useTranslation()
-  const [biz, setBiz]         = useState(defaultBiz)
+  const location                = useLocation()
+  const { t }                   = useTranslation()
+  const [biz, setBiz]           = useState(defaultBiz)
 
   useEffect(() => {
     try {
@@ -57,126 +52,103 @@ export function Layout() {
   const isActive = (p: string) => location.pathname === p
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "hsl(var(--background))" }}>
+    <div className="min-h-screen flex flex-col bg-background">
 
-      {/* ── Nav bar — glass-thin, 44px ── */}
-      <header
-        className="glass-thin sticky top-0 z-50"
-        style={{
-          height: 44,
-          transition: "box-shadow 0.3s ease",
-          boxShadow: scrolled ? "0 2px 20px rgba(0,0,0,0.08)" : "none",
-        }}
-      >
-        <div style={{ display: "flex", height: "100%", alignItems: "center", justifyContent: "space-between", padding: "0 16px", maxWidth: 1200, margin: "0 auto", width: "100%" }}>
+      {/* ── Navbar ── */}
+      <header className={cn(
+        "sticky top-0 z-50 h-[44px] border-b bg-background/80 backdrop-blur-md transition-shadow",
+        scrolled && "shadow-sm"
+      )}>
+        <div className="flex h-full items-center justify-between px-4 md:px-6 max-w-7xl mx-auto w-full gap-4">
 
           {/* Logo */}
-          <Link to="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", flexShrink: 0 }}>
-            <div
-              className="hig-app-icon"
-              style={{ width: 28, height: 28, background: "linear-gradient(145deg,#3ab26a,#27854d)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(52,199,89,.28)" }}
-            >
-              <Sprout style={{ width: 14, height: 14, color: "white" }} />
+          <Link to="/" className="flex items-center gap-2 shrink-0 text-foreground no-underline">
+            <div className="hig-app-icon flex items-center justify-center"
+              style={{ width: 28, height: 28, background: "hsl(var(--primary))", boxShadow: "0 2px 8px hsl(var(--primary)/.28)" }}>
+              <Sprout className="h-3.5 w-3.5 text-white" />
             </div>
-            <span style={{ fontSize: 15, fontWeight: 600, color: "hsl(var(--foreground))", letterSpacing: "-0.01em", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <span className="text-[15px] font-semibold tracking-tight truncate max-w-[180px] sm:max-w-none">
               {biz.name}
             </span>
           </Link>
 
-          {/* Desktop nav — centered */}
-          <nav className="hidden md:flex items-center" style={{ gap: 2 }}>
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-1">
             {NAV.map(item => (
-              <Link
-                key={item.name}
-                to={item.href}
-                style={{
-                  padding: "5px 12px", borderRadius: 8, fontSize: 14,
-                  fontWeight: isActive(item.href) ? 600 : 400,
-                  letterSpacing: "-0.005em",
-                  color: isActive(item.href) ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))",
-                  background: isActive(item.href) ? "hsl(var(--primary)/.08)" : "transparent",
-                  textDecoration: "none",
-                  transition: "all .12s",
-                }}
-                className="hover:text-foreground transition-colors"
-              >
+              <Link key={item.name} to={item.href}
+                className={cn(
+                  "px-3 py-1.5 rounded-lg text-sm transition-colors",
+                  isActive(item.href)
+                    ? "bg-primary/10 text-primary font-semibold"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                )}>
                 {t(item.name)}
               </Link>
             ))}
           </nav>
 
-          {/* Right actions — NO admin login button here */}
-          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+          {/* Right actions */}
+          <div className="flex items-center gap-2 shrink-0">
             <LanguageSwitcher />
             <ThemeToggle />
+            {/* Admin Login — desktop */}
+            <Link to="/admin/login"
+              className="hidden md:flex items-center gap-1.5 h-8 px-3 rounded-full bg-primary text-primary-foreground text-[13px] font-semibold hover:bg-primary/90 active:scale-95 transition-all no-underline"
+              style={{ boxShadow: "0 2px 8px hsl(var(--primary)/.25)" }}>
+              <LogIn className="h-3.5 w-3.5" />
+              {t("admin_login")}
+            </Link>
 
             {/* Mobile hamburger */}
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild className="md:hidden">
-                <button
-                  style={{ width: 32, height: 32, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(120,120,128,.12)", color: "hsl(var(--muted-foreground))", border: "none", cursor: "pointer" }}
-                >
-                  {open ? <X style={{ width: 17, height: 17 }} /> : <Menu style={{ width: 17, height: 17 }} />}
+                <button className="h-8 w-8 rounded-lg flex items-center justify-center bg-muted text-muted-foreground hover:text-foreground transition-colors border-none cursor-pointer">
+                  {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
                 </button>
               </SheetTrigger>
-              <SheetContent
-                side="right"
-                style={{ width: 280, padding: 0, background: "hsl(var(--card))", border: "none", boxShadow: "0 0 40px rgba(0,0,0,0.15)" }}
-              >
+              <SheetContent side="right" className="w-72 p-0 bg-background border-border">
                 {/* Sheet header */}
-                <div style={{ padding: "16px", borderBottom: "0.5px solid rgba(60,60,67,.14)" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div className="hig-app-icon" style={{ width: 32, height: 32, background: "linear-gradient(145deg,#3ab26a,#27854d)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <Sprout style={{ width: 16, height: 16, color: "white" }} />
-                    </div>
-                    <div>
-                      <p style={{ fontSize: 14, fontWeight: 600, color: "hsl(var(--foreground))" }}>{biz.name}</p>
-                      <p style={{ fontSize: 11, color: "hsl(var(--muted-foreground))" }}>{biz.phone}</p>
-                    </div>
+                <div className="flex items-center gap-2.5 px-4 py-4 border-b border-border">
+                  <div className="hig-app-icon flex items-center justify-center"
+                    style={{ width: 32, height: 32, background: "hsl(var(--primary))" }}>
+                    <Sprout className="h-4 w-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{biz.name}</p>
+                    <p className="text-[11px] text-muted-foreground">{biz.phone}</p>
                   </div>
                 </div>
-
                 {/* Nav links */}
-                <div style={{ padding: "8px" }}>
+                <div className="p-2 space-y-0.5">
                   {NAV.map(item => (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      onClick={() => setOpen(false)}
-                      style={{
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                        padding: "11px 14px", borderRadius: 10, marginBottom: 2,
-                        fontSize: 16, fontWeight: isActive(item.href) ? 600 : 400,
-                        color: isActive(item.href) ? "hsl(var(--primary))" : "hsl(var(--foreground))",
-                        background: isActive(item.href) ? "hsl(var(--primary)/.08)" : "transparent",
-                        textDecoration: "none",
-                      }}
-                      className="hover:bg-black/4 dark:hover:bg-white/5 transition-colors"
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <item.icon style={{ width: 18, height: 18, opacity: 0.6 }} />
+                    <Link key={item.name} to={item.href} onClick={() => setOpen(false)}
+                      className={cn(
+                        "flex items-center justify-between px-3 py-2.5 rounded-xl text-[15px] transition-colors no-underline",
+                        isActive(item.href)
+                          ? "bg-primary/10 text-primary font-semibold"
+                          : "text-foreground hover:bg-accent"
+                      )}>
+                      <div className="flex items-center gap-2.5">
+                        <item.icon className="h-[18px] w-[18px] opacity-60" />
                         {t(item.name)}
                       </div>
-                      {isActive(item.href) && <ChevronRight style={{ width: 14, height: 14, opacity: .4 }} />}
+                      {isActive(item.href) && <ChevronRight className="h-3.5 w-3.5 opacity-40" />}
                     </Link>
                   ))}
-
-                  {/* Call button in sheet — useful for farmers */}
-                  <div style={{ height: "0.5px", background: "rgba(60,60,67,.12)", margin: "8px 0" }} />
-                  <a
-                    href={`tel:${biz.phone}`}
-                    onClick={() => setOpen(false)}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 10,
-                      padding: "11px 14px", borderRadius: 10,
-                      fontSize: 15, fontWeight: 600,
-                      color: "#34C759", background: "rgba(52,199,89,0.08)",
-                      textDecoration: "none",
-                    }}
-                  >
-                    <Phone style={{ width: 18, height: 18 }} />
+                  <div className="h-px bg-border mx-1 my-2" />
+                  {/* Call us */}
+                  <a href={`tel:${biz.phone}`} onClick={() => setOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[15px] font-semibold no-underline transition-colors"
+                    style={{ color: "#34C759", background: "rgba(52,199,89,0.08)" }}>
+                    <Phone className="h-[18px] w-[18px]" />
                     {biz.phone}
                   </a>
+                  {/* Admin Login — mobile sheet */}
+                  <Link to="/admin/login" onClick={() => setOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[15px] font-medium text-muted-foreground hover:bg-accent transition-colors no-underline mt-0.5">
+                    <LogIn className="h-[18px] w-[18px] opacity-60" />
+                    {t("admin_login")}
+                  </Link>
                 </div>
               </SheetContent>
             </Sheet>
@@ -185,51 +157,50 @@ export function Layout() {
       </header>
 
       {/* Page content */}
-      <main style={{ flex: 1, position: "relative" }}>
+      <main className="flex-1 relative">
         {biz.logo && (
           <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-0" aria-hidden>
-            <img src={biz.logo} alt="" style={{ width: "28%", maxWidth: 260, objectFit: "contain", filter: "grayscale(1)", opacity: .02 }} />
+            <img src={biz.logo} alt="" className="w-[28%] max-w-[260px] object-contain grayscale opacity-[0.02]" />
           </div>
         )}
-        <div style={{ position: "relative", zIndex: 1 }}>
-          <Outlet />
-        </div>
+        <div className="relative z-10"><Outlet /></div>
       </main>
 
       {/* Footer */}
-      <footer style={{ background: "hsl(var(--card))", borderTop: "0.5px solid rgba(60,60,67,.15)" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 20px" }}>
+      <footer className="bg-card border-t border-border">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-10">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <div className="hig-app-icon" style={{ width: 26, height: 26, background: "hsl(var(--primary))", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Sprout style={{ width: 13, height: 13, color: "white" }} />
+              <div className="flex items-center gap-2 mb-3">
+                <div className="hig-app-icon flex items-center justify-center"
+                  style={{ width: 26, height: 26, background: "hsl(var(--primary))" }}>
+                  <Sprout className="h-3 w-3 text-white" />
                 </div>
-                <span style={{ fontSize: 14, fontWeight: 600 }}>{biz.name}</span>
+                <span className="text-sm font-semibold text-foreground">{biz.name}</span>
               </div>
-              <p style={{ fontSize: 13, color: "hsl(var(--muted-foreground))", lineHeight: 1.6 }}>{t("pub_footer_tagline")}</p>
+              <p className="text-[13px] text-muted-foreground leading-relaxed">{t("pub_footer_tagline")}</p>
             </div>
             <div>
-              <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "hsl(var(--muted-foreground))", marginBottom: 10 }}>{t("quick_links")}</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {["products", "about", "contact"].map(l => (
-                  <Link key={l} to={`/${l}`} style={{ fontSize: 14, color: "hsl(var(--muted-foreground))", textDecoration: "none" }} className="hover:text-foreground transition-colors">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">{t("quick_links")}</p>
+              <div className="flex flex-col gap-1.5">
+                {["products","about","contact"].map(l => (
+                  <Link key={l} to={`/${l}`} className="text-sm text-muted-foreground hover:text-foreground transition-colors no-underline">
                     {t(l)}
                   </Link>
                 ))}
               </div>
             </div>
             <div>
-              <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "hsl(var(--muted-foreground))", marginBottom: 10 }}>{t("contact")}</p>
-              {[["📍", biz.address], ["📞", biz.phone], ["✉️", biz.email], ["🕐", t("pub_timings")]].map(([i, v], k) => (
-                <p key={k} style={{ fontSize: 13, color: "hsl(var(--muted-foreground))", display: "flex", gap: 6, marginBottom: 5, lineHeight: 1.5 }}>
-                  <span style={{ flexShrink: 0 }}>{i}</span><span>{v}</span>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">{t("contact")}</p>
+              {[["📍", biz.address], ["📞", biz.phone], ["✉️", biz.email], ["🕐", t("pub_timings")]].map(([icon, val], i) => (
+                <p key={i} className="flex gap-2 text-[13px] text-muted-foreground mb-1.5 leading-relaxed">
+                  <span className="shrink-0">{icon}</span><span>{val}</span>
                 </p>
               ))}
             </div>
           </div>
-          <div style={{ borderTop: "0.5px solid rgba(60,60,67,.12)", marginTop: 24, paddingTop: 18, textAlign: "center" }}>
-            <p style={{ fontSize: 12, color: "hsl(var(--muted-foreground))", opacity: .55 }}>
+          <div className="border-t border-border mt-8 pt-5 text-center">
+            <p className="text-xs text-muted-foreground/50">
               © {new Date().getFullYear()} {biz.name}. {t("all_rights_reserved")}.
             </p>
           </div>

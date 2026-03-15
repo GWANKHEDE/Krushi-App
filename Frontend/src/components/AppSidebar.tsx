@@ -1,112 +1,120 @@
-import { LayoutDashboard, Package, ShoppingCart, FileText, BarChart3, Settings, LogOut, Sprout, BookOpen, ChevronRight } from "lucide-react"
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from "@/components/ui/sidebar"
+import {
+  LayoutDashboard, Package, ShoppingCart, FileText,
+  BarChart3, Settings, LogOut, Sprout, BookOpen, ChevronRight
+} from "lucide-react"
+import {
+  Sidebar, SidebarContent, SidebarFooter, SidebarHeader,
+  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarRail,
+  SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarSeparator,
+} from "@/components/ui/sidebar"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useAuth } from "@/lib/auth"
 import { toast } from "@/lib/toast"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "react-i18next"
-import { useSidebar } from "@/components/ui/sidebar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
-const NAV = [
-  { key:"dashboard", url:"/admin/dashboard", icon:LayoutDashboard },
-  { key:"products",  url:"/admin/products",  icon:Package },
-  { key:"billing",   url:"/admin/billing",   icon:ShoppingCart },
-  { key:"khatabook", url:"/admin/khatabook", icon:BookOpen },
-  { key:"purchase",  url:"/admin/purchases", icon:FileText },
-  { key:"reports",   url:"/admin/reports",   icon:BarChart3 },
-  { key:"settings",  url:"/admin/settings",  icon:Settings },
+const NAV_ITEMS = [
+  { key: "dashboard", url: "/admin/dashboard", icon: LayoutDashboard },
+  { key: "products",  url: "/admin/products",  icon: Package },
+  { key: "billing",   url: "/admin/billing",   icon: ShoppingCart },
+  { key: "khatabook", url: "/admin/khatabook", icon: BookOpen },
+  { key: "purchase",  url: "/admin/purchases", icon: FileText },
+  { key: "reports",   url: "/admin/reports",   icon: BarChart3 },
+  { key: "settings",  url: "/admin/settings",  icon: Settings },
 ]
 
 export function AppSidebar() {
   const location = useLocation()
-  const navigate = useNavigate()
+  const navigate  = useNavigate()
   const { user, logout } = useAuth()
-  const { t } = useTranslation()
-  const { state } = useSidebar()
-  const collapsed = state === "collapsed"
-  const initial = user?.name?.charAt(0).toUpperCase() || "A"
+  const { t }     = useTranslation()
+  const initial   = user?.name?.charAt(0).toUpperCase() || "A"
 
   const handleLogout = () => {
-    logout(); toast.success("Signed out"); navigate("/admin/login")
+    logout()
+    toast.success("Signed out")
+    navigate("/admin/login")
   }
 
   return (
-    <Sidebar collapsible="icon" className="border-none glass-sidebar">
+    /* Use bg-sidebar from CSS vars — works in both light and dark */
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
       {/* ── Brand header ── */}
-      <SidebarHeader style={{ padding: collapsed ? "18px 8px" : "18px 14px" }}>
-        <div className={cn("flex items-center gap-3 overflow-hidden", collapsed && "justify-center")}>
-          {/* App icon — 22.37% HIG radius */}
-          <div style={{
-            width:38, height:38, borderRadius:"22.37%",
-            background:"hsl(var(--primary))",
-            display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0,
-            boxShadow:"0 3px 10px hsl(var(--primary)/.35), inset 0 1px 0 rgba(255,255,255,0.25)"
-          }}>
-            <Sprout style={{width:20,height:20,color:"white"}} />
-          </div>
-          {!collapsed && (
-            <div style={{minWidth:0}}>
-              <p style={{fontSize:15,fontWeight:600,color:"hsl(var(--foreground))",letterSpacing:"-0.01em",lineHeight:1.2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>Krushi Kendra</p>
-              <p style={{fontSize:11,color:"hsl(var(--muted-foreground))",marginTop:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{user?.business?.name || "Management"}</p>
-            </div>
-          )}
+      <SidebarHeader className="h-14 px-4 flex flex-row items-center gap-3 border-b border-sidebar-border">
+        {/* App icon */}
+        <div className="hig-app-icon flex items-center justify-center flex-shrink-0"
+          style={{ width: 32, height: 32, background: "hsl(var(--primary))", boxShadow: "0 2px 8px hsl(var(--primary)/.30)" }}>
+          <Sprout className="h-4 w-4 text-primary-foreground" />
+        </div>
+        <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
+          <p className="text-sm font-semibold text-sidebar-foreground truncate leading-tight">Krushi Kendra</p>
+          <p className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">
+            {user?.business?.name || "Management"}
+          </p>
         </div>
       </SidebarHeader>
 
-      {/* 0.5px HIG separator */}
-      <div style={{height:"0.5px",background:"rgba(60,60,67,0.14)",margin:`0 ${collapsed?6:12}px`}} className="dark:[background:rgba(84,84,88,0.40)]" />
-
       {/* ── Navigation ── */}
-      <SidebarContent style={{padding: collapsed?"8px 4px":"8px 8px",overflowY:"auto"}} className="hide-scrollbar">
-        {!collapsed && <p className="hig-sidebar-section">{t("navigation")}</p>}
-        <nav style={{display:"flex",flexDirection:"column",gap:2}}>
-          {NAV.map(item => {
-            const active = location.pathname === item.url
-            return (
-              <Link key={item.key} to={item.url}
-                title={collapsed ? t(item.key) : undefined}
-                className={cn("hig-sidebar-item", active && "selected", collapsed && "justify-center")}
-                style={collapsed ? {padding:"7px 6px"} : {}}
-              >
-                <item.icon style={{width:18,height:18,flexShrink:0,opacity: active ? 1 : 0.65}} />
-                {!collapsed && (
-                  <>
-                    <span style={{flex:1}}>{t(item.key)}</span>
-                    {active && <ChevronRight style={{width:14,height:14,opacity:0.5}}/>}
-                  </>
-                )}
-              </Link>
-            )
-          })}
-        </nav>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-[11px] uppercase tracking-widest text-muted-foreground/60">
+            {t("navigation")}
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {NAV_ITEMS.map((item) => {
+                const active = location.pathname === item.url
+                return (
+                  <SidebarMenuItem key={item.key}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={active}
+                      tooltip={t(item.key)}
+                      className={cn(
+                        "rounded-lg h-9 transition-colors",
+                        active
+                          ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      )}
+                    >
+                      <Link to={item.url}>
+                        <item.icon className="h-4 w-4 shrink-0" />
+                        <span className="font-medium text-sm">{t(item.key)}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       {/* ── User footer ── */}
-      <SidebarFooter style={{padding: collapsed?"8px 4px":"8px 8px"}}>
-        <div style={{height:"0.5px",background:"rgba(60,60,67,0.14)",margin:`0 4px 8px`}} className="dark:[background:rgba(84,84,88,0.40)]" />
-        <button onClick={handleLogout}
-          className={cn("w-full hig-sidebar-item group", collapsed && "justify-center")}
-          style={{minHeight:44, padding: collapsed?"8px 6px":"8px 10px"}}
-        >
-          {/* Avatar circle */}
-          <div style={{
-            width:32,height:32,borderRadius:"50%",flexShrink:0,
-            background:"hsl(var(--primary)/.12)",
-            border:"1.5px solid hsl(var(--primary)/.22)",
-            display:"flex",alignItems:"center",justifyContent:"center",
-            color:"hsl(var(--primary))",fontSize:13,fontWeight:700
-          }}>{initial}</div>
-          {!collapsed && (
-            <>
-              <div style={{flex:1,minWidth:0}}>
-                <p style={{fontSize:14,fontWeight:500,color:"hsl(var(--foreground))",letterSpacing:"-0.008em",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{user?.name}</p>
-                <p style={{fontSize:11,color:"hsl(var(--muted-foreground))",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{user?.email}</p>
+      <SidebarFooter className="border-t border-sidebar-border p-2">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={handleLogout}
+              tooltip="Sign out"
+              className="rounded-lg h-10 text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive group transition-colors"
+            >
+              <Avatar className="h-6 w-6 shrink-0">
+                <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold">
+                  {initial}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0 text-left group-data-[collapsible=icon]:hidden">
+                <p className="text-xs font-semibold truncate">{user?.name}</p>
+                <p className="text-[10px] text-muted-foreground truncate">{user?.email}</p>
               </div>
-              <LogOut style={{width:15,height:15,opacity:.4,flexShrink:0}} className="group-hover:opacity-80 group-hover:text-red-500 transition-all" />
-            </>
-          )}
-        </button>
+              <LogOut className="h-4 w-4 shrink-0 opacity-40 group-hover:opacity-100 transition-opacity group-data-[collapsible=icon]:hidden" />
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
+
       <SidebarRail />
     </Sidebar>
   )

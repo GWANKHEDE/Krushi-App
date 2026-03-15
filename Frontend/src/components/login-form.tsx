@@ -2,6 +2,10 @@ import { cn } from "@/lib/utils"
 import { Loader2, Lock, Mail, Sprout, Eye, EyeOff } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
 
 interface Props extends React.ComponentProps<"div"> {
   onLogin: (e: React.FormEvent) => void
@@ -12,184 +16,153 @@ interface Props extends React.ComponentProps<"div"> {
   errors: { email?: string; password?: string }
 }
 
-export function LoginForm({ className, onLogin, onSwitchToSignup, loading, email, setEmail, password, setPassword, errors, ...props }: Props) {
-  const { t } = useTranslation()
+export function LoginForm({
+  className, onLogin, onSwitchToSignup, loading,
+  email, setEmail, password, setPassword, errors, ...props
+}: Props) {
+  const { t }     = useTranslation()
   const [showPw, setShowPw] = useState(false)
 
   return (
+    /*
+      Container: inline-block so card fits content width.
+      w-full inside so it expands to parent on small screens.
+      max-w-sm caps on mobile; md:max-w-2xl for two-column layout.
+    */
     <div className={cn("w-full", className)} {...props}>
+      <Card className="w-full overflow-hidden shadow-2xl border border-border">
+        <CardContent className="p-0">
+          <div className="grid md:grid-cols-2">
 
-      {/* Outer card — exactly same structure as SignupForm */}
-      <div
-        className="w-full rounded-3xl hig-sheet-enter"
-        style={{
-          boxShadow: "0 24px 64px rgba(0,0,0,0.16),0 8px 24px rgba(0,0,0,0.10),inset 0 1px 0 rgba(255,255,255,0.80)",
-          border: "0.5px solid rgba(255,255,255,0.70)",
-          outline: "0.5px solid rgba(0,0,0,0.07)",
-          overflow: "hidden",
-        }}
-      >
-        {/* grid md:grid-cols-2 — exactly same as SignupForm, NOT flex flex-col */}
-        <div className="grid md:grid-cols-2">
+            {/* ── Form panel ── */}
+            <div className="p-7 bg-card">
 
-          {/* ── Form panel — same padding as SignupForm ── */}
-          <div
-            className="p-7 sm:p-9"
-            style={{
-              background: "rgba(255,255,255,0.82)",
-              backdropFilter: "saturate(180%) blur(28px)",
-              WebkitBackdropFilter: "saturate(180%) blur(28px)",
-            }}
-          >
-            {/* Brand — identical to SignupForm */}
-            <div className="flex items-center gap-3 mb-7">
-              <div
-                className="hig-app-icon flex items-center justify-center flex-shrink-0"
-                style={{ width: 52, height: 52, background: "hsl(var(--primary))", boxShadow: "0 4px 14px hsl(var(--primary)/.35),inset 0 1px 0 rgba(255,255,255,0.28)" }}
-              >
-                <Sprout style={{ width: 26, height: 26, color: "white" }} />
-              </div>
-              <div>
-                <p style={{ fontSize: 17, fontWeight: 600, color: "hsl(var(--foreground))", letterSpacing: "-0.01em" }}>Krushi Kendra</p>
-                <p style={{ fontSize: 13, color: "hsl(var(--muted-foreground))", marginTop: 1 }}>Management Portal</p>
-              </div>
-            </div>
-
-            <h1 style={{ fontSize: 28, fontWeight: 700, color: "hsl(var(--foreground))", letterSpacing: "-0.022em", lineHeight: 1.2, marginBottom: 6 }}>
-              {t("welcome_back")}
-            </h1>
-            <p style={{ fontSize: 15, color: "hsl(var(--muted-foreground))", marginBottom: 20, lineHeight: 1.5 }}>
-              {t("login_subtitle") || "Sign in to your dashboard"}
-            </p>
-
-            {/* Demo hint */}
-            <button
-              type="button"
-              onClick={() => { setEmail("admin@krushi.com"); setPassword("password123") }}
-              style={{
-                display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left",
-                padding: "10px 14px", background: "rgba(52,199,89,0.08)", borderRadius: 12,
-                border: "0.5px solid rgba(52,199,89,0.20)", cursor: "pointer", marginBottom: 18, transition: "background 0.12s",
-              }}
-              className="hover:bg-[rgba(52,199,89,0.13)] active:scale-[.98]"
-            >
-              <span style={{ fontSize: 18, flexShrink: 0 }}>🔑</span>
-              <div>
-                <p style={{ fontSize: 13, fontWeight: 600, color: "#34C759" }}>Use demo credentials</p>
-                <p style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", marginTop: 1 }}>admin@krushi.com · password123</p>
-              </div>
-            </button>
-
-            {/* Form — same gap as SignupForm */}
-            <form onSubmit={onLogin} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-
-              {/* Email */}
-              <div>
-                <p style={{ fontSize: 11, fontWeight: 600, color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 7 }}>
-                  {t("email_address")}
-                </p>
-                <div className="hig-field-wrap">
-                  <Mail style={{ width: 16, height: 16, color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
-                  <input type="email" placeholder="name@krushi.com" required value={email} onChange={e => setEmail(e.target.value)} />
+              {/* Brand */}
+              <div className="flex items-center gap-3 mb-6">
+                <div className="hig-app-icon flex items-center justify-center shrink-0"
+                  style={{ width: 44, height: 44, background: "hsl(var(--primary))", boxShadow: "0 3px 12px hsl(var(--primary)/.28)" }}>
+                  <Sprout className="h-5 w-5 text-white" />
                 </div>
-                {errors.email && <p style={{ fontSize: 12, color: "#FF3B30", marginTop: 4, marginLeft: 2 }}>{errors.email}</p>}
-              </div>
-
-              {/* Password */}
-              <div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}>
-                  <p style={{ fontSize: 11, fontWeight: 600, color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                    {t("password")}
-                  </p>
-                  <a href="#" style={{ fontSize: 13, color: "#007AFF", textDecoration: "none" }} className="hover:opacity-70 dark:[color:#0A84FF]">
-                    {t("forgot_password")}
-                  </a>
+                <div>
+                  <p className="text-[15px] font-semibold tracking-tight text-foreground">Krushi Kendra</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Management Portal</p>
                 </div>
-                <div className="hig-field-wrap">
-                  <Lock style={{ width: 16, height: 16, color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
-                  <input
-                    type={showPw ? "text" : "password"}
-                    required value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••"
-                  />
-                  <button
-                    type="button" onClick={() => setShowPw(p => !p)}
-                    style={{ color: "hsl(var(--muted-foreground))", background: "none", border: "none", cursor: "pointer", display: "flex", flexShrink: 0, padding: 0 }}
-                    className="hover:opacity-70"
-                  >
-                    {showPw ? <EyeOff style={{ width: 16, height: 16 }} /> : <Eye style={{ width: 16, height: 16 }} />}
-                  </button>
-                </div>
-                {errors.password && <p style={{ fontSize: 12, color: "#FF3B30", marginTop: 4, marginLeft: 2 }}>{errors.password}</p>}
               </div>
 
-              {/* Submit — same as SignupForm */}
-              <button
-                type="submit" disabled={loading}
-                className="hig-btn hig-btn-filled w-full"
-                style={{ marginTop: 2, borderRadius: 14 }}
-              >
-                {loading && <Loader2 style={{ width: 18, height: 18 }} className="animate-spin" />}
-                {loading ? "Signing in…" : t("sign_in")}
-              </button>
-            </form>
-
-            {/* Switch to signup — same position as SignupForm's switch link */}
-            <p style={{ textAlign: "center", fontSize: 14, color: "hsl(var(--muted-foreground))", marginTop: 20 }}>
-              {t("dont_have_account")}{" "}
-              <button
-                type="button" onClick={onSwitchToSignup}
-                style={{ color: "#007AFF", fontWeight: 500, background: "none", border: "none", cursor: "pointer", fontSize: 14 }}
-                className="hover:opacity-70 dark:[color:#0A84FF]"
-              >
-                {t("sign_up")}
-              </button>
-            </p>
-          </div>
-
-          {/* ── Hero panel — desktop only, identical structure to SignupForm ── */}
-          <div
-            className="hidden md:flex flex-col overflow-hidden relative"
-            style={{
-              background: "linear-gradient(155deg, hsl(141,62%,22%) 0%, hsl(141,50%,15%) 60%, hsl(200,60%,14%) 100%)",
-              minHeight: 400,
-            }}
-          >
-            <div style={{ position: "absolute", top: "12%", right: "-8%", width: 240, height: 240, borderRadius: "50%", background: "rgba(52,199,89,0.18)", filter: "blur(60px)", pointerEvents: "none" }} />
-            <div style={{ position: "absolute", bottom: "18%", left: "-4%", width: 180, height: 180, borderRadius: "50%", background: "rgba(0,122,255,0.12)", filter: "blur(50px)", pointerEvents: "none" }} />
-            <div style={{ position: "absolute", inset: 0, opacity: .04, backgroundImage: "radial-gradient(circle at 1.5px 1.5px, white 1.5px, transparent 0)", backgroundSize: "20px 20px", pointerEvents: "none" }} />
-
-            <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", padding: "40px 28px", color: "white", textAlign: "center" }}>
-              <div
-                className="hig-app-icon flex items-center justify-center"
-                style={{ width: 84, height: 84, background: "rgba(255,255,255,0.12)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.20)", boxShadow: "0 12px 40px rgba(0,0,0,0.30),inset 0 1px 0 rgba(255,255,255,0.28)", marginBottom: 22 }}
-              >
-                <Sprout style={{ width: 40, height: 40, color: "white" }} />
-              </div>
-              <h2 style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-0.022em", lineHeight: 1.2, marginBottom: 10 }}>
-                Empowering<br />Farmers
-              </h2>
-              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.52)", lineHeight: 1.6, maxWidth: 190, marginBottom: 28 }}>
-                Next-generation agriculture business management
+              <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1">{t("welcome_back")}</h1>
+              <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
+                {t("login_subtitle") || "Sign in to your dashboard"}
               </p>
-              {/* Same 2×2 stat grid as signup hero */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, width: "100%", maxWidth: 220 }}>
-                {[{ v: "5000+", l: "Farmers" }, { v: "100%", l: "Trusted" }, { v: "24/7", l: "Support" }, { v: "10+", l: "Years" }].map((s, i) => (
-                  <div key={i} style={{ background: "rgba(255,255,255,0.09)", borderRadius: 14, padding: "12px 13px", border: "0.5px solid rgba(255,255,255,0.12)", backdropFilter: "blur(12px)", textAlign: "left", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.16)" }}>
-                    <p style={{ fontSize: 21, fontWeight: 700, letterSpacing: "-0.022em", lineHeight: 1 }}>{s.v}</p>
-                    <p style={{ fontSize: 11, color: "rgba(255,255,255,0.48)", marginTop: 4 }}>{s.l}</p>
+
+              {/* Demo hint */}
+              <button
+                type="button"
+                onClick={() => { setEmail("admin@krushi.com"); setPassword("password123") }}
+                className="w-full text-left mb-5 px-3 py-2.5 rounded-xl bg-primary/5 border border-primary/20 hover:bg-primary/10 dark:bg-primary/10 dark:border-primary/30 dark:hover:bg-primary/15 transition-colors"
+              >
+                <p className="text-[12px] font-semibold text-primary">🔑 Use demo credentials</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">admin@krushi.com · password123</p>
+              </button>
+
+              <form onSubmit={onLogin} className="space-y-4">
+
+                {/* Email */}
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    {t("email_address")}
+                  </Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                    <Input
+                      type="email" placeholder="name@krushi.com" required
+                      value={email} onChange={e => setEmail(e.target.value)}
+                      className="pl-9 h-11 rounded-xl bg-muted/60 border-transparent focus-visible:bg-background focus-visible:border-primary/40 focus-visible:ring-primary/20 dark:bg-muted dark:focus-visible:bg-card"
+                    />
                   </div>
-                ))}
+                  {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
+                </div>
+
+                {/* Password */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      {t("password")}
+                    </Label>
+                    <a href="#" className="text-xs text-primary hover:opacity-70 transition-opacity">
+                      {t("forgot_password")}
+                    </a>
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                    <Input
+                      type={showPw ? "text" : "password"} required placeholder="••••••••"
+                      value={password} onChange={e => setPassword(e.target.value)}
+                      className="pl-9 pr-9 h-11 rounded-xl bg-muted/60 border-transparent focus-visible:bg-background focus-visible:border-primary/40 focus-visible:ring-primary/20 dark:bg-muted dark:focus-visible:bg-card"
+                    />
+                    <button type="button" onClick={() => setShowPw(p => !p)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0 bg-transparent border-none cursor-pointer">
+                      {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
+                </div>
+
+                <Button type="submit" disabled={loading} className="w-full h-11 rounded-xl font-semibold text-[15px] mt-1">
+                  {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                  {loading ? "Signing in…" : t("sign_in")}
+                </Button>
+              </form>
+
+              <p className="text-center text-sm text-muted-foreground mt-5">
+                {t("dont_have_account")}{" "}
+                <button type="button" onClick={onSwitchToSignup}
+                  className="text-primary font-semibold hover:opacity-70 transition-opacity bg-transparent border-none cursor-pointer">
+                  {t("sign_up")}
+                </button>
+              </p>
+            </div>
+
+            {/* ── Hero panel — desktop only ── */}
+            <div className="hidden md:flex flex-col relative overflow-hidden"
+              style={{ background: "linear-gradient(155deg,hsl(141,62%,22%) 0%,hsl(141,50%,15%) 60%,hsl(200,60%,14%) 100%)", minHeight: 380 }}>
+              {/* Glows */}
+              <div className="absolute top-[10%] right-[-8%] w-52 h-52 rounded-full blur-[60px] pointer-events-none"
+                style={{ background: "rgba(52,199,89,0.18)" }} />
+              <div className="absolute bottom-[18%] left-[-4%] w-40 h-40 rounded-full blur-[48px] pointer-events-none"
+                style={{ background: "rgba(0,122,255,0.12)" }} />
+              {/* Dot grid */}
+              <div className="absolute inset-0 opacity-[0.04] pointer-events-none"
+                style={{ backgroundImage: "radial-gradient(circle at 1.5px 1.5px,white 1.5px,transparent 0)", backgroundSize: "20px 20px" }} />
+              {/* Content */}
+              <div className="relative z-10 flex flex-col items-center justify-center h-full p-9 text-white text-center">
+                <div className="hig-app-icon flex items-center justify-center mb-5"
+                  style={{ width: 76, height: 76, background: "rgba(255,255,255,.12)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,.20)", boxShadow: "0 12px 40px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.28)" }}>
+                  <Sprout className="h-9 w-9 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold tracking-tight leading-tight mb-2">Empowering<br />Farmers</h2>
+                <p className="text-sm leading-relaxed mb-6" style={{ color: "rgba(255,255,255,0.55)", maxWidth: 180 }}>
+                  Next-generation agriculture business management
+                </p>
+                <div className="grid grid-cols-2 gap-2.5 w-full max-w-[200px]">
+                  {[{ v:"5000+",l:"Farmers" },{ v:"100%",l:"Trusted" },{ v:"24/7",l:"Support" },{ v:"10+",l:"Years" }].map((s,i) => (
+                    <div key={i} className="rounded-2xl p-3 text-left"
+                      style={{ background:"rgba(255,255,255,.09)", border:"0.5px solid rgba(255,255,255,.12)", backdropFilter:"blur(12px)", boxShadow:"inset 0 1px 0 rgba(255,255,255,.16)" }}>
+                      <p className="text-xl font-bold tracking-tight leading-none">{s.v}</p>
+                      <p className="text-[11px] mt-1" style={{ color:"rgba(255,255,255,0.45)" }}>{s.l}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
 
-      <p style={{ textAlign: "center", fontSize: 11, color: "hsl(var(--muted-foreground))", opacity: .45, marginTop: 14 }}>
+          </div>
+        </CardContent>
+      </Card>
+
+      <p className="text-center text-[11px] text-muted-foreground/40 mt-3">
         By signing in you agree to our{" "}
-        <a href="#" style={{ textDecoration: "underline", color: "inherit" }}>{t("terms")}</a>
-        {" "}and{" "}
-        <a href="#" style={{ textDecoration: "underline", color: "inherit" }}>{t("privacy")}</a>.
+        <a href="#" className="underline hover:text-muted-foreground">{t("terms")}</a>{" "}and{" "}
+        <a href="#" className="underline hover:text-muted-foreground">{t("privacy")}</a>.
       </p>
     </div>
   )
