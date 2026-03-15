@@ -157,24 +157,51 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background font-sans transition-colors duration-300">
-      {/* Hero Section */}
-      <section className="relative h-[85vh] overflow-hidden">
-        {heroImages.map((img, index) => (
-          <div
-            key={index}
-            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === slide ? "opacity-100" : "opacity-0"
-              }`}
-          >
+      {/* ── Hero — iOS scroll-snap carousel ── */}
+      <section className="relative overflow-hidden" style={{ height: "85vh" }}>
+        {/* Scroll-snap track */}
+        <div
+          className="hide-scrollbar"
+          style={{
+            display: "flex",
+            height: "100%",
+            overflowX: "auto",
+            scrollSnapType: "x mandatory",
+            scrollBehavior: "smooth",
+            msOverflowStyle: "none",
+            scrollbarWidth: "none",
+          }}
+          id="hero-carousel"
+        >
+          {heroImages.map((img, index) => (
             <div
-              className="absolute inset-0 bg-cover bg-center transform scale-105 transition-transform duration-[10000ms]"
-              style={{ backgroundImage: `url(${img})` }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
-          </div>
-        ))}
+              key={index}
+              style={{
+                minWidth: "100%",
+                height: "100%",
+                scrollSnapAlign: "start",
+                position: "relative",
+                flexShrink: 0,
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute", inset: 0,
+                  backgroundImage: `url(${img})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  transform: "scale(1.04)",
+                  transition: "transform 8s ease-out",
+                }}
+              />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(0,0,0,.78) 0%, rgba(0,0,0,.35) 55%, transparent 100%)" }} />
+            </div>
+          ))}
+        </div>
 
-        <div className="relative z-10 h-full container mx-auto px-4 flex flex-col justify-center items-start">
-          <div className="max-w-3xl animate-fade-in-up">
+        {/* Overlay content — sits on top */}
+        <div className="absolute inset-0 z-10 flex flex-col justify-center items-start container mx-auto px-4 pointer-events-none">
+          <div className="max-w-3xl pointer-events-auto">
             <Badge className="mb-6 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-1.5 text-sm uppercase tracking-wider shadow-lg border-none">
               {t('welcome_to_business')}
             </Badge>
@@ -188,27 +215,54 @@ export default function Home() {
               {t('hero_desc')}
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                asChild
-                size="default"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 h-8 text-xs rounded-xl transition-all hover:scale-[1.02] shadow-lg hover:shadow-primary/20 font-bold uppercase tracking-widest"
-              >
-                <Link to="/products">
-                  {t('explore_products')}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
+              <Button asChild size="default"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 h-8 text-xs rounded-xl transition-all hover:scale-[1.02] shadow-lg font-bold uppercase tracking-widest">
+                <Link to="/products">{t('explore_products')}<ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="default"
-                className="bg-white/10 backdrop-blur-md border-white/30 text-white hover:bg-white/20 px-6 h-8 text-xs rounded-xl transition-all hover:scale-[1.02] font-bold uppercase tracking-widest"
-              >
+              <Button asChild variant="outline" size="default"
+                className="bg-white/10 backdrop-blur-md border-white/30 text-white hover:bg-white/20 px-6 h-8 text-xs rounded-xl font-bold uppercase tracking-widest">
                 <Link to="/contact">{t('contact_experts')}</Link>
               </Button>
             </div>
           </div>
         </div>
+
+        {/* Dot indicators */}
+        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+          {heroImages.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                const el = document.getElementById("hero-carousel")
+                if (el) { el.scrollTo({ left: i * el.offsetWidth, behavior: "smooth" }); setSlide(i) }
+              }}
+              style={{
+                width: i === slide ? 20 : 6, height: 6, borderRadius: 3,
+                background: i === slide ? "white" : "rgba(255,255,255,.45)",
+                border: "none", cursor: "pointer", padding: 0,
+                transition: "all 0.3s cubic-bezier(0.34,1.56,0.64,1)",
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Arrow nav buttons */}
+        {[
+          { dir: -1, pos: "left-4", label: "‹" },
+          { dir:  1, pos: "right-4", label: "›" },
+        ].map(({ dir, pos, label }) => (
+          <button key={dir}
+            onClick={() => {
+              const next = (slide + dir + heroImages.length) % heroImages.length
+              const el = document.getElementById("hero-carousel")
+              if (el) { el.scrollTo({ left: next * el.offsetWidth, behavior: "smooth" }); setSlide(next) }
+            }}
+            className={`absolute top-1/2 -translate-y-1/2 ${pos} z-20 hidden md:flex items-center justify-center`}
+            style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,.18)", backdropFilter: "blur(12px)", border: "0.5px solid rgba(255,255,255,.30)", color: "white", fontSize: 22, fontWeight: 300, cursor: "pointer", transition: "background .15s" }}
+          >
+            {label}
+          </button>
+        ))}
       </section>
 
       {/* Offer Banner - E-commerce Style */}

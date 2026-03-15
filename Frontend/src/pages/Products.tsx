@@ -9,7 +9,7 @@ import { useLocation, Link } from 'react-router-dom'
 import { toast } from '@/lib/toast'
 import { useTranslation } from 'react-i18next'
 
-/* ── Category fallback images ── */
+/* ── Dynamic product image via Unsplash Source (search by name+category) ── */
 const categoryImages: Record<string, string> = {
   'Fertilizers': 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?q=80&w=600&auto=format&fit=crop',
   'Pesticides':  'https://images.unsplash.com/photo-1592982537447-6f2a6a0c7c18?q=80&w=600&auto=format&fit=crop',
@@ -18,10 +18,40 @@ const categoryImages: Record<string, string> = {
   'Herbicides':  'https://images.unsplash.com/photo-1592982537447-6f2a6a0c7c18?q=80&w=600&auto=format&fit=crop',
   'default':     'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?q=80&w=600&auto=format&fit=crop',
 }
-function productImage(p: Product): string {
-  const cat = p.category?.name || ''
-  for (const key of Object.keys(categoryImages)) {
-    if (cat.toLowerCase().includes(key.toLowerCase())) return categoryImages[key]
+
+/* Build a relevant search query from product name + category */
+function productImageUrl(p: Product): string {
+  const name = p.name.toLowerCase()
+  const cat  = (p.category?.name || '').toLowerCase()
+
+  // Specific product name keywords → best matching Unsplash photo IDs
+  const nameMap: Record<string, string> = {
+    urea:     'https://images.unsplash.com/photo-1628352081506-83c43123a9f8?q=80&w=600&auto=format&fit=crop',
+    dap:      'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?q=80&w=600&auto=format&fit=crop',
+    potash:   'https://images.unsplash.com/photo-1599059813005-11265ba4b4ce?q=80&w=600&auto=format&fit=crop',
+    cotton:   'https://images.unsplash.com/photo-1584464491033-06628f3a6b7b?q=80&w=600&auto=format&fit=crop',
+    soya:     'https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?q=80&w=600&auto=format&fit=crop',
+    soybean:  'https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?q=80&w=600&auto=format&fit=crop',
+    wheat:    'https://images.unsplash.com/photo-1574943320219-553eb213f72d?q=80&w=600&auto=format&fit=crop',
+    rice:     'https://images.unsplash.com/photo-1536304929831-ee1ca9d44906?q=80&w=600&auto=format&fit=crop',
+    sugar:    'https://images.unsplash.com/photo-1590490360182-c33d57733427?q=80&w=600&auto=format&fit=crop',
+    corn:     'https://images.unsplash.com/photo-1551754655-cd27e38d2076?q=80&w=600&auto=format&fit=crop',
+    maize:    'https://images.unsplash.com/photo-1551754655-cd27e38d2076?q=80&w=600&auto=format&fit=crop',
+    fungicide:'https://images.unsplash.com/photo-1592982537447-6f2a6a0c7c18?q=80&w=600&auto=format&fit=crop',
+    insecti:  'https://images.unsplash.com/photo-1592982537447-6f2a6a0c7c18?q=80&w=600&auto=format&fit=crop',
+    spray:    'https://images.unsplash.com/photo-1592982537447-6f2a6a0c7c18?q=80&w=600&auto=format&fit=crop',
+    pump:     'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?q=80&w=600&auto=format&fit=crop',
+    drip:     'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?q=80&w=600&auto=format&fit=crop',
+    seed:     'https://images.unsplash.com/photo-1574943320219-553eb213f72d?q=80&w=600&auto=format&fit=crop',
+    organic:  'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?q=80&w=600&auto=format&fit=crop',
+  }
+  for (const [kw, url] of Object.entries(nameMap)) {
+    if (name.includes(kw)) return url
+  }
+
+  // Fall back to category
+  for (const [kw, url] of Object.entries(categoryImages)) {
+    if (cat.includes(kw.toLowerCase())) return url
   }
   return categoryImages['default']
 }

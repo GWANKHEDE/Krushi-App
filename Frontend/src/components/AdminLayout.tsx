@@ -13,6 +13,7 @@ import { AppSidebar } from "./AppSidebar"
 import { useTranslation } from "react-i18next"
 import { LanguageSwitcher } from "./LanguageSwitcher"
 import { MobileTabBar } from "./MobileTabBar"
+import { Input } from "@/components/ui/input"
 
 export function AdminLayout() {
   const location = useLocation()
@@ -21,127 +22,89 @@ export function AdminLayout() {
   const { t } = useTranslation()
 
   const handleLogout = () => { logout(); toast.success("Signed out"); navigate("/admin/login") }
-  const initial  = user?.name?.charAt(0).toUpperCase() || "A"
-  const segment  = location.pathname.split("/").pop() || "dashboard"
-  const pageTitle = t(segment) || segment.charAt(0).toUpperCase() + segment.slice(1)
+  const initial = user?.name?.charAt(0).toUpperCase() || "A"
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full page-bg">
+      {/* Sidebar rendered directly — no hidden wrapper */}
+      <AppSidebar />
 
-        {/* ── Sidebar — desktop only ── */}
-        <div className="hidden md:block">
-          <AppSidebar />
-        </div>
+      <SidebarInset className="flex flex-col min-w-0">
 
-        <SidebarInset className="flex flex-col min-w-0">
+        {/* ── Top navbar ── */}
+        <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-4 border-b bg-background/80 backdrop-blur-md px-4 md:px-6">
 
-          {/* ── iOS-style top navbar ── */}
-          <header
-            className="glass-thin sticky top-0 z-40"
-            style={{ height: 44, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", gap: 8 }}
-          >
-            {/* Left: sidebar trigger (desktop) + search */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}>
-              <SidebarTrigger
-                className="hidden md:flex hover:bg-black/5 dark:hover:bg-white/8 transition-colors"
-                style={{ width: 32, height: 32, borderRadius: 8, alignItems: "center", justifyContent: "center", color: "hsl(var(--muted-foreground))" }}
+          {/* Left: trigger + search */}
+          <div className="flex items-center gap-3 flex-1">
+            <SidebarTrigger className="-ml-1 h-9 w-9 rounded-lg hover:bg-accent text-muted-foreground" />
+            <div className="hidden md:flex relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input
+                type="search"
+                placeholder={t("search")}
+                className="pl-9 h-9 w-56 lg:w-72 bg-muted border-transparent rounded-xl text-sm focus-visible:ring-primary/20"
               />
-              <div className="hidden md:block" style={{ width: "0.5px", height: 16, background: "rgba(60,60,67,0.22)" }} />
-              <div className="hig-search hidden md:flex flex-1 max-w-64">
-                <Search style={{ width: 15, height: 15, color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
-                <input placeholder={`${t("search")}…`} />
-              </div>
             </div>
+          </div>
 
-            {/* Center: page title */}
-            <p
-              className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
-              style={{ fontSize: 17, fontWeight: 600, color: "hsl(var(--foreground))", letterSpacing: "-0.01em", whiteSpace: "nowrap" }}
-            >
-              {pageTitle}
-            </p>
+          {/* Right: lang, theme, bell, avatar */}
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <ThemeToggle />
 
-            {/* Right: lang, theme, bell, avatar */}
-            <div style={{ display: "flex", alignItems: "center", gap: 4, flex: 1, justifyContent: "flex-end" }}>
-              <LanguageSwitcher />
-              <ThemeToggle />
+            {/* Notification bell */}
+            <button className="relative h-9 w-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+              <Bell className="h-4 w-4" />
+              <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-destructive" />
+            </button>
 
-              {/* Bell */}
-              <button
-                style={{ width: 32, height: 32, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", color: "hsl(var(--muted-foreground))", background: "none", border: "none", cursor: "pointer" }}
-                className="hover:bg-black/5 dark:hover:bg-white/8 transition-colors"
-              >
-                <Bell style={{ width: 18, height: 18 }} />
-                <span style={{ position: "absolute", top: 7, right: 7, width: 7, height: 7, borderRadius: "50%", background: "#FF3B30", border: "1.5px solid rgba(242,242,247,0.92)" }} />
-              </button>
+            {/* User avatar dropdown — uses Tailwind theme classes throughout for dark mode */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="h-8 w-8 rounded-full ring-2 ring-border hover:ring-primary/40 transition-all overflow-hidden ml-1 outline-none cursor-pointer">
+                  <Avatar className="h-full w-full">
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                      {initial}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              {/* DropdownMenuContent: uses bg-popover/border/text from shadcn — dark mode automatic */}
+              <DropdownMenuContent align="end" sideOffset={8} className="w-56 rounded-2xl p-1.5">
+                <DropdownMenuLabel className="px-3 py-2.5">
+                  <p className="text-sm font-semibold">{user?.name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{user?.email}</p>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/admin/settings")} className="rounded-xl px-3 py-2.5 gap-2.5 cursor-pointer">
+                  <Settings className="h-4 w-4 text-muted-foreground" /> Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/admin/profile")} className="rounded-xl px-3 py-2.5 gap-2.5 cursor-pointer">
+                  <UserIcon className="h-4 w-4 text-muted-foreground" /> Profile
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="rounded-xl px-3 py-2.5 gap-2.5 cursor-pointer text-destructive focus:text-destructive">
+                  <LogOut className="h-4 w-4" /> Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </header>
 
-              {/* Avatar dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    style={{ width: 28, height: 28, borderRadius: "50%", overflow: "hidden", border: "1.5px solid rgba(60,60,67,0.18)", marginLeft: 2, outline: "none", cursor: "pointer" }}
-                    className="hover:opacity-80 transition-opacity"
-                  >
-                    <Avatar style={{ width: "100%", height: "100%" }}>
-                      <AvatarFallback style={{ background: "hsl(var(--primary)/.12)", color: "hsl(var(--primary))", fontSize: 11, fontWeight: 700 }}>
-                        {initial}
-                      </AvatarFallback>
-                    </Avatar>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end" sideOffset={8}
-                  style={{ width: 220, borderRadius: 16, border: "0.5px solid rgba(60,60,67,0.18)", boxShadow: "0 20px 60px rgba(0,0,0,0.15)", backdropFilter: "blur(20px)", background: "rgba(255,255,255,0.90)" }}
-                  className="p-1.5 dark:[background:rgba(28,28,30,0.90)] dark:[border-color:rgba(84,84,88,0.55)]"
-                >
-                  <DropdownMenuLabel style={{ padding: "10px 12px", borderRadius: 10 }}>
-                    <p style={{ fontSize: 14, fontWeight: 600 }}>{user?.name}</p>
-                    <p style={{ fontSize: 12, color: "hsl(var(--muted-foreground))", marginTop: 1 }}>{user?.email}</p>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator style={{ background: "rgba(60,60,67,0.12)", margin: "4px 0" }} />
-                  {[
-                    { l: "Settings", I: Settings, p: "/admin/settings" },
-                    { l: "Profile",  I: UserIcon,  p: "/admin/profile"  },
-                  ].map(({ l, I, p }) => (
-                    <DropdownMenuItem key={l} onClick={() => navigate(p)}
-                      style={{ borderRadius: 10, padding: "10px 12px", fontSize: 14, gap: 10, cursor: "pointer" }}
-                      className="hover:bg-black/5 dark:hover:bg-white/5">
-                      <I style={{ width: 16, height: 16, color: "hsl(var(--muted-foreground))" }} />{l}
-                    </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuSeparator style={{ background: "rgba(60,60,67,0.12)", margin: "4px 0" }} />
-                  <DropdownMenuItem onClick={handleLogout}
-                    style={{ borderRadius: 10, padding: "10px 12px", fontSize: 14, gap: 10, cursor: "pointer", color: "#FF3B30" }}
-                    className="focus:text-[#FF3B30]">
-                    <LogOut style={{ width: 16, height: 16 }} /> Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+        {/* Main content */}
+        <main className="flex-1 overflow-auto bg-muted/20 dark:bg-background">
+          {user?.business?.logo && (
+            <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-0" aria-hidden>
+              <img src={user.business.logo} alt="" className="w-[25%] max-w-[240px] object-contain grayscale opacity-[0.02]" />
             </div>
-          </header>
+          )}
+          <div className="relative z-10 p-4 md:p-6 pb-20 md:pb-6 hig-page-enter">
+            <Outlet />
+          </div>
+        </main>
+      </SidebarInset>
 
-          {/* ── Main content ── */}
-          <main className="flex-1 overflow-auto page-bg" style={{ minHeight: 0 }}>
-            {user?.business?.logo && (
-              <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-0" aria-hidden>
-                <img src={user.business.logo} alt="" style={{ width: "25%", maxWidth: 240, objectFit: "contain", filter: "grayscale(1)", opacity: .02 }} />
-              </div>
-            )}
-            {/*
-              Bottom padding:
-              • Mobile: 49px tab bar + 16px gap = pb-[65px]
-              • Desktop: normal
-            */}
-            <div className="relative z-10 p-4 md:p-5 hig-page-enter pb-[73px] md:pb-5">
-              <Outlet />
-            </div>
-          </main>
-        </SidebarInset>
-
-        {/* ── iOS bottom tab bar — mobile only ── */}
-        <MobileTabBar />
-      </div>
+      <MobileTabBar />
     </SidebarProvider>
   )
 }
