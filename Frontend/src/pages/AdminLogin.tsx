@@ -13,7 +13,6 @@ export default function AdminLogin() {
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
-
   const navigate = useNavigate()
   const { login, isAuthenticated } = useAuth()
 
@@ -26,25 +25,20 @@ export default function AdminLogin() {
     if (loading) return
     setErrors({})
 
-    const newErrors: Record<string, string> = {}
-    if (!email.trim()) newErrors.email = 'Email is required'
-    if (!password) newErrors.password = 'Password is required'
-    if (!isLogin && !name.trim()) newErrors.name = 'Full name is required'
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
-      toast.error('Please fill in all required fields')
-      return
-    }
+    const errs: Record<string, string> = {}
+    if (!email.trim()) errs.email = 'Email required'
+    if (!password) errs.password = 'Password required'
+    if (!isLogin && !name.trim()) errs.name = 'Full name required'
+    if (Object.keys(errs).length) { setErrors(errs); return }
 
     setLoading(true)
     try {
-      const loggedInUser = login(email, password)
-      if (loggedInUser) {
-        toast.success(`Welcome back, ${loggedInUser.name}!`)
+      const u = login(email, password)
+      if (u) {
+        toast.success(`Welcome back, ${u.name}!`)
         navigate('/admin/dashboard', { replace: true })
       } else {
-        toast.error('Invalid credentials. Please try again.')
+        toast.error('Invalid credentials — please try again.')
         setErrors({ general: 'Invalid credentials' })
       }
     } finally {
@@ -53,36 +47,27 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-primary/5 flex flex-col">
-      {/* Top bar */}
-      <div className="flex items-center justify-end p-4 md:p-6">
+    /* iOS-like off-white background */
+    <div className="min-h-screen bg-background flex flex-col">
+      <div className="flex justify-end p-4">
         <ThemeToggle />
       </div>
-
-      {/* Center content */}
-      <div className="flex-1 flex items-center justify-center px-4 pb-12">
-        <div className="w-full max-w-sm md:max-w-3xl animate-fade-up">
+      <div className="flex-1 flex items-center justify-center px-4 pb-10">
+        <div className="w-full max-w-[340px] md:max-w-[780px] ios-page">
           {isLogin ? (
             <LoginForm
-              email={email}
-              setEmail={setEmail}
-              password={password}
-              setPassword={setPassword}
-              loading={loading}
-              onLogin={handleSubmit}
+              email={email} setEmail={setEmail}
+              password={password} setPassword={setPassword}
+              loading={loading} onLogin={handleSubmit}
               onSwitchToSignup={() => { setIsLogin(false); setErrors({}) }}
               errors={errors}
             />
           ) : (
             <SignupForm
-              name={name}
-              setName={setName}
-              email={email}
-              setEmail={setEmail}
-              password={password}
-              setPassword={setPassword}
-              loading={loading}
-              onSignup={handleSubmit}
+              name={name} setName={setName}
+              email={email} setEmail={setEmail}
+              password={password} setPassword={setPassword}
+              loading={loading} onSignup={handleSubmit}
               onSwitchToLogin={() => { setIsLogin(true); setErrors({}) }}
               errors={errors}
             />
