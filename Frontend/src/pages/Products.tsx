@@ -8,6 +8,7 @@ import DeleteProductDialog from '../components/DeleteProductDialog'
 import { useLocation, Link } from 'react-router-dom'
 import { toast } from '@/lib/toast'
 import { useTranslation } from 'react-i18next'
+import { useSearch } from '@/lib/SearchContext'
 
 /* ── Dynamic product image via Unsplash Source (search by name+category) ── */
 const categoryImages: Record<string, string> = {
@@ -65,7 +66,6 @@ const defaultBiz = {
 export default function Products() {
   const [products, setProducts]     = useState<Product[]>(getProducts())
   const [categories]                = useState<Category[]>(getCategories())
-  const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [selectedStock, setSelectedStock]       = useState('All')
   const [addOpen, setAddOpen]       = useState(false)
@@ -75,6 +75,8 @@ export default function Products() {
   const location  = useLocation()
   const isAdmin   = location.pathname.startsWith('/admin')
   const { t }     = useTranslation()
+  const { query: searchTerm } = useSearch()   // ← synced with navbar search (admin)
+  const [pubSearch, setPubSearch] = useState('') // ← public page hero search (separate)
 
   /* Load biz info for public page CTA phone number */
   useEffect(() => {
@@ -94,17 +96,21 @@ export default function Products() {
   const handleUpdated= () => { reload(); setEditing(null);      toast.success('Product updated') }
   const handleDeleted= () => { reload(); setDeleting(null);     toast.success('Product deleted') }
 
+  // Admin uses navbar search; public uses the hero search bar
+  const activeSearch = isAdmin ? searchTerm : pubSearch
+
   const filtered = useMemo(() => {
+    const q = activeSearch.toLowerCase()
     return products.filter(p => {
-      const matchSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (isAdmin && p.sku.toLowerCase().includes(searchTerm.toLowerCase()))
+      const matchSearch = p.name.toLowerCase().includes(q) ||
+        (isAdmin && p.sku.toLowerCase().includes(q))
       const matchCat   = selectedCategory === 'All' || p.category?.name === selectedCategory
       const matchStock = selectedStock === 'All' ||
         (selectedStock === 'In Stock' && p.currentStock > 0) ||
         (selectedStock === 'Out of Stock' && p.currentStock === 0)
       return matchSearch && matchCat && matchStock && p.isActive
     }).sort((a, b) => a.name.localeCompare(b.name))
-  }, [products, searchTerm, selectedCategory, selectedStock, isAdmin])
+  }, [products, activeSearch, selectedCategory, selectedStock, isAdmin])
 
   const isAvailable = (p: Product) => p.currentStock > 0
 
@@ -130,12 +136,7 @@ export default function Products() {
           </button>
         </div>
         <div className="glass" style={{ padding:"14px 16px",borderRadius:16 }}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="relative sm:col-span-2">
-              <Search style={{ position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",width:15,height:15,color:"hsl(var(--muted-foreground))" }} />
-              <input placeholder={t('search_sku') || 'Search name or SKU…'} value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-                style={{ paddingLeft:34,width:"100%",height:36,background:"rgba(120,120,128,.10)",borderRadius:9,border:"none",outline:"none",fontSize:14,color:"hsl(var(--foreground))" }} className="dark:[background:rgba(120,120,128,.22)]" />
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger className="h-9 rounded-xl border-0 bg-black/5 dark:bg-white/8 text-sm">
                 <div className="flex items-center gap-2"><Filter style={{ width:14,height:14 }} /><SelectValue placeholder="Category" /></div>
@@ -145,9 +146,19 @@ export default function Products() {
                 {categories.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
               </SelectContent>
             </Select>
-            <button onClick={() => { setSearchTerm(''); setSelectedCategory('All'); setSelectedStock('All') }}
+            <Select value={selectedStock} onValueChange={setSelectedStock}>
+              <SelectTrigger className="h-9 rounded-xl border-0 bg-black/5 dark:bg-white/8 text-sm">
+                <SelectValue placeholder="Stock status" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="All">All stock</SelectItem>
+                <SelectItem value="In Stock">In Stock</SelectItem>
+                <SelectItem value="Out of Stock">Out of Stock</SelectItem>
+              </SelectContent>
+            </Select>
+            <button onClick={() => { setSelectedCategory('All'); setSelectedStock('All') }}
               style={{ height:36,borderRadius:9,background:"rgba(120,120,128,.10)",border:"none",fontSize:13,color:"hsl(var(--muted-foreground))",cursor:"pointer" }}
-              className="hover:bg-black/8 dark:hover:bg-white/10">Reset</button>
+              className="hover:bg-black/8 dark:hover:bg-white/10">Reset filters</button>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -210,7 +221,7 @@ export default function Products() {
             <Package style={{ width:44,height:44,margin:"0 auto 12px",opacity:.2 }} />
             <p style={{ fontSize:17,fontWeight:600,color:"hsl(var(--foreground))" }}>{t('no_products_found')}</p>
             <div style={{ display:"flex",justifyContent:"center",gap:10,marginTop:16 }}>
-              <button onClick={()=>{setSearchTerm('');setSelectedCategory('All')}} style={{ padding:"8px 18px",borderRadius:10,background:"rgba(120,120,128,.12)",border:"none",fontSize:14,cursor:"pointer" }}>Clear filters</button>
+              <button onClick={()=>{setSelectedCategory('All')}} style={{ padding:"8px 18px",borderRadius:10,background:"rgba(120,120,128,.12)",border:"none",fontSize:14,cursor:"pointer" }}>Clear filters</button>
               <button onClick={()=>setAddOpen(true)} className="hig-btn hig-btn-filled hig-btn-sm">{t('add_product')}</button>
             </div>
           </div>
@@ -266,9 +277,9 @@ export default function Products() {
           {/* Search in hero */}
           <div style={{ maxWidth:460,margin:"0 auto",background:"rgba(255,255,255,.14)",backdropFilter:"blur(16px)",borderRadius:14,border:"0.5px solid rgba(255,255,255,.28)",display:"flex",alignItems:"center",gap:8,padding:"0 14px",height:50 }}>
             <Search style={{ width:18,height:18,color:"rgba(255,255,255,.65)",flexShrink:0 }} />
-            <input placeholder={t("pub_search_placeholder")} value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+            <input placeholder={t("pub_search_placeholder")} value={pubSearch} onChange={e => setPubSearch(e.target.value)}
               style={{ flex:1,background:"transparent",border:"none",outline:"none",fontSize:15,color:"white",fontFamily:"inherit" }} className="placeholder:text-white/50" />
-            {searchTerm && <button onClick={() => setSearchTerm("")} style={{ background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.6)",padding:0,display:"flex" }}><X style={{ width:16,height:16 }} /></button>}
+            {pubSearch && <button onClick={() => setPubSearch("")} style={{ background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.6)",padding:0,display:"flex" }}><X style={{ width:16,height:16 }} /></button>}
           </div>
         </div>
       </div>
@@ -405,7 +416,7 @@ export default function Products() {
             </div>
             <p style={{ fontSize:17,fontWeight:700,color:"hsl(var(--foreground))" }}>{t("pub_no_products")}</p>
             <p style={{ fontSize:14,color:"hsl(var(--muted-foreground))",marginTop:5,lineHeight:1.5 }}>{t("pub_no_products_sub")}</p>
-            <button onClick={() => { setSearchTerm(""); setSelectedCategory("All") }} className="hig-btn hig-btn-tinted hig-btn-sm" style={{ marginTop:16 }}>
+            <button onClick={() => { setPubSearch(""); setSelectedCategory("All") }} className="hig-btn hig-btn-tinted hig-btn-sm" style={{ marginTop:16 }}>
               {t("pub_clear_filters")}
             </button>
           </div>
