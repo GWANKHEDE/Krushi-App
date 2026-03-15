@@ -1,80 +1,68 @@
-/*
-  AdminDashboard — Apple HIG Dashboard
-  ──────────────────────────────────────
-  • Large Title (34pt bold) at top — iOS standard
-  • Widgets: white cards on systemGroupedBackground (#F2F2F7)
-  • System colors for status indicators
-  • Grouped table view style for lists
-  • No decorative gradients — color used semantically
-  • Touch targets: minimum 44×44pt
-*/
 import { useState, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/lib/auth"
-import {
-  getDashboardStats, getSalesTrend, getLowStockProducts,
-  getRecentSales, getCategories
-} from "@/lib/store"
+import { getDashboardStats, getSalesTrend, getLowStockProducts, getRecentSales, getCategories } from "@/lib/store"
 import { toast } from "@/lib/toast"
-import {
-  Package, TrendingUp, AlertTriangle, ShoppingCart,
-  BarChart3, Plus, IndianRupee, RefreshCw, ChevronRight
-} from "lucide-react"
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, PieChart, Pie, Cell
-} from "recharts"
-import { useTranslation as i18n } from "react-i18next"
+import { Package, TrendingUp, AlertTriangle, ShoppingCart, BarChart3, Plus, IndianRupee, RefreshCw, ChevronRight, ArrowUpRight } from "lucide-react"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from "recharts"
 
-/* iOS system colors for chart */
-const PIE_COLORS = ["#34C759","#007AFF","#FF9500","#FF3B30","#AF52DE","#5AC8FA","#FFCC00"]
+const PIE_COLORS = ["#34C759","#007AFF","#FF9500","#FF3B30","#AF52DE","#5AC8FA"]
 
-/* ── Reusable Widget component ── */
-function Widget({ color, iconBg, iconColor, icon: Icon, label, value, sub }:
-  { color: string; iconBg: string; iconColor: string; icon: any; label: string; value: string|number; sub: string }
-) {
+/* ── Glass Widget (iOS Control Centre card) ── */
+function GlassWidget({ tint, icon: Icon, iconColor, label, value, sub, trend }:
+  { tint: string; icon: any; iconColor: string; label: string; value: string|number; sub: string; trend?: number }) {
   return (
-    <div
-      style={{
-        background: "hsl(var(--card))",
-        borderRadius: 16,
-        padding: "14px 14px 12px",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
-        position: "relative", overflow: "hidden",
-        borderTop: `3px solid ${color}`,
-        transition: "transform 0.2s, box-shadow 0.2s",
-        cursor: "default"
-      }}
-      className="hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
-    >
-      <div className="flex items-start justify-between mb-2.5">
-        <div style={{ width: 36, height: 36, borderRadius: 9, background: iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <Icon style={{ width: 18, height: 18, color: iconColor }} />
+    <div className={`glass-widget ${tint} relative`} style={{ padding: "18px 16px 14px" }}>
+      {/* Content sits above the specular ::before layer */}
+      <div style={{ position: "relative", zIndex: 2 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
+          <div className="icon-md" style={{ background: `${iconColor}22`, backdropFilter: "blur(8px)" }}>
+            <Icon style={{ width: 20, height: 20, color: iconColor }} />
+          </div>
+          {trend !== undefined && (
+            <div style={{ display: "flex", alignItems: "center", gap: 3, background: trend >= 0 ? "rgba(52,199,89,.18)" : "rgba(255,59,48,.15)", borderRadius: 999, padding: "2px 7px" }}>
+              <ArrowUpRight style={{ width: 11, height: 11, color: trend >= 0 ? "#34C759" : "#FF3B30", transform: trend < 0 ? "scaleY(-1)" : "none" }} />
+              <span style={{ fontSize: 11, fontWeight: 600, color: trend >= 0 ? "#1d8639" : "#cc1f1a" }}>{Math.abs(trend)}%</span>
+            </div>
+          )}
         </div>
-        <ChevronRight style={{ width: 14, height: 14, color: "hsl(var(--muted-foreground))", opacity: 0.4, marginTop: 2 }} />
+        <p style={{ fontSize: 30, fontWeight: 700, color: "hsl(var(--foreground))", letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 5 }}>{value}</p>
+        <p style={{ fontSize: 13, fontWeight: 600, color: "hsl(var(--foreground))", opacity: 0.75, marginBottom: 2 }}>{label}</p>
+        <p style={{ fontSize: 11, color: "hsl(var(--muted-foreground))" }}>{sub}</p>
       </div>
-      <p style={{ fontSize: 26, fontWeight: 700, color: "hsl(var(--foreground))", letterSpacing: "-0.025em", lineHeight: 1.1 }}>{value}</p>
-      <p style={{ fontSize: 13, fontWeight: 500, color: "hsl(var(--foreground))", marginTop: 5, opacity: 0.8 }}>{label}</p>
-      <p style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", marginTop: 2 }}>{sub}</p>
     </div>
   )
 }
 
-/* ── Reusable Section Header ── */
-function SectionHeader({ title, subtitle, action, onAction }:
-  { title: string; subtitle?: string; action?: string; onAction?: () => void }
-) {
+/* ── Quick Action tile ── */
+function ActionTile({ icon: Icon, label, color, bg, onClick }: { icon: any; label: string; color: string; bg: string; onClick: () => void }) {
   return (
-    <div className="flex items-end justify-between mb-2 px-0.5">
+    <button onClick={onClick} className="glass scale-in"
+      style={{ padding: "16px 10px 12px", borderRadius: 18, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer", border: "1px solid var(--glass-border)" }}
+    >
+      <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+        <div style={{ width: 44, height: 44, borderRadius: 12, background: bg, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 4px 12px ${color}30` }}>
+          <Icon style={{ width: 22, height: 22, color: color }} />
+        </div>
+        <span style={{ fontSize: 11, fontWeight: 500, color: "hsl(var(--foreground))", textAlign: "center", lineHeight: 1.25, letterSpacing: "-0.003em" }}>{label}</span>
+      </div>
+    </button>
+  )
+}
+
+/* ── Section header ── */
+function SectionHead({ title, sub, action, onAction }: { title: string; sub?: string; action?: string; onAction?: () => void }) {
+  return (
+    <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 10 }}>
       <div>
-        <p style={{ fontSize: 20, fontWeight: 700, color: "hsl(var(--foreground))", letterSpacing: "-0.015em" }}>{title}</p>
-        {subtitle && <p style={{ fontSize: 12, color: "hsl(var(--muted-foreground))", marginTop: 1 }}>{subtitle}</p>}
+        <p className="t-title-3" style={{ color: "hsl(var(--foreground))" }}>{title}</p>
+        {sub && <p className="t-caption-1" style={{ color: "hsl(var(--muted-foreground))", marginTop: 1 }}>{sub}</p>}
       </div>
       {action && (
-        <button onClick={onAction} style={{ fontSize: 14, color: "#007AFF", fontWeight: 400, display: "flex", alignItems: "center", gap: 2 }}
+        <button onClick={onAction} style={{ display: "flex", alignItems: "center", gap: 2, fontSize: 14, color: "var(--sys-blue)", fontWeight: 400 }}
           className="hover:opacity-70 transition-opacity">
-          {action} <ChevronRight style={{ width: 14, height: 14 }} />
+          {action}<ChevronRight style={{ width: 14, height: 14 }} />
         </button>
       )}
     </div>
@@ -83,164 +71,92 @@ function SectionHeader({ title, subtitle, action, onAction }:
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
-  const { user } = useAuth()
-  const { t } = useTranslation()
+  const { user }  = useAuth()
+  const { t }     = useTranslation()
   const [key, setKey] = useState(0)
 
-  const stats    = useMemo(() => getDashboardStats(),    [key])
-  const trend    = useMemo(() => getSalesTrend(7),       [key])
-  const lowStock = useMemo(() => getLowStockProducts(),   [key])
-  const sales    = useMemo(() => getRecentSales(8),      [key])
+  const stats    = useMemo(() => getDashboardStats(), [key])
+  const trend    = useMemo(() => getSalesTrend(7),    [key])
+  const lowStock = useMemo(() => getLowStockProducts(), [key])
+  const sales    = useMemo(() => getRecentSales(8),   [key])
   const catData  = useMemo(() =>
-    getCategories().map(c => ({ name: c.name, value: c._count?.products || 0 })).filter(c => c.value > 0),
-    [key]
-  )
+    getCategories().map(c => ({ name: c.name, value: c._count?.products||0 })).filter(c=>c.value>0), [key])
 
-  const greet = () => {
-    const h = new Date().getHours()
-    return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"
-  }
+  const greet = () => { const h = new Date().getHours(); return h<12?"Good morning":h<17?"Good afternoon":"Good evening" }
+  const dateStr = new Date().toLocaleDateString("en-IN", { weekday:"long", day:"numeric", month:"long" })
 
-  const dateStr = new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })
-
-  /* iOS system colors */
   const widgets = [
-    { label: t("total_products"), value: stats.totalProducts,                       sub: "In inventory",    icon: Package,       color: "#007AFF", iconBg: "rgba(0,122,255,0.1)",    iconColor: "#007AFF" },
-    { label: t("todays_sales"),   value: `₹${stats.todaysSales.toLocaleString()}`,  sub: "Today's revenue", icon: TrendingUp,    color: "#34C759", iconBg: "rgba(52,199,89,0.1)",     iconColor: "#34C759" },
-    { label: t("low_stock"),      value: stats.lowStockItems,                        sub: "Need restock",    icon: AlertTriangle, color: "#FF9500", iconBg: "rgba(255,149,0,0.1)",     iconColor: "#FF9500" },
-    { label: t("monthly_profit"), value: `₹${stats.monthlyProfit.toLocaleString()}`, sub: "This month",     icon: IndianRupee,   color: "#AF52DE", iconBg: "rgba(175,82,222,0.1)",    iconColor: "#AF52DE" },
+    { tint:"glass-blue",   icon:Package,       iconColor:"#007AFF", label:t("total_products"), value:stats.totalProducts,                       sub:"In inventory",    trend:5  },
+    { tint:"glass-green",  icon:TrendingUp,     iconColor:"#34C759", label:t("todays_sales"),   value:`₹${stats.todaysSales.toLocaleString()}`,  sub:"Today's revenue", trend:12 },
+    { tint:"glass-orange", icon:AlertTriangle,  iconColor:"#FF9500", label:t("low_stock"),      value:stats.lowStockItems,                        sub:"Need restock",    trend:-3 },
+    { tint:"glass-purple", icon:IndianRupee,    iconColor:"#AF52DE", label:t("monthly_profit"), value:`₹${stats.monthlyProfit.toLocaleString()}`, sub:"This month",      trend:8  },
   ]
 
-  /* Quick actions — iOS App Library grid style */
   const actions = [
-    { icon: Plus,         label: t("add_product_action"), path: "/admin/products",  color: "#34C759", bg: "rgba(52,199,89,0.12)" },
-    { icon: ShoppingCart, label: t("create_bill"),         path: "/admin/billing",   color: "#007AFF", bg: "rgba(0,122,255,0.12)" },
-    { icon: Package,      label: t("stock_entry"),         path: "/admin/purchases", color: "#FF9500", bg: "rgba(255,149,0,0.12)" },
-    { icon: BarChart3,    label: t("reports"),             path: "/admin/reports",   color: "#AF52DE", bg: "rgba(175,82,222,0.12)" },
+    { icon:Plus,         label:t("add_product_action"), color:"#34C759", bg:"rgba(52,199,89,.15)",   path:"/admin/products"  },
+    { icon:ShoppingCart, label:t("create_bill"),         color:"#007AFF", bg:"rgba(0,122,255,.15)",  path:"/admin/billing"   },
+    { icon:Package,      label:t("stock_entry"),         color:"#FF9500", bg:"rgba(255,149,0,.15)",  path:"/admin/purchases" },
+    { icon:BarChart3,    label:t("reports"),             color:"#AF52DE", bg:"rgba(175,82,222,.15)", path:"/admin/reports"   },
   ]
 
   return (
-    <div className="space-y-5 hig-page-enter">
+    <div className="space-y-6 page-in">
 
-      {/*
-        Large Title — iOS standard top section
-        34pt bold, letterSpacing -0.025em
-      */}
-      <div className="flex items-start justify-between gap-3">
+      {/* ── Large title header ── */}
+      <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:12 }}>
         <div>
-          <p style={{ fontSize: 13, color: "hsl(var(--muted-foreground))", fontWeight: 400 }}>{dateStr}</p>
-          <h1 className="ios-large-title" style={{ color: "hsl(var(--foreground))", marginTop: 2 }}>
+          <p className="t-footnote" style={{ color:"hsl(var(--muted-foreground))" }}>{dateStr}</p>
+          <h1 className="t-large-title" style={{ color:"hsl(var(--foreground))", marginTop:2 }}>
             {greet()}, {user?.name?.split(" ")[0]} 👋
           </h1>
         </div>
-        <button
-          onClick={() => { setKey(k => k + 1); toast.success("Refreshed") }}
-          style={{
-            width: 34, height: 34, borderRadius: 9,
-            background: "hsl(var(--card))",
-            border: "0.5px solid rgba(60,60,67,0.18)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "hsl(var(--muted-foreground))",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-            marginTop: 6, flexShrink: 0,
-            transition: "opacity 0.12s, transform 0.12s"
-          }}
-          className="hover:opacity-70 active:scale-95"
-        >
-          <RefreshCw style={{ width: 15, height: 15 }} />
+        <button onClick={() => { setKey(k=>k+1); toast.success("Refreshed") }} className="glass scale-in"
+          style={{ width:36, height:36, borderRadius:10, display:"flex", alignItems:"center", justifyContent:"center", color:"hsl(var(--muted-foreground))", flexShrink:0, marginTop:6 }}>
+          <RefreshCw style={{ width:15, height:15 }} />
         </button>
       </div>
 
-      {/*
-        Quick Actions — App Library style grid
-        44pt minimum touch target, rounded icon + label below
-      */}
+      {/* ── Quick Actions ── */}
       <div>
-        <div className="grid grid-cols-4 gap-2.5 hig-list">
-          {actions.map((a, i) => (
-            <button
-              key={i}
-              onClick={() => navigate(a.path)}
-              style={{
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
-                padding: "12px 4px", borderRadius: 14,
-                background: "hsl(var(--card))",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-                border: "0.5px solid rgba(60,60,67,0.1)",
-                cursor: "pointer", transition: "transform 0.15s, opacity 0.15s",
-                minHeight: 72,
-              }}
-              className="hover:opacity-90 active:scale-95"
-            >
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: a.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <a.icon style={{ width: 20, height: 20, color: a.color }} />
-              </div>
-              <span style={{ fontSize: 11, fontWeight: 500, color: "hsl(var(--foreground))", textAlign: "center", lineHeight: 1.3, letterSpacing: "-0.003em" }}>
-                {a.label}
-              </span>
-            </button>
-          ))}
+        <div className="grid grid-cols-4 gap-3 list-stagger">
+          {actions.map((a,i) => <ActionTile key={i} {...a} onClick={() => navigate(a.path)} />)}
         </div>
       </div>
 
-      {/*
-        Stat Widgets — iOS widget style
-        White cards on gray (#F2F2F7) grouped background.
-      */}
+      {/* ── Glass Widgets ── */}
       <div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 hig-list">
-          {widgets.map((w, i) => <Widget key={i} {...w} />)}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 list-stagger">
+          {widgets.map((w,i) => <GlassWidget key={i} {...w} />)}
         </div>
       </div>
 
-      {/* Sales + Low Stock — Grouped Table View */}
+      {/* ── Sales + Low Stock ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
         {/* Recent Sales */}
         <div>
-          <SectionHeader
-            title={t("recent_sales")}
-            subtitle="Latest transactions"
-            action="See All"
-            onAction={() => navigate("/admin/reports")}
-          />
-          <div className="hig-grouped-section">
-            {sales.length > 0 ? sales.map((s, i) => (
-              <div key={s.id} className="hig-cell">
-                {/* Avatar — iOS initials circle */}
-                <div style={{
-                  width: 36, height: 36, borderRadius: "50%",
-                  background: "hsl(var(--primary) / 0.1)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  color: "hsl(var(--primary))", fontSize: 14, fontWeight: 600, flexShrink: 0
-                }}>
-                  {s.customerName?.charAt(0) || "C"}
+          <SectionHead title={t("recent_sales")} sub="Latest transactions" action="See All" onAction={() => navigate("/admin/reports")} />
+          <div className="glass" style={{ borderRadius:20, overflow:"hidden" }}>
+            {sales.length > 0 ? sales.map((s,i) => (
+              <div key={s.id} className="list-row" style={{ position:"relative", zIndex:2 }}>
+                <div style={{ width:38,height:38,borderRadius:"50%",background:"hsl(var(--primary)/.10)",display:"flex",alignItems:"center",justifyContent:"center",color:"hsl(var(--primary))",fontSize:14,fontWeight:700,flexShrink:0 }}>
+                  {s.customerName?.charAt(0)||"C"}
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p className="hig-cell-title truncate">{s.customerName}</p>
-                  <p className="hig-cell-subtitle">
-                    {s.items} items · {new Date(s.saleDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
-                  </p>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <p className="t-callout truncate" style={{ fontWeight:500, color:"hsl(var(--foreground))" }}>{s.customerName}</p>
+                  <p className="t-caption-1" style={{ color:"hsl(var(--muted-foreground))" }}>{s.items} items · {new Date(s.saleDate).toLocaleDateString("en-IN",{day:"numeric",month:"short"})}</p>
                 </div>
-                <div style={{ textAlign: "right", flexShrink: 0 }}>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: "#34C759" }}>₹{s.totalAmount.toLocaleString()}</p>
-                  <span style={{
-                    fontSize: 11, fontWeight: 600, padding: "1px 7px", borderRadius: 99,
-                    background: s.paymentStatus === "PAID" ? "rgba(52,199,89,0.12)" : "rgba(255,149,0,0.12)",
-                    color: s.paymentStatus === "PAID" ? "#34C759" : "#FF9500",
-                    display: "inline-block", marginTop: 2
-                  }}>
+                <div style={{ textAlign:"right", flexShrink:0 }}>
+                  <p style={{ fontSize:14,fontWeight:600,color:"#34C759" }}>₹{s.totalAmount.toLocaleString()}</p>
+                  <span className={`pill ${s.paymentStatus==="PAID"?"pill-green":"pill-amber"}`} style={{ marginTop:2, display:"inline-flex" }}>
                     {s.paymentStatus.toLowerCase()}
                   </span>
                 </div>
               </div>
             )) : (
-              <div style={{ padding: "40px 16px", textAlign: "center" }}>
-                <ShoppingCart style={{ width: 36, height: 36, margin: "0 auto 8px", color: "hsl(var(--muted-foreground))", opacity: 0.25 }} />
-                <p style={{ fontSize: 15, color: "hsl(var(--muted-foreground))" }}>No sales yet</p>
-                <button onClick={() => navigate("/admin/billing")} style={{ fontSize: 14, color: "#007AFF", marginTop: 6 }}>
-                  Create first bill →
-                </button>
+              <div style={{ padding:"40px 20px",textAlign:"center",position:"relative",zIndex:2 }}>
+                <ShoppingCart style={{ width:36,height:36,margin:"0 auto 8px",opacity:.2 }} />
+                <p className="t-callout" style={{ color:"hsl(var(--muted-foreground))" }}>No sales yet</p>
+                <button onClick={() => navigate("/admin/billing")} style={{ fontSize:14,color:"var(--sys-blue)",marginTop:6,display:"block",margin:"8px auto 0" }}>Create first bill →</button>
               </div>
             )}
           </div>
@@ -248,101 +164,99 @@ export default function AdminDashboard() {
 
         {/* Low Stock */}
         <div>
-          <SectionHeader
-            title={t("low_stock_alert")}
-            subtitle="Items needing restock"
-            action={lowStock.length > 0 ? `${lowStock.length} items` : undefined}
-          />
-          <div className="hig-grouped-section">
+          <SectionHead title={t("low_stock_alert")} sub="Items needing restock"
+            action={lowStock.length > 0 ? `${lowStock.length} items` : undefined} />
+          <div className="glass" style={{ borderRadius:20, overflow:"hidden" }}>
             {lowStock.length > 0 ? lowStock.map(p => (
-              <div key={p.id} className="hig-cell">
-                <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(255,149,0,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Package style={{ width: 18, height: 18, color: "#FF9500" }} />
+              <div key={p.id} className="list-row" style={{ position:"relative",zIndex:2 }}>
+                <div className="icon-sm" style={{ background:"rgba(255,149,0,.14)", borderRadius:9, flexShrink:0 }}>
+                  <Package style={{ width:16,height:16,color:"#FF9500" }} />
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p className="hig-cell-title truncate">{p.name}</p>
-                  <p className="hig-cell-subtitle">SKU: {p.sku}</p>
+                <div style={{ flex:1,minWidth:0 }}>
+                  <p className="t-callout truncate" style={{ fontWeight:500,color:"hsl(var(--foreground))" }}>{p.name}</p>
+                  <p className="t-caption-1" style={{ color:"hsl(var(--muted-foreground))" }}>SKU: {p.sku}</p>
                 </div>
-                <div style={{ textAlign: "right", flexShrink: 0 }}>
-                  <span style={{
-                    fontSize: 12, fontWeight: 600, padding: "2px 8px", borderRadius: 99,
-                    background: p.currentStock === 0 ? "rgba(255,59,48,0.1)" : "rgba(255,149,0,0.1)",
-                    color: p.currentStock === 0 ? "#FF3B30" : "#FF9500",
-                  }}>
-                    {p.currentStock} units
-                  </span>
-                  <p style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", marginTop: 2 }}>Alert: {p.lowStockAlert}</p>
+                <div style={{ textAlign:"right",flexShrink:0 }}>
+                  <span className={`pill ${p.currentStock===0?"pill-red":"pill-amber"}`}>{p.currentStock} units</span>
+                  <p className="t-caption-2" style={{ color:"hsl(var(--muted-foreground))",marginTop:2 }}>Alert: {p.lowStockAlert}</p>
                 </div>
               </div>
             )) : (
-              <div style={{ padding: "40px 16px", textAlign: "center" }}>
-                <p style={{ fontSize: 15, fontWeight: 500, color: "#34C759" }}>All stock healthy ✓</p>
+              <div style={{ padding:"40px 20px",textAlign:"center",position:"relative",zIndex:2 }}>
+                <p className="t-callout" style={{ color:"#34C759",fontWeight:500 }}>All stock levels healthy ✓</p>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Charts — in cards */}
+      {/* ── Charts ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-        {/* Sales Trend — 2 cols */}
+        {/* Sales Trend */}
         <div className="lg:col-span-2">
-          <SectionHeader title={t("sales_trend")} subtitle={`₹${trend.reduce((s, d) => s + d.sales, 0).toLocaleString()} · ${trend.reduce((s, d) => s + d.transactions, 0)} transactions`} />
-          <div className="hig-card p-4">
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={trend} barSize={20} barCategoryGap="40%">
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(60,60,67,0.1)" vertical={false} />
-                <XAxis dataKey="date" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontFamily: "Inter" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontFamily: "Inter" }} axisLine={false} tickLine={false} tickFormatter={v => `₹${v/1000}k`} width={48} />
-                <Tooltip
-                  formatter={(v: number) => [`₹${v.toLocaleString()}`, "Sales"]}
-                  contentStyle={{ borderRadius: 12, border: "0.5px solid rgba(60,60,67,0.18)", boxShadow: "0 8px 24px rgba(0,0,0,0.1)", background: "hsl(var(--card))", color: "hsl(var(--foreground))", fontSize: 13, fontFamily: "Inter" }}
-                  cursor={{ fill: "rgba(60,60,67,0.05)", radius: 6 }}
-                />
-                {/* systemGreen fill */}
-                <Bar dataKey="sales" fill="#34C759" radius={[5,5,0,0]} />
-              </BarChart>
-            </ResponsiveContainer>
+          <SectionHead title={t("sales_trend")}
+            sub={`₹${trend.reduce((s,d)=>s+d.sales,0).toLocaleString()} · ${trend.reduce((s,d)=>s+d.transactions,0)} transactions`} />
+          <div className="glass" style={{ borderRadius:20, padding:"16px 12px 12px" }}>
+            <div style={{ position:"relative",zIndex:2 }}>
+              <ResponsiveContainer width="100%" height={210}>
+                <AreaChart data={trend} barSize={18} margin={{ top:4, right:4, left:0, bottom:0 }}>
+                  <defs>
+                    <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%"   stopColor="#34C759" stopOpacity={0.30} />
+                      <stop offset="100%" stopColor="#34C759" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(60,60,67,.10)" vertical={false} />
+                  <XAxis dataKey="date" tick={{ fontSize:11, fill:"hsl(var(--muted-foreground))", fontFamily:"Inter" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize:11, fill:"hsl(var(--muted-foreground))", fontFamily:"Inter" }} axisLine={false} tickLine={false} tickFormatter={v=>`₹${v/1000}k`} width={46} />
+                  <Tooltip formatter={(v:number)=>[`₹${v.toLocaleString()}`,"Sales"]}
+                    contentStyle={{ borderRadius:14, border:"1px solid var(--glass-border)", boxShadow:"var(--glass-shadow)", background:"var(--glass-bg)", backdropFilter:"var(--glass-blur)", WebkitBackdropFilter:"var(--glass-blur)", color:"hsl(var(--foreground))", fontSize:13 }}
+                    cursor={{ stroke:"rgba(52,199,89,.35)", strokeWidth:1 }} />
+                  <Area type="monotone" dataKey="sales" stroke="#34C759" strokeWidth={2.5} fill="url(#salesGrad)" dot={false} activeDot={{ r:5, fill:"#34C759", strokeWidth:2, stroke:"white" }} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
 
-        {/* Category Pie — 1 col */}
+        {/* Category Pie */}
         <div>
-          <SectionHeader title={t("product_categories")} subtitle={`${catData.length} categories`} />
-          <div className="hig-card p-4">
-            {catData.length > 0 ? (
-              <>
-                <ResponsiveContainer width="100%" height={160}>
-                  <PieChart>
-                    <Pie data={catData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={44} outerRadius={70} paddingAngle={3}>
-                      {catData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-                    </Pie>
-                    <Tooltip contentStyle={{ borderRadius: 12, border: "0.5px solid rgba(60,60,67,0.18)", background: "hsl(var(--card))", color: "hsl(var(--foreground))", fontSize: 12 }} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
-                  {catData.map((c, i) => (
-                    <div key={c.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: PIE_COLORS[i % PIE_COLORS.length], flexShrink: 0 }} />
-                        <span style={{ fontSize: 12, color: "hsl(var(--foreground))", opacity: 0.8 }} className="truncate max-w-24">{c.name}</span>
+          <SectionHead title={t("product_categories")} sub={`${catData.length} categories`} />
+          <div className="glass" style={{ borderRadius:20, padding:"16px 14px" }}>
+            <div style={{ position:"relative",zIndex:2 }}>
+              {catData.length > 0 ? (
+                <>
+                  <ResponsiveContainer width="100%" height={160}>
+                    <PieChart>
+                      <Pie data={catData} dataKey="value" cx="50%" cy="50%" innerRadius={44} outerRadius={68} paddingAngle={3} stroke="none">
+                        {catData.map((_,i) => <Cell key={i} fill={PIE_COLORS[i%PIE_COLORS.length]} />)}
+                      </Pie>
+                      <Tooltip contentStyle={{ borderRadius:12, border:"1px solid var(--glass-border)", background:"var(--glass-bg)", backdropFilter:"var(--glass-blur)", WebkitBackdropFilter:"var(--glass-blur)", color:"hsl(var(--foreground))", fontSize:12 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div style={{ display:"flex",flexDirection:"column",gap:7,marginTop:6 }}>
+                    {catData.map((c,i) => (
+                      <div key={c.name} style={{ display:"flex",alignItems:"center",justifyContent:"space-between" }}>
+                        <div style={{ display:"flex",alignItems:"center",gap:7 }}>
+                          <div style={{ width:8,height:8,borderRadius:"50%",background:PIE_COLORS[i%PIE_COLORS.length],flexShrink:0 }} />
+                          <span className="t-caption-1 truncate max-w-[100px]" style={{ color:"hsl(var(--foreground))",opacity:.8 }}>{c.name}</span>
+                        </div>
+                        <span className="t-caption-1" style={{ fontWeight:600,color:"hsl(var(--muted-foreground))" }}>{c.value}</span>
                       </div>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: "hsl(var(--muted-foreground))" }}>{c.value}</span>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div style={{ padding:"40px 0",textAlign:"center" }}>
+                  <Package style={{ width:32,height:32,margin:"0 auto 8px",opacity:.2 }} />
+                  <button onClick={() => navigate("/admin/products")} style={{ fontSize:14,color:"var(--sys-blue)" }}>Add products →</button>
                 </div>
-              </>
-            ) : (
-              <div style={{ padding: "40px 0", textAlign: "center" }}>
-                <Package style={{ width: 32, height: 32, margin: "0 auto 8px", opacity: 0.2 }} />
-                <button onClick={() => navigate("/admin/products")} style={{ fontSize: 14, color: "#007AFF" }}>Add products →</button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
-
     </div>
   )
 }

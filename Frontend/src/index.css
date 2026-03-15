@@ -4,613 +4,530 @@
 @tailwind components;
 @tailwind utilities;
 
-/*
- ╔══════════════════════════════════════════════════════════════════╗
- ║   KRUSHI KENDRA — Apple Human Interface Guidelines Design System  ║
- ║   Exact iOS system colors, typography scale, spacing & patterns   ║
- ║   Reference: developer.apple.com/design/human-interface-guidelines║
- ╚══════════════════════════════════════════════════════════════════╝
-
-  iOS SYSTEM COLORS (exact hex → converted to HSL)
-  ─────────────────────────────────────────────────
-  systemBackground        light #FFFFFF    dark #000000
-  secondarySystemBackground  light #F2F2F7  dark #1C1C1E
-  tertiarySystemBackground   light #FFFFFF  dark #2C2C2E
-  groupedBackground       light #F2F2F7    dark #000000
-  secondaryGroupedBackground light #FFFFFF  dark #1C1C1E
-
-  Label                   light #000000    dark #FFFFFF
-  secondaryLabel          light rgba(60,60,67,.6)  dark rgba(235,235,245,.6)
-  tertiaryLabel           light rgba(60,60,67,.3)  dark rgba(235,235,245,.3)
-  separator               light rgba(60,60,67,.29) dark rgba(84,84,88,.65)
-  opaqueSeparator         light #C6C6C8    dark #38383A
-
-  systemBlue              light #007AFF    dark #0A84FF
-  systemGreen             light #34C759    dark #30D158
-  systemRed               light #FF3B30    dark #FF453A
-  systemOrange            light #FF9500    dark #FF9F0A
-  systemYellow            light #FFCC00    dark #FFD60A
-  systemGray              light #8E8E93    dark #8E8E93
-  systemGray2             light #AEAEB2    dark #636366
-  systemGray3             light #C7C7CC    dark #48484A
-  systemGray4             light #D1D1D6    dark #3A3A3C
-  systemGray5             light #E5E5EA    dark #2C2C2E
-  systemGray6             light #F2F2F7    dark #1C1C1E
-*/
+/* ═══════════════════════════════════════════════════════════════
+   KRUSHI KENDRA  ·  Apple-Grade Glass Morphism Design System
+   ═══════════════════════════════════════════════════════════════
+   Philosophy: iOS Control Center / iPadOS widgets aesthetic.
+   Luminous glass cards floating on rich gradient backgrounds.
+   Every surface has depth. Every element has light.
+   ═══════════════════════════════════════════════════════════════ */
 
 @layer base {
   :root {
-    /* ── Backgrounds (iOS systemGroupedBackground) ── */
-    --background:  240 5.9% 95%;   /* #F2F2F7 */
-    --foreground:  0 0% 0%;        /* #000000 label */
+    /* ── iOS exact system colors ── */
+    --sys-blue:      #007AFF;   --sys-blue-d:    #0A84FF;
+    --sys-green:     #34C759;   --sys-green-d:   #30D158;
+    --sys-red:       #FF3B30;   --sys-red-d:     #FF453A;
+    --sys-orange:    #FF9500;   --sys-orange-d:  #FF9F0A;
+    --sys-yellow:    #FFCC00;   --sys-yellow-d:  #FFD60A;
+    --sys-purple:    #AF52DE;   --sys-purple-d:  #BF5AF2;
+    --sys-teal:      #5AC8FA;   --sys-teal-d:    #64D2FF;
+    --sys-indigo:    #5E5CE6;   --sys-indigo-d:  #5E5CE6;
 
-    /* iOS secondarySystemGroupedBackground = white cards on grouped bg */
-    --card:        0 0% 100%;      /* #FFFFFF */
-    --card-foreground: 0 0% 0%;
-
-    --popover:     0 0% 100%;
-    --popover-foreground: 0 0% 0%;
-
-    /* Brand primary = iOS systemGreen adapted for agriculture */
-    --primary:     142 43% 40%;    /* #3A9D5F — farm green, passes contrast on white */
+    /* ── Semantic tokens ── */
+    --background:         250 30% 96%;
+    --foreground:         230 20% 10%;
+    --card:               0 0% 100%;
+    --card-foreground:    230 20% 10%;
+    --popover:            0 0% 100%;
+    --popover-foreground: 230 20% 10%;
+    --primary:            142 50% 36%;
     --primary-foreground: 0 0% 100%;
-
-    /* iOS systemGray5 for secondary bg */
-    --secondary:   240 5.3% 90%;   /* #E5E5EA */
-    --secondary-foreground: 0 0% 10%;
-
-    /* iOS systemGray6 for muted areas */
-    --muted:       240 5.9% 95%;   /* #F2F2F7 */
-    --muted-foreground: 240 3.8% 46.1%; /* rgba(60,60,67,.6) */
-
-    /* iOS systemOrange for accent */
-    --accent:      35 100% 50%;    /* #FF9500 */
-    --accent-foreground: 0 0% 100%;
-
-    /* iOS systemRed */
-    --destructive: 3 100% 59%;     /* #FF3B30 */
+    --secondary:          240 6% 90%;
+    --secondary-foreground: 230 20% 15%;
+    --muted:              240 6% 94%;
+    --muted-foreground:   230 8% 50%;
+    --accent:             35 100% 50%;
+    --accent-foreground:  0 0% 100%;
+    --destructive:        3 100% 59%;
     --destructive-foreground: 0 0% 100%;
-
-    /* iOS separator */
-    --border:      240 5.9% 78%;   /* #C6C6C8 opaqueSeparator */
-    --input:       240 5.9% 78%;
-    --ring:        142 43% 40%;
-
-    /* Semantic extras */
-    --success:     134 61% 49%;    /* #34C759 systemGreen */
+    --border:             240 6% 86%;
+    --input:              240 6% 86%;
+    --ring:               142 50% 36%;
+    --success:            134 61% 49%;
     --success-foreground: 0 0% 100%;
-    --warning:     35 100% 50%;    /* #FF9500 systemOrange */
-    --warning-foreground: 0 0% 100%;
-    --info:        211 100% 50%;   /* #007AFF systemBlue */
-    --info-foreground: 0 0% 100%;
+    --radius:             1rem;
 
-    /*
-      iOS Shadow Philosophy:
-      Apple uses very subtle shadows — almost no shadow on light bg,
-      just enough to show depth/separation. Shadows are soft, never dramatic.
-    */
-    --shadow-xs:   0 1px 0 rgba(0,0,0,0.04);
-    --shadow-sm:   0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-md:   0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
-    --shadow-lg:   0 8px 24px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.06);
-    --shadow-xl:   0 20px 48px rgba(0,0,0,0.14), 0 8px 16px rgba(0,0,0,0.08);
+    /* ── Glass variables (light mode) ── */
+    --glass-bg:           rgba(255,255,255,0.72);
+    --glass-bg-heavy:     rgba(255,255,255,0.85);
+    --glass-bg-light:     rgba(255,255,255,0.45);
+    --glass-border:       rgba(255,255,255,0.80);
+    --glass-border-inner: rgba(255,255,255,0.50);
+    --glass-shadow:       0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.9);
+    --glass-shadow-hover: 0 16px 48px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.95);
+    --glass-shadow-lg:    0 24px 64px rgba(0,0,0,0.14), 0 8px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.95);
+    --glass-blur:         saturate(200%) blur(24px);
 
-    /* iOS standard border radius */
-    --radius-sm:   0.5rem;    /* 8px  — small elements */
-    --radius-md:   0.75rem;   /* 12px — inputs, chips */
-    --radius-lg:   1rem;      /* 16px — cards */
-    --radius-xl:   1.375rem;  /* 22px — sheets, large cards */
-    --radius-2xl:  1.875rem;  /* 30px — modals */
-    --radius:      1rem;
+    /* ── Page background gradient ── */
+    --page-bg-from:  #e8f5e9;
+    --page-bg-via:   #f0f7ff;
+    --page-bg-to:    #fef9f0;
 
     /* Sidebar */
-    --sidebar-background:     0 0% 100%;
-    --sidebar-foreground:     240 3.8% 46.1%;
-    --sidebar-primary:        142 43% 40%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent:         240 5.9% 95%;
-    --sidebar-accent-foreground: 0 0% 10%;
-    --sidebar-border:         240 5.9% 90%;
-    --sidebar-ring:           142 43% 40%;
+    --sidebar-background:           255 255 255;
+    --sidebar-foreground:           240 3.8% 46.1%;
+    --sidebar-primary:              142 50% 36%;
+    --sidebar-primary-foreground:   0 0% 100%;
+    --sidebar-accent:               240 6% 94%;
+    --sidebar-accent-foreground:    230 20% 10%;
+    --sidebar-border:               240 6% 91%;
+    --sidebar-ring:                 142 50% 36%;
   }
 
   .dark {
-    /* iOS Dark Mode system colors */
-    --background:  0 0% 0%;         /* #000000 systemGroupedBackground dark */
-    --foreground:  0 0% 100%;       /* #FFFFFF label dark */
-
-    --card:        240 5.9% 11.8%;  /* #1C1C1E secondarySystemGroupedBackground dark */
-    --card-foreground: 0 0% 100%;
-
-    --popover:     240 3.7% 17.3%;  /* #2C2C2E */
-    --popover-foreground: 0 0% 100%;
-
-    --primary:     142 54% 47%;     /* #30D158 systemGreen dark */
-    --primary-foreground: 0 0% 0%;
-
-    --secondary:   240 3.7% 17.3%;  /* #2C2C2E systemGray5 dark */
+    /* ── Dark mode: iOS exactly ── */
+    --background:         0 0% 5%;
+    --foreground:         0 0% 98%;
+    --card:               240 6% 10%;
+    --card-foreground:    0 0% 98%;
+    --popover:            240 5% 13%;
+    --popover-foreground: 0 0% 98%;
+    --primary:            142 54% 47%;
+    --primary-foreground: 0 0% 5%;
+    --secondary:          240 4% 16%;
     --secondary-foreground: 0 0% 90%;
-
-    --muted:       240 5.9% 11.8%;  /* #1C1C1E systemGray6 dark */
-    --muted-foreground: 240 5% 64.9%; /* rgba(235,235,245,.6) */
-
-    --accent:      35 100% 55%;     /* #FF9F0A systemOrange dark */
-    --accent-foreground: 0 0% 0%;
-
-    --destructive: 3 100% 61%;      /* #FF453A systemRed dark */
+    --muted:              240 5% 13%;
+    --muted-foreground:   240 5% 58%;
+    --accent:             35 100% 55%;
+    --accent-foreground:  0 0% 5%;
+    --destructive:        3 95% 58%;
     --destructive-foreground: 0 0% 100%;
+    --border:             240 4% 18%;
+    --input:              240 4% 18%;
+    --ring:               142 54% 47%;
 
-    --border:      240 3.7% 22.4%;  /* #38383A opaqueSeparator dark */
-    --input:       240 3.7% 22.4%;
-    --ring:        142 54% 47%;
+    /* ── Glass variables (dark mode) ── */
+    --glass-bg:           rgba(28,28,30,0.78);
+    --glass-bg-heavy:     rgba(28,28,30,0.92);
+    --glass-bg-light:     rgba(28,28,30,0.50);
+    --glass-border:       rgba(255,255,255,0.10);
+    --glass-border-inner: rgba(255,255,255,0.06);
+    --glass-shadow:       0 8px 32px rgba(0,0,0,0.40), 0 2px 8px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.06);
+    --glass-shadow-hover: 0 16px 48px rgba(0,0,0,0.50), 0 4px 16px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.08);
+    --glass-shadow-lg:    0 24px 64px rgba(0,0,0,0.60), 0 8px 24px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.08);
 
-    --sidebar-background:     0 0% 0%;
-    --sidebar-foreground:     240 5% 64.9%;
-    --sidebar-primary:        142 54% 47%;
-    --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent:         240 5.9% 11.8%;
-    --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border:         240 3.7% 17.3%;
-    --sidebar-ring:           142 54% 47%;
+    --page-bg-from: #0a1628;
+    --page-bg-via:  #0d1a0e;
+    --page-bg-to:   #1a0a0a;
+
+    --sidebar-background:           12 14 20;
+    --sidebar-foreground:           240 5% 60%;
+    --sidebar-primary:              142 54% 47%;
+    --sidebar-primary-foreground:   0 0% 5%;
+    --sidebar-accent:               240 5% 14%;
+    --sidebar-accent-foreground:    0 0% 92%;
+    --sidebar-border:               240 4% 16%;
+    --sidebar-ring:                 142 54% 47%;
   }
 }
 
 @layer base {
   * { @apply border-border; box-sizing: border-box; }
 
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+
   body {
     @apply bg-background text-foreground;
-    /*
-      Apple uses SF Pro on iOS. For web we use Inter which is the closest
-      publicly available typeface to SF Pro in terms of metrics and feel.
-    */
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display',
                  'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-feature-settings: 'cv02','cv03','cv04','cv11','ss01';
     letter-spacing: -0.011em;
+    /* Rich gradient background — iOS wallpaper feel */
+    background:
+      radial-gradient(ellipse 120% 80% at 0% 0%,   rgba(52,199,89,0.12)  0%, transparent 60%),
+      radial-gradient(ellipse 80%  80% at 100% 0%,  rgba(0,122,255,0.08)  0%, transparent 55%),
+      radial-gradient(ellipse 100% 60% at 50% 100%, rgba(255,149,0,0.06)  0%, transparent 50%),
+      hsl(var(--background));
+    background-attachment: fixed;
+    min-height: 100vh;
   }
 
-  /* iOS Typography Scale (pt → px at 1x)
-     Large Title: 34pt / 700
-     Title 1:     28pt / 700
-     Title 2:     22pt / 700
-     Title 3:     20pt / 600
-     Headline:    17pt / 600
-     Body:        17pt / 400
-     Callout:     16pt / 400
-     Subhead:     15pt / 400
-     Footnote:    13pt / 400
-     Caption 1:   12pt / 400
-     Caption 2:   11pt / 400
-  */
-  .ios-large-title  { font-size: 2.125rem; font-weight: 700; letter-spacing: -0.025em; line-height: 1.15; }
-  .ios-title-1      { font-size: 1.75rem;  font-weight: 700; letter-spacing: -0.022em; line-height: 1.18; }
-  .ios-title-2      { font-size: 1.375rem; font-weight: 700; letter-spacing: -0.018em; line-height: 1.22; }
-  .ios-title-3      { font-size: 1.25rem;  font-weight: 600; letter-spacing: -0.015em; line-height: 1.25; }
-  .ios-headline     { font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; }
-  .ios-body         { font-size: 1.0625rem; font-weight: 400; letter-spacing: -0.01em; line-height: 1.5; }
-  .ios-callout      { font-size: 1rem;      font-weight: 400; letter-spacing: -0.008em; line-height: 1.45; }
-  .ios-subhead      { font-size: 0.9375rem; font-weight: 400; letter-spacing: -0.006em; line-height: 1.45; }
-  .ios-footnote     { font-size: 0.8125rem; font-weight: 400; letter-spacing: -0.003em; line-height: 1.4; }
-  .ios-caption-1    { font-size: 0.75rem;   font-weight: 400; letter-spacing: 0;        line-height: 1.35; }
-  .ios-caption-2    { font-size: 0.6875rem; font-weight: 400; letter-spacing: 0.008em; line-height: 1.3; }
+  .dark body, body.dark {
+    background:
+      radial-gradient(ellipse 120% 80% at 0% 0%,   rgba(48,209,88,0.08)  0%, transparent 60%),
+      radial-gradient(ellipse 80%  80% at 100% 0%,  rgba(10,132,255,0.06) 0%, transparent 55%),
+      radial-gradient(ellipse 100% 60% at 50% 100%, rgba(255,159,10,0.04) 0%, transparent 50%),
+      hsl(var(--background));
+  }
 }
 
-/* ================================================================
-   APPLE HIG COMPONENT PATTERNS
-   ================================================================ */
+/* ═══════════════════════════════════════════════════════════════
+   GLASS MORPHISM CARDS  — The centrepiece
+   ═══════════════════════════════════════════════════════════════
+   Replicates iOS Control Center / Notification Centre glass:
+   • Multi-layer frosted glass  
+   • Specular highlight on top edge (inset 0 1px 0 white)
+   • Subtle border from background light bleed
+   • Smooth hover lift with shadow bloom
+   ═══════════════════════════════════════════════════════════════ */
 
-/*
-  Navigation Bar
-  ─────────────
-  iOS navbars are 44pt tall in compact, use systemBackground/blur.
-  Title is 17pt semibold centered (or 34pt large title when scrolled up).
-*/
-.hig-navbar {
-  height: 44px;
-  background: rgba(242,242,247,0.92);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 0.5px solid rgba(60,60,67,0.29);
-}
-.dark .hig-navbar {
-  background: rgba(0,0,0,0.85);
-  border-bottom: 0.5px solid rgba(84,84,88,0.65);
-}
-
-/*
-  Tab Bar (sidebar equivalent)
-  ────────────────────────────
-  iOS tab bars use systemBackground + top separator + 49pt height.
-  Items use system colors for selected/unselected state.
-*/
-
-/*
-  Grouped Table View style (Settings.app)
-  ────────────────────────────────────────
-  Background is systemGroupedBackground (#F2F2F7).
-  Rows sit on white (#FFF) cards with inset left padding.
-  Row height: 44pt minimum.
-  Separator: 0.5px, inset 16pt from left.
-*/
-.hig-grouped-section {
-  background: hsl(var(--card));
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-}
-.hig-row {
-  display: flex;
-  align-items: center;
-  min-height: 44px;
-  padding: 10px 16px;
-  gap: 12px;
-  background: hsl(var(--card));
-  transition: background 0.12s ease;
-  cursor: default;
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 20px;
+  transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
   position: relative;
+  overflow: hidden;
 }
-.hig-row-interactive { cursor: pointer; }
-.hig-row-interactive:active,
-.hig-row-interactive:hover { background: hsl(var(--muted) / 0.7); }
-/* Inset separator (16px left indent, matching iOS) */
-.hig-row + .hig-row::before {
+
+/* Specular sheen — top edge light catch */
+.glass::before {
   content: '';
   position: absolute;
-  top: 0; left: 56px; right: 0;
-  height: 0.5px;
-  background: rgba(60,60,67,0.29);
-}
-.dark .hig-row + .hig-row::before { background: rgba(84,84,88,0.65); }
-
-/*
-  Card / Sheet
-  ─────────────
-  iOS cards have no border in light mode — just background difference
-  + very subtle shadow. In dark mode, they use elevated surfaces.
-*/
-.hig-card {
-  background: hsl(var(--card));
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
-  overflow: hidden;
-}
-.hig-card-section-header {
-  padding: 6px 16px 4px;
-  font-size: 0.8125rem;
-  font-weight: 400;
-  color: hsl(var(--muted-foreground));
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  line-height: 1.4;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    160deg,
+    rgba(255,255,255,0.35) 0%,
+    rgba(255,255,255,0.08) 30%,
+    transparent            60%
+  );
+  pointer-events: none;
+  z-index: 1;
 }
 
-/*
-  System Icon Container
-  ──────────────────────
-  iOS app icon corners: 22.37% of width = 16px on 72pt icon.
-  Small icon containers follow same proportional rounding.
-*/
-.hig-icon-xs  { width: 28px; height: 28px; border-radius: 6px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.hig-icon-sm  { width: 32px; height: 32px; border-radius: 7px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.hig-icon-md  { width: 40px; height: 40px; border-radius: 9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.hig-icon-lg  { width: 48px; height: 48px; border-radius: 11px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.hig-icon-xl  { width: 60px; height: 60px; border-radius: 13px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-/* App icon — 22.37% rounding */
-.hig-app-icon { border-radius: 22.37%; }
+.glass:hover {
+  box-shadow: var(--glass-shadow-hover);
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,0.9);
+}
 
-/*
-  Button Styles
-  ──────────────
-  iOS has 5 button styles:
-  1. Filled   — primary action, rounded rect, filled with tint color
-  2. Gray     — secondary, systemGray5 background
-  3. Tinted   — light tint of primary color bg
-  4. Plain    — no bg, just label
-  5. Destructive — red filled or plain
-*/
-.hig-btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  gap: 6px;
-  font-size: 1.0625rem; /* 17pt — iOS default button font */
-  font-weight: 600;
-  border-radius: var(--radius-lg);
-  padding: 0 20px;
-  height: 50px; /* iOS standard button height */
-  transition: opacity 0.12s ease, transform 0.12s ease;
-  cursor: pointer;
-  border: none; outline: none;
+.dark .glass:hover { border-color: rgba(255,255,255,0.14); }
+
+/* Heavy glass — sidebar, modals */
+.glass-heavy {
+  background: var(--glass-bg-heavy);
+  backdrop-filter: saturate(200%) blur(40px);
+  -webkit-backdrop-filter: saturate(200%) blur(40px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow-lg);
+  border-radius: 20px;
+  position: relative; overflow: hidden;
+}
+.glass-heavy::before {
+  content: '';
+  position: absolute; inset: 0; border-radius: inherit;
+  background: linear-gradient(155deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 40%, transparent 70%);
+  pointer-events: none; z-index: 1;
+}
+
+/* Light glass — nav bar, tooltips */
+.glass-light {
+  background: var(--glass-bg-light);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid var(--glass-border-inner);
+}
+
+/* Widget glass — tinted by accent color */
+.glass-widget {
+  border-radius: 22px;
+  backdrop-filter: saturate(200%) blur(28px);
+  -webkit-backdrop-filter: saturate(200%) blur(28px);
+  border: 1px solid rgba(255,255,255,0.55);
+  box-shadow: var(--glass-shadow);
+  transition: all 0.3s cubic-bezier(0.34,1.2,0.64,1);
+  position: relative; overflow: hidden;
+}
+.dark .glass-widget { border-color: rgba(255,255,255,0.10); }
+.glass-widget::before {
+  content: '';
+  position: absolute; inset: 0; border-radius: inherit;
+  background: linear-gradient(140deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.06) 50%, transparent 100%);
+  pointer-events: none; z-index: 1;
+}
+.glass-widget:hover {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: var(--glass-shadow-hover);
+}
+.glass-widget:active { transform: scale(0.98); }
+
+/* Tinted widget backgrounds */
+.glass-green  { background: rgba(52,199,89,0.18);  }
+.glass-blue   { background: rgba(0,122,255,0.15);  }
+.glass-orange { background: rgba(255,149,0,0.18);  }
+.glass-purple { background: rgba(175,82,222,0.18); }
+.glass-red    { background: rgba(255,59,48,0.15);  }
+.glass-teal   { background: rgba(90,200,250,0.18); }
+
+.dark .glass-green  { background: rgba(48,209,88,0.14);  }
+.dark .glass-blue   { background: rgba(10,132,255,0.12); }
+.dark .glass-orange { background: rgba(255,159,10,0.14); }
+.dark .glass-purple { background: rgba(191,90,242,0.14); }
+
+/* ═══════════════════════════════════════════════════════════════
+   NAV BAR GLASS  (iOS translucent nav bar)
+   ═══════════════════════════════════════════════════════════════ */
+.glass-navbar {
+  background: rgba(242,242,247,0.82);
+  backdrop-filter: saturate(180%) blur(24px);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  border-bottom: 0.5px solid rgba(60,60,67,0.22);
+}
+.dark .glass-navbar {
+  background: rgba(0,0,0,0.80);
+  border-bottom: 0.5px solid rgba(255,255,255,0.08);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SIDEBAR GLASS
+   ═══════════════════════════════════════════════════════════════ */
+.glass-sidebar {
+  background: rgba(248,248,252,0.88);
+  backdrop-filter: saturate(200%) blur(32px);
+  -webkit-backdrop-filter: saturate(200%) blur(32px);
+  border-right: 0.5px solid rgba(60,60,67,0.14);
+}
+.dark .glass-sidebar {
+  background: rgba(12,12,16,0.90);
+  border-right: 0.5px solid rgba(255,255,255,0.06);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   iOS TYPOGRAPHY  (SF Pro scale)
+   ═══════════════════════════════════════════════════════════════ */
+.t-large-title { font-size: 2.125rem; font-weight: 700; letter-spacing: -0.025em; line-height: 1.12; }
+.t-title-1     { font-size: 1.75rem;  font-weight: 700; letter-spacing: -0.022em; line-height: 1.16; }
+.t-title-2     { font-size: 1.375rem; font-weight: 700; letter-spacing: -0.018em; line-height: 1.20; }
+.t-title-3     { font-size: 1.25rem;  font-weight: 600; letter-spacing: -0.015em; line-height: 1.24; }
+.t-headline    { font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.010em; line-height: 1.30; }
+.t-body        { font-size: 1.0625rem; font-weight: 400; letter-spacing: -0.010em; line-height: 1.50; }
+.t-callout     { font-size: 1rem;      font-weight: 400; letter-spacing: -0.008em; line-height: 1.45; }
+.t-subhead     { font-size: 0.9375rem; font-weight: 400; letter-spacing: -0.006em; line-height: 1.45; }
+.t-footnote    { font-size: 0.8125rem; font-weight: 400; letter-spacing: -0.003em; line-height: 1.40; }
+.t-caption-1   { font-size: 0.75rem;   font-weight: 400; letter-spacing: 0;        line-height: 1.35; }
+.t-caption-2   { font-size: 0.6875rem; font-weight: 400; letter-spacing: 0.008em; line-height: 1.30; }
+.t-label       { font-size: 0.75rem;   font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+
+/* ═══════════════════════════════════════════════════════════════
+   ICON CONTAINERS  (HIG proportional rounding)
+   ═══════════════════════════════════════════════════════════════ */
+.icon-xs  { width: 28px; height: 28px; border-radius: 7px;  display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.icon-sm  { width: 32px; height: 32px; border-radius: 8px;  display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.icon-md  { width: 40px; height: 40px; border-radius: 10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.icon-lg  { width: 48px; height: 48px; border-radius: 12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.icon-xl  { width: 60px; height: 60px; border-radius: 14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.icon-app { border-radius: 22.37%; }
+
+/* ═══════════════════════════════════════════════════════════════
+   BUTTONS  (iOS HIG button hierarchy)
+   ═══════════════════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.01em;
+  height: 50px; padding: 0 22px; border-radius: 14px;
+  cursor: pointer; border: none; outline: none;
+  transition: all 0.15s cubic-bezier(0.34,1.2,0.64,1);
   -webkit-tap-highlight-color: transparent;
+  user-select: none; position: relative; overflow: hidden;
 }
-.hig-btn:active { transform: scale(0.97); opacity: 0.85; }
-.hig-btn-filled {
+.btn:active { transform: scale(0.96); }
+/* Sheen on press */
+.btn::after {
+  content: '';
+  position: absolute; inset: 0; border-radius: inherit;
+  background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.3) 0%, transparent 60%);
+  opacity: 0; transition: opacity 0.15s;
+}
+.btn:hover::after { opacity: 1; }
+
+.btn-filled {
   background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
-  box-shadow: 0 2px 8px hsl(var(--primary) / 0.3);
+  color: white;
+  box-shadow: 0 4px 20px hsl(var(--primary)/.35), 0 1px 4px hsl(var(--primary)/.20);
 }
-.hig-btn-filled:hover { opacity: 0.92; }
-.hig-btn-gray {
-  background: hsl(var(--muted));
-  color: hsl(var(--foreground));
-}
-.hig-btn-tinted {
-  background: hsl(var(--primary) / 0.12);
+.btn-filled:hover { box-shadow: 0 6px 28px hsl(var(--primary)/.45), 0 2px 8px hsl(var(--primary)/.25); }
+
+.btn-glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   color: hsl(var(--primary));
+  box-shadow: var(--glass-shadow);
 }
-.hig-btn-destructive {
-  background: hsl(var(--destructive));
-  color: hsl(var(--destructive-foreground));
-}
-/* Small variant: Callout (16pt) font, 34px height */
-.hig-btn-sm {
-  font-size: 1rem; height: 36px; padding: 0 14px;
-  border-radius: var(--radius-md);
-}
-/* Pill shape for some actions */
-.hig-btn-pill { border-radius: 99px; }
 
-/*
-  Text Field / Input
-  ───────────────────
-  iOS text fields: 34pt height, 16pt corner radius,
-  systemGray6 (#F2F2F7) background (no border in light mode),
-  systemGray5 in dark mode.
-*/
-.hig-field {
-  background: hsl(var(--muted));
-  border: none;
-  border-radius: var(--radius-md);
-  height: 44px;
-  padding: 0 12px;
-  font-size: 1.0625rem;
-  color: hsl(var(--foreground));
-  width: 100%;
-  transition: background 0.15s, box-shadow 0.15s;
-  outline: none;
-  -webkit-appearance: none;
+.btn-sm { height: 36px; padding: 0 16px; font-size: 0.9375rem; border-radius: 10px; }
+.btn-pill { border-radius: 999px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   FORM INPUTS
+   ═══════════════════════════════════════════════════════════════ */
+.field-wrap {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(120,120,128,0.12);
+  border: 1px solid transparent;
+  border-radius: 12px; padding: 0 14px; height: 48px;
+  transition: all 0.2s ease;
 }
-.hig-field:focus {
+.field-wrap:focus-within {
   background: hsl(var(--card));
-  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.15), var(--shadow-sm);
+  border-color: hsl(var(--primary) / 0.4);
+  box-shadow: 0 0 0 4px hsl(var(--primary)/.10);
 }
-.hig-field::placeholder { color: hsl(var(--muted-foreground) / 0.7); }
+.field-wrap input {
+  flex: 1; background: transparent; border: none; outline: none;
+  font-size: 1.0625rem; color: hsl(var(--foreground)); letter-spacing: -0.01em;
+}
+.field-wrap input::placeholder { color: hsl(var(--muted-foreground)/.65); }
 
-.hig-field-wrap {
-  display: flex; align-items: center; gap: 8px;
-  background: hsl(var(--muted));
-  border-radius: var(--radius-md);
-  padding: 0 12px;
-  transition: background 0.15s, box-shadow 0.15s;
+/* Search */
+.search-bar {
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(118,118,128,0.14);
+  border-radius: 10px; padding: 0 10px; height: 36px;
 }
-.hig-field-wrap:focus-within {
-  background: hsl(var(--card));
-  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.15), var(--shadow-sm);
-}
-.hig-field-wrap input {
-  background: transparent; border: none; outline: none;
-  flex: 1; height: 44px; font-size: 1.0625rem; color: hsl(var(--foreground));
-}
-.hig-field-wrap input::placeholder { color: hsl(var(--muted-foreground) / 0.6); }
-
-/* Search Field — iOS-style pill search */
-.hig-search {
-  background: hsl(var(--muted));
-  border-radius: 10px;
-  display: flex; align-items: center; gap: 6px;
-  padding: 0 10px;
-  height: 36px;
-}
-.hig-search input {
+.search-bar input {
   flex: 1; background: transparent; border: none; outline: none;
   font-size: 0.9375rem; color: hsl(var(--foreground));
 }
-.hig-search input::placeholder { color: hsl(var(--muted-foreground)); }
+.search-bar input::placeholder { color: hsl(var(--muted-foreground)); }
 
-/*
-  Segmented Control
-  ──────────────────
-  iOS: systemGray6 bg, white active segment, 9px border-radius.
-  Height: 28px on standard, 32px on page control.
-*/
-.hig-segmented {
-  background: hsl(var(--muted));
-  border-radius: 9px;
-  padding: 2px;
-  display: flex;
-  gap: 2px;
-  height: 32px;
-}
-.hig-seg {
-  flex: 1; display: flex; align-items: center; justify-content: center;
-  border-radius: 7px;
-  font-size: 0.8125rem; font-weight: 500;
-  color: hsl(var(--muted-foreground));
-  cursor: pointer;
-  transition: all 0.15s ease;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-  white-space: nowrap; padding: 0 8px;
-}
-.hig-seg.active {
-  background: hsl(var(--card));
-  color: hsl(var(--foreground));
-  font-weight: 600;
-  box-shadow: var(--shadow-sm);
-}
-
-/*
-  List Cell / Table Row
-  ──────────────────────
-  iOS table cells: left-aligned icon 28x28 with rounded corners,
-  title in Body (17pt), subtitle in Subhead (15pt) gray, right chevron.
-*/
-.hig-cell {
+/* ═══════════════════════════════════════════════════════════════
+   LIST / TABLE ROWS (grouped table view)
+   ═══════════════════════════════════════════════════════════════ */
+.list-row {
   display: flex; align-items: center; gap: 12px;
-  padding: 10px 16px; min-height: 44px;
-  background: hsl(var(--card));
+  padding: 11px 16px; min-height: 52px;
   transition: background 0.12s ease;
+  cursor: default; position: relative;
+}
+.list-row-btn {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.hig-cell:hover { background: hsl(var(--muted) / 0.6); }
-.hig-cell:active { background: hsl(var(--muted)); }
-.hig-cell-title { font-size: 1.0625rem; font-weight: 400; color: hsl(var(--foreground)); line-height: 1.3; }
-.hig-cell-subtitle { font-size: 0.9375rem; color: hsl(var(--muted-foreground)); line-height: 1.3; }
-.hig-cell-value { font-size: 1.0625rem; color: hsl(var(--muted-foreground)); margin-left: auto; flex-shrink: 0; }
+.list-row-btn:hover { background: rgba(0,0,0,0.035); }
+.dark .list-row-btn:hover { background: rgba(255,255,255,0.04); }
+.list-row-btn:active { background: rgba(0,0,0,0.06); }
+/* Inset separator */
+.list-row + .list-row::before {
+  content: '';
+  position: absolute; top: 0; left: 56px; right: 0;
+  height: 0.5px; background: rgba(60,60,67,0.18);
+}
+.dark .list-row + .list-row::before { background: rgba(255,255,255,0.08); }
 
-/* Inset separator within grouped section */
-.hig-grouped-section .hig-cell + .hig-cell { border-top: 0.5px solid rgba(60,60,67,0.18); }
-.dark .hig-grouped-section .hig-cell + .hig-cell { border-top: 0.5px solid rgba(84,84,88,0.55); }
-
-/*
-  Badge
-  ──────
-  iOS badges are small circular/pill shapes.
-  Notification badge: red circle, white text.
-  Status badge: pill shape.
-*/
-.hig-badge {
-  display: inline-flex; align-items: center; justify-content: center;
-  font-size: 0.75rem; font-weight: 600; line-height: 1;
-  padding: 2px 7px; border-radius: 99px;
+/* ═══════════════════════════════════════════════════════════════
+   BADGES / PILLS
+   ═══════════════════════════════════════════════════════════════ */
+.pill {
+  display: inline-flex; align-items: center;
+  padding: 2px 10px; border-radius: 999px;
+  font-size: 0.75rem; font-weight: 600; line-height: 1.5;
   white-space: nowrap;
 }
-.hig-badge-dot {
-  width: 8px; height: 8px; border-radius: 99px;
-  display: inline-block; flex-shrink: 0;
+.pill-green  { background: rgba(52,199,89,0.15);  color: #1d8639; }
+.pill-amber  { background: rgba(255,149,0,0.15);  color: #b56900; }
+.pill-red    { background: rgba(255,59,48,0.15);  color: #cc1f1a; }
+.pill-blue   { background: rgba(0,122,255,0.12);  color: #0055cc; }
+.dark .pill-green  { background: rgba(48,209,88,0.15);  color: #30d158; }
+.dark .pill-amber  { background: rgba(255,159,10,0.15); color: #ff9f0a; }
+.dark .pill-red    { background: rgba(255,69,58,0.18);  color: #ff453a; }
+.dark .pill-blue   { background: rgba(10,132,255,0.15); color: #0a84ff; }
+
+/* Segmented control */
+.seg-control {
+  background: rgba(118,118,128,0.12);
+  border-radius: 9px; padding: 2px; display: flex; gap: 2px;
+}
+.seg-item {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  height: 28px; border-radius: 7px; font-size: 0.8125rem; font-weight: 500;
+  color: hsl(var(--muted-foreground)); cursor: pointer;
+  transition: all 0.15s; user-select: none; white-space: nowrap; padding: 0 8px;
+}
+.seg-item.active {
+  background: hsl(var(--card));
+  color: hsl(var(--foreground)); font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
-/*
-  Switch / Toggle
-  ────────────────
-  iOS toggle: 31px × 51px, green when on, gray when off.
-  (We use Tailwind/shadcn but apply iOS colors via CSS vars.)
-*/
-
-/*
-  Navigation Sidebar
-  ───────────────────
-  macOS/iPadOS sidebar: systemGray6 background.
-  Selected item: filled with tintColor (systemBlue/green).
-  Row height: 32pt.
-  Font: 15pt (Subhead), no uppercase labels.
-*/
-.hig-sidebar-item {
+/* ═══════════════════════════════════════════════════════════════
+   SIDEBAR NAV ITEM
+   ═══════════════════════════════════════════════════════════════ */
+.nav-item {
   display: flex; align-items: center; gap: 10px;
-  padding: 6px 12px; border-radius: 7px;
-  min-height: 32px;
-  font-size: 0.9375rem; font-weight: 400;
-  color: hsl(var(--sidebar-foreground));
-  cursor: pointer;
-  transition: background 0.1s ease;
+  padding: 7px 12px; border-radius: 9px; min-height: 34px;
+  font-size: 0.9375rem; font-weight: 400; color: hsl(var(--muted-foreground));
+  cursor: pointer; text-decoration: none;
+  transition: all 0.15s ease; position: relative;
   -webkit-tap-highlight-color: transparent;
-  text-decoration: none;
+  letter-spacing: -0.005em;
 }
-.hig-sidebar-item:hover { background: rgba(0,0,0,0.05); }
-.dark .hig-sidebar-item:hover { background: rgba(255,255,255,0.07); }
-.hig-sidebar-item.selected {
+.nav-item:hover { background: rgba(0,0,0,0.04); color: hsl(var(--foreground)); }
+.dark .nav-item:hover { background: rgba(255,255,255,0.06); }
+.nav-item.active {
   background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
-  font-weight: 600;
+  color: white; font-weight: 600;
+  box-shadow: 0 2px 12px hsl(var(--primary)/.30);
 }
-.hig-sidebar-item.selected .hig-sidebar-icon { opacity: 1; }
-.hig-sidebar-icon { opacity: 0.6; flex-shrink: 0; }
-.hig-sidebar-item.selected .hig-sidebar-icon { opacity: 1; }
-
-/* Sidebar section header: 11pt uppercase with letter-spacing */
-.hig-sidebar-section {
-  padding: 16px 12px 4px;
+.nav-item.active .nav-icon { color: white !important; opacity: 1 !important; }
+.nav-section {
   font-size: 0.6875rem; font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.06em;
-  color: hsl(var(--muted-foreground));
+  text-transform: uppercase; letter-spacing: 0.07em;
+  color: hsl(var(--muted-foreground)); opacity: 0.6;
+  padding: 14px 14px 4px;
 }
 
-/* ================================================================
-   ANIMATIONS — iOS motion spec
-   Apple uses spring animations (mass 1, stiffness 500, damping 28)
-   For CSS we approximate with cubic-bezier.
-   ================================================================ */
-
-/* Page push (like NavigationController push) */
-@keyframes hig-page-enter {
-  from { opacity: 0; transform: translateY(10px); }
+/* ═══════════════════════════════════════════════════════════════
+   ANIMATIONS — iOS spring physics approximation
+   cubic-bezier(0.22, 1, 0.36, 1) ≈ spring(mass:1 stiff:400 damp:30)
+   ═══════════════════════════════════════════════════════════════ */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-/* Modal sheet present (bottom sheet) */
-@keyframes hig-sheet-enter {
-  from { opacity: 0; transform: translateY(40px) scale(0.98); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.88); }
+  to   { opacity: 1; transform: scale(1); }
 }
-/* Alert/card pop */
-@keyframes hig-pop {
-  0%   { opacity: 0; transform: scale(0.85); }
-  70%  { opacity: 1; transform: scale(1.02); }
-  100% { opacity: 1; transform: scale(1); }
-}
-/* Stagger list items */
-@keyframes hig-fade-up {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-.hig-page-enter { animation: hig-page-enter 0.32s cubic-bezier(0.22,1,0.36,1) both; }
-.hig-sheet-enter { animation: hig-sheet-enter 0.38s cubic-bezier(0.22,1,0.36,1) both; }
-.hig-pop { animation: hig-pop 0.28s cubic-bezier(0.34,1.56,0.64,1) both; }
+.page-in  { animation: slideUp 0.35s cubic-bezier(0.22,1,0.36,1) both; }
+.scale-in { animation: scaleIn 0.30s cubic-bezier(0.34,1.4,0.64,1) both; }
+.fade-in  { animation: fadeIn  0.25s ease both; }
 
-.hig-list > *:nth-child(1) { animation: hig-fade-up 0.28s cubic-bezier(0.22,1,0.36,1) 0ms  both; }
-.hig-list > *:nth-child(2) { animation: hig-fade-up 0.28s cubic-bezier(0.22,1,0.36,1) 40ms both; }
-.hig-list > *:nth-child(3) { animation: hig-fade-up 0.28s cubic-bezier(0.22,1,0.36,1) 80ms both; }
-.hig-list > *:nth-child(4) { animation: hig-fade-up 0.28s cubic-bezier(0.22,1,0.36,1) 120ms both; }
-.hig-list > *:nth-child(5) { animation: hig-fade-up 0.28s cubic-bezier(0.22,1,0.36,1) 160ms both; }
-.hig-list > *:nth-child(6) { animation: hig-fade-up 0.28s cubic-bezier(0.22,1,0.36,1) 200ms both; }
-.hig-list > *:nth-child(7) { animation: hig-fade-up 0.28s cubic-bezier(0.22,1,0.36,1) 240ms both; }
-.hig-list > *:nth-child(8) { animation: hig-fade-up 0.28s cubic-bezier(0.22,1,0.36,1) 280ms both; }
+.list-stagger > *:nth-child(1)  { animation: slideUp 0.32s cubic-bezier(0.22,1,0.36,1) 0ms  both; }
+.list-stagger > *:nth-child(2)  { animation: slideUp 0.32s cubic-bezier(0.22,1,0.36,1) 45ms both; }
+.list-stagger > *:nth-child(3)  { animation: slideUp 0.32s cubic-bezier(0.22,1,0.36,1) 90ms both; }
+.list-stagger > *:nth-child(4)  { animation: slideUp 0.32s cubic-bezier(0.22,1,0.36,1) 135ms both; }
+.list-stagger > *:nth-child(5)  { animation: slideUp 0.32s cubic-bezier(0.22,1,0.36,1) 180ms both; }
+.list-stagger > *:nth-child(6)  { animation: slideUp 0.32s cubic-bezier(0.22,1,0.36,1) 225ms both; }
+.list-stagger > *:nth-child(7)  { animation: slideUp 0.32s cubic-bezier(0.22,1,0.36,1) 270ms both; }
+.list-stagger > *:nth-child(8)  { animation: slideUp 0.32s cubic-bezier(0.22,1,0.36,1) 315ms both; }
 
-/* compat aliases */
-.animate-fade-up { animation: hig-fade-up 0.32s cubic-bezier(0.22,1,0.36,1) both; }
+/* compat */
+.animate-fade-up { animation: slideUp 0.35s cubic-bezier(0.22,1,0.36,1) both; }
 .stagger > *:nth-child(1) { animation-delay: 0ms; }
-.stagger > *:nth-child(2) { animation-delay: 40ms; }
-.stagger > *:nth-child(3) { animation-delay: 80ms; }
-.stagger > *:nth-child(4) { animation-delay: 120ms; }
-.stagger > *:nth-child(5) { animation-delay: 160ms; }
-.stagger > *:nth-child(6) { animation-delay: 200ms; }
+.stagger > *:nth-child(2) { animation-delay: 45ms; }
+.stagger > *:nth-child(3) { animation-delay: 90ms; }
+.stagger > *:nth-child(4) { animation-delay: 135ms; }
 
-/* ================================================================
-   SCROLLBAR — macOS Safari style (barely visible)
-   ================================================================ */
+/* ═══════════════════════════════════════════════════════════════
+   UTILITY & MISC
+   ═══════════════════════════════════════════════════════════════ */
 .hide-scrollbar { scrollbar-width: none; }
 .hide-scrollbar::-webkit-scrollbar { display: none; }
-* { scrollbar-width: thin; scrollbar-color: rgba(60,60,67,0.2) transparent; }
-*::-webkit-scrollbar { width: 5px; height: 5px; }
-*::-webkit-scrollbar-track { background: transparent; }
-*::-webkit-scrollbar-thumb { background: rgba(60,60,67,0.2); border-radius: 99px; }
-.dark *::-webkit-scrollbar-thumb { background: rgba(235,235,245,0.15); }
+* { scrollbar-width: thin; scrollbar-color: rgba(120,120,128,0.25) transparent; }
+*::-webkit-scrollbar { width: 4px; height: 4px; }
+*::-webkit-scrollbar-thumb { background: rgba(120,120,128,0.25); border-radius: 99px; }
+.dark *::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); }
 
-/* ================================================================
-   UTILITY
-   ================================================================ */
 .text-balance { text-wrap: balance; }
-
-/* iOS system color helpers */
-.text-sys-blue   { color: #007AFF; } .dark .text-sys-blue   { color: #0A84FF; }
-.text-sys-green  { color: #34C759; } .dark .text-sys-green  { color: #30D158; }
-.text-sys-red    { color: #FF3B30; } .dark .text-sys-red    { color: #FF453A; }
-.text-sys-orange { color: #FF9500; } .dark .text-sys-orange { color: #FF9F0A; }
-.text-sys-yellow { color: #FFCC00; } .dark .text-sys-yellow { color: #FFD60A; }
-.text-sys-gray   { color: #8E8E93; }
-
-.bg-sys-blue   { background: #007AFF; } .dark .bg-sys-blue   { background: #0A84FF; }
-.bg-sys-green  { background: #34C759; } .dark .bg-sys-green  { background: #30D158; }
-.bg-sys-red    { background: #FF3B30; } .dark .bg-sys-red    { background: #FF453A; }
-.bg-sys-orange { background: #FF9500; } .dark .bg-sys-orange { background: #FF9F0A; }
-.bg-sys-teal   { background: #5AC8FA; } .dark .bg-sys-teal   { background: #64D2FF; }
-.bg-sys-indigo { background: #5E5CE6; } .dark .bg-sys-indigo { background: #5E5CE6; }
-.bg-sys-purple { background: #AF52DE; } .dark .bg-sys-purple { background: #BF5AF2; }
+.text-sys-blue   { color: var(--sys-blue); }
+.text-sys-green  { color: var(--sys-green); }
+.text-sys-red    { color: var(--sys-red); }
+.text-sys-orange { color: var(--sys-orange); }
+.text-sys-purple { color: var(--sys-purple); }
 
 /* Toast */
-.toast-add    { background: #34C759!important; border:none!important; color:#fff!important; border-radius:14px!important; }
-.toast-update { background: #FF9500!important; border:none!important; color:#fff!important; border-radius:14px!important; }
-.toast-delete { background: #FF3B30!important; border:none!important; color:#fff!important; border-radius:14px!important; }
+.toast-add    { background:linear-gradient(135deg,#28a745,#34c759)!important; border:none!important; color:#fff!important; border-radius:14px!important; box-shadow:0 8px 24px rgba(52,199,89,.35)!important; }
+.toast-update { background:linear-gradient(135deg,#e67e00,#ff9500)!important; border:none!important; color:#fff!important; border-radius:14px!important; }
+.toast-delete { background:linear-gradient(135deg,#d63030,#ff3b30)!important; border:none!important; color:#fff!important; border-radius:14px!important; }
 
