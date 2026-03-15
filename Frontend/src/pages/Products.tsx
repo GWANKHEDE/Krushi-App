@@ -330,7 +330,7 @@ export default function Products() {
                 <div key={product.id} className="glass-widget" style={{ padding:0,overflow:"hidden" }}>
                   {/* Image */}
                   <div style={{ position:"relative",aspectRatio:"4/3",overflow:"hidden",borderRadius:"22px 22px 0 0",background:"#e8f0e8" }}>
-                    <img src={productImage(product)} alt={product.name}
+                    <img src={productImageUrl(product)} alt={product.name}
                       style={{ width:"100%",height:"100%",objectFit:"cover",transition:"transform 0.5s ease" }}
                       className="hover:scale-105" loading="lazy"
                       onError={e => { (e.target as HTMLImageElement).src = categoryImages['default'] }} />
