@@ -1,383 +1,616 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;1,14..32,400&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ============================================================
-   KRUSHI KENDRA — iOS Design System
-   Inspired by Apple's Human Interface Guidelines
-   ============================================================ */
+/*
+ ╔══════════════════════════════════════════════════════════════════╗
+ ║   KRUSHI KENDRA — Apple Human Interface Guidelines Design System  ║
+ ║   Exact iOS system colors, typography scale, spacing & patterns   ║
+ ║   Reference: developer.apple.com/design/human-interface-guidelines║
+ ╚══════════════════════════════════════════════════════════════════╝
+
+  iOS SYSTEM COLORS (exact hex → converted to HSL)
+  ─────────────────────────────────────────────────
+  systemBackground        light #FFFFFF    dark #000000
+  secondarySystemBackground  light #F2F2F7  dark #1C1C1E
+  tertiarySystemBackground   light #FFFFFF  dark #2C2C2E
+  groupedBackground       light #F2F2F7    dark #000000
+  secondaryGroupedBackground light #FFFFFF  dark #1C1C1E
+
+  Label                   light #000000    dark #FFFFFF
+  secondaryLabel          light rgba(60,60,67,.6)  dark rgba(235,235,245,.6)
+  tertiaryLabel           light rgba(60,60,67,.3)  dark rgba(235,235,245,.3)
+  separator               light rgba(60,60,67,.29) dark rgba(84,84,88,.65)
+  opaqueSeparator         light #C6C6C8    dark #38383A
+
+  systemBlue              light #007AFF    dark #0A84FF
+  systemGreen             light #34C759    dark #30D158
+  systemRed               light #FF3B30    dark #FF453A
+  systemOrange            light #FF9500    dark #FF9F0A
+  systemYellow            light #FFCC00    dark #FFD60A
+  systemGray              light #8E8E93    dark #8E8E93
+  systemGray2             light #AEAEB2    dark #636366
+  systemGray3             light #C7C7CC    dark #48484A
+  systemGray4             light #D1D1D6    dark #3A3A3C
+  systemGray5             light #E5E5EA    dark #2C2C2E
+  systemGray6             light #F2F2F7    dark #1C1C1E
+*/
 
 @layer base {
   :root {
-    /* === iOS System Backgrounds === */
-    --background: 240 5% 96%;          /* iOS systemGroupedBackground */
-    --foreground: 240 10% 10%;         /* iOS label */
+    /* ── Backgrounds (iOS systemGroupedBackground) ── */
+    --background:  240 5.9% 95%;   /* #F2F2F7 */
+    --foreground:  0 0% 0%;        /* #000000 label */
 
-    --card: 0 0% 100%;                 /* iOS secondarySystemGroupedBackground */
-    --card-foreground: 240 10% 10%;
+    /* iOS secondarySystemGroupedBackground = white cards on grouped bg */
+    --card:        0 0% 100%;      /* #FFFFFF */
+    --card-foreground: 0 0% 0%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 10%;
+    --popover:     0 0% 100%;
+    --popover-foreground: 0 0% 0%;
 
-    /* === iOS System Colors === */
-    --primary: 141 55% 33%;            /* iOS custom green */
+    /* Brand primary = iOS systemGreen adapted for agriculture */
+    --primary:     142 43% 40%;    /* #3A9D5F — farm green, passes contrast on white */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 5% 92%;
-    --secondary-foreground: 240 8% 25%;
+    /* iOS systemGray5 for secondary bg */
+    --secondary:   240 5.3% 90%;   /* #E5E5EA */
+    --secondary-foreground: 0 0% 10%;
 
-    --muted: 240 6% 93%;
-    --muted-foreground: 240 4% 52%;    /* iOS secondaryLabel */
+    /* iOS systemGray6 for muted areas */
+    --muted:       240 5.9% 95%;   /* #F2F2F7 */
+    --muted-foreground: 240 3.8% 46.1%; /* rgba(60,60,67,.6) */
 
-    --accent: 37 95% 52%;              /* iOS orange/yellow accent */
+    /* iOS systemOrange for accent */
+    --accent:      35 100% 50%;    /* #FF9500 */
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 3 85% 57%;          /* iOS systemRed */
+    /* iOS systemRed */
+    --destructive: 3 100% 59%;     /* #FF3B30 */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 6% 88%;              /* iOS separator */
-    --input: 240 6% 88%;
-    --ring: 141 55% 33%;
+    /* iOS separator */
+    --border:      240 5.9% 78%;   /* #C6C6C8 opaqueSeparator */
+    --input:       240 5.9% 78%;
+    --ring:        142 43% 40%;
 
-    --success: 141 71% 38%;
+    /* Semantic extras */
+    --success:     134 61% 49%;    /* #34C759 systemGreen */
     --success-foreground: 0 0% 100%;
-    --warning: 37 95% 52%;
+    --warning:     35 100% 50%;    /* #FF9500 systemOrange */
     --warning-foreground: 0 0% 100%;
-    --info: 211 100% 50%;
+    --info:        211 100% 50%;   /* #007AFF systemBlue */
     --info-foreground: 0 0% 100%;
 
-    /* === iOS Elevation / Depth === */
-    --shadow-1: 0 1px 2px rgba(0,0,0,0.04), 0 0 0 0.5px rgba(0,0,0,0.04);
-    --shadow-2: 0 2px 8px rgba(0,0,0,0.06), 0 0 0 0.5px rgba(0,0,0,0.04);
-    --shadow-3: 0 4px 16px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.04);
-    --shadow-4: 0 8px 32px rgba(0,0,0,0.12), 0 0 0 0.5px rgba(0,0,0,0.06);
-    --shadow-modal: 0 20px 60px rgba(0,0,0,0.18), 0 0 0 0.5px rgba(0,0,0,0.08);
+    /*
+      iOS Shadow Philosophy:
+      Apple uses very subtle shadows — almost no shadow on light bg,
+      just enough to show depth/separation. Shadows are soft, never dramatic.
+    */
+    --shadow-xs:   0 1px 0 rgba(0,0,0,0.04);
+    --shadow-sm:   0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md:   0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+    --shadow-lg:   0 8px 24px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.06);
+    --shadow-xl:   0 20px 48px rgba(0,0,0,0.14), 0 8px 16px rgba(0,0,0,0.08);
 
-    --radius: 0.875rem;
+    /* iOS standard border radius */
+    --radius-sm:   0.5rem;    /* 8px  — small elements */
+    --radius-md:   0.75rem;   /* 12px — inputs, chips */
+    --radius-lg:   1rem;      /* 16px — cards */
+    --radius-xl:   1.375rem;  /* 22px — sheets, large cards */
+    --radius-2xl:  1.875rem;  /* 30px — modals */
+    --radius:      1rem;
 
     /* Sidebar */
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 240 6% 35%;
-    --sidebar-primary: 141 55% 33%;
+    --sidebar-background:     0 0% 100%;
+    --sidebar-foreground:     240 3.8% 46.1%;
+    --sidebar-primary:        142 43% 40%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 5% 95%;
-    --sidebar-accent-foreground: 240 8% 20%;
-    --sidebar-border: 240 6% 91%;
-    --sidebar-ring: 141 55% 33%;
+    --sidebar-accent:         240 5.9% 95%;
+    --sidebar-accent-foreground: 0 0% 10%;
+    --sidebar-border:         240 5.9% 90%;
+    --sidebar-ring:           142 43% 40%;
   }
 
   .dark {
-    --background: 240 6% 8%;           /* iOS systemGroupedBackground dark */
-    --foreground: 0 0% 95%;
+    /* iOS Dark Mode system colors */
+    --background:  0 0% 0%;         /* #000000 systemGroupedBackground dark */
+    --foreground:  0 0% 100%;       /* #FFFFFF label dark */
 
-    --card: 240 6% 12%;                /* iOS secondarySystemGroupedBackground dark */
-    --card-foreground: 0 0% 95%;
+    --card:        240 5.9% 11.8%;  /* #1C1C1E secondarySystemGroupedBackground dark */
+    --card-foreground: 0 0% 100%;
 
-    --popover: 240 6% 13%;
-    --popover-foreground: 0 0% 95%;
+    --popover:     240 3.7% 17.3%;  /* #2C2C2E */
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 141 58% 48%;
-    --primary-foreground: 240 6% 8%;
+    --primary:     142 54% 47%;     /* #30D158 systemGreen dark */
+    --primary-foreground: 0 0% 0%;
 
-    --secondary: 240 5% 18%;
-    --secondary-foreground: 0 0% 88%;
+    --secondary:   240 3.7% 17.3%;  /* #2C2C2E systemGray5 dark */
+    --secondary-foreground: 0 0% 90%;
 
-    --muted: 240 5% 16%;
-    --muted-foreground: 240 5% 55%;    /* iOS secondaryLabel dark */
+    --muted:       240 5.9% 11.8%;  /* #1C1C1E systemGray6 dark */
+    --muted-foreground: 240 5% 64.9%; /* rgba(235,235,245,.6) */
 
-    --accent: 37 95% 58%;
-    --accent-foreground: 240 6% 8%;
+    --accent:      35 100% 55%;     /* #FF9F0A systemOrange dark */
+    --accent-foreground: 0 0% 0%;
 
-    --destructive: 3 75% 55%;
+    --destructive: 3 100% 61%;      /* #FF453A systemRed dark */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 5% 20%;
-    --input: 240 5% 20%;
-    --ring: 141 58% 48%;
+    --border:      240 3.7% 22.4%;  /* #38383A opaqueSeparator dark */
+    --input:       240 3.7% 22.4%;
+    --ring:        142 54% 47%;
 
-    --sidebar-background: 240 6% 9%;
-    --sidebar-foreground: 0 0% 75%;
-    --sidebar-primary: 141 58% 48%;
-    --sidebar-primary-foreground: 240 6% 8%;
-    --sidebar-accent: 240 5% 15%;
+    --sidebar-background:     0 0% 0%;
+    --sidebar-foreground:     240 5% 64.9%;
+    --sidebar-primary:        142 54% 47%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent:         240 5.9% 11.8%;
     --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: 240 5% 18%;
-    --sidebar-ring: 141 58% 48%;
+    --sidebar-border:         240 3.7% 17.3%;
+    --sidebar-ring:           142 54% 47%;
   }
 }
 
 @layer base {
   * { @apply border-border; box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; }
+
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    /*
+      Apple uses SF Pro on iOS. For web we use Inter which is the closest
+      publicly available typeface to SF Pro in terms of metrics and feel.
+    */
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display',
+                 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-feature-settings: 'cv02','cv03','cv04','cv11';
+    font-feature-settings: 'cv02','cv03','cv04','cv11','ss01';
+    letter-spacing: -0.011em;
   }
+
+  /* iOS Typography Scale (pt → px at 1x)
+     Large Title: 34pt / 700
+     Title 1:     28pt / 700
+     Title 2:     22pt / 700
+     Title 3:     20pt / 600
+     Headline:    17pt / 600
+     Body:        17pt / 400
+     Callout:     16pt / 400
+     Subhead:     15pt / 400
+     Footnote:    13pt / 400
+     Caption 1:   12pt / 400
+     Caption 2:   11pt / 400
+  */
+  .ios-large-title  { font-size: 2.125rem; font-weight: 700; letter-spacing: -0.025em; line-height: 1.15; }
+  .ios-title-1      { font-size: 1.75rem;  font-weight: 700; letter-spacing: -0.022em; line-height: 1.18; }
+  .ios-title-2      { font-size: 1.375rem; font-weight: 700; letter-spacing: -0.018em; line-height: 1.22; }
+  .ios-title-3      { font-size: 1.25rem;  font-weight: 600; letter-spacing: -0.015em; line-height: 1.25; }
+  .ios-headline     { font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; }
+  .ios-body         { font-size: 1.0625rem; font-weight: 400; letter-spacing: -0.01em; line-height: 1.5; }
+  .ios-callout      { font-size: 1rem;      font-weight: 400; letter-spacing: -0.008em; line-height: 1.45; }
+  .ios-subhead      { font-size: 0.9375rem; font-weight: 400; letter-spacing: -0.006em; line-height: 1.45; }
+  .ios-footnote     { font-size: 0.8125rem; font-weight: 400; letter-spacing: -0.003em; line-height: 1.4; }
+  .ios-caption-1    { font-size: 0.75rem;   font-weight: 400; letter-spacing: 0;        line-height: 1.35; }
+  .ios-caption-2    { font-size: 0.6875rem; font-weight: 400; letter-spacing: 0.008em; line-height: 1.3; }
 }
 
-/* ============================================================
-   iOS COMPONENT SYSTEM
-   ============================================================ */
+/* ================================================================
+   APPLE HIG COMPONENT PATTERNS
+   ================================================================ */
 
-/* --- Card: clean white, soft shadow, large radius --- */
-.ios-card {
-  background: hsl(var(--card));
-  border-radius: 1.25rem;
-  box-shadow: var(--shadow-2);
-  border: 0.5px solid hsl(var(--border) / 0.8);
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+/*
+  Navigation Bar
+  ─────────────
+  iOS navbars are 44pt tall in compact, use systemBackground/blur.
+  Title is 17pt semibold centered (or 34pt large title when scrolled up).
+*/
+.hig-navbar {
+  height: 44px;
+  background: rgba(242,242,247,0.92);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 0.5px solid rgba(60,60,67,0.29);
 }
-.ios-card:hover { box-shadow: var(--shadow-3); transform: translateY(-1px); }
+.dark .hig-navbar {
+  background: rgba(0,0,0,0.85);
+  border-bottom: 0.5px solid rgba(84,84,88,0.65);
+}
 
-/* --- iOS Grouped List Style (like Settings.app) --- */
-.ios-group {
+/*
+  Tab Bar (sidebar equivalent)
+  ────────────────────────────
+  iOS tab bars use systemBackground + top separator + 49pt height.
+  Items use system colors for selected/unselected state.
+*/
+
+/*
+  Grouped Table View style (Settings.app)
+  ────────────────────────────────────────
+  Background is systemGroupedBackground (#F2F2F7).
+  Rows sit on white (#FFF) cards with inset left padding.
+  Row height: 44pt minimum.
+  Separator: 0.5px, inset 16pt from left.
+*/
+.hig-grouped-section {
   background: hsl(var(--card));
-  border-radius: 1.25rem;
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: var(--shadow-1);
-  border: 0.5px solid hsl(var(--border) / 0.6);
+  box-shadow: var(--shadow-sm);
 }
-.ios-group-row {
+.hig-row {
   display: flex;
   align-items: center;
-  padding: 0.875rem 1rem;
-  gap: 0.875rem;
-  transition: background 0.12s ease;
-  min-height: 52px;
-}
-.ios-group-row:not(:last-child) {
-  border-bottom: 0.5px solid hsl(var(--border) / 0.5);
-}
-.ios-group-row:active, .ios-group-row:hover { background: hsl(var(--muted) / 0.6); }
-
-/* --- iOS Glass / Frosted --- */
-.ios-glass {
-  background: rgba(255,255,255,0.78);
-  backdrop-filter: saturate(200%) blur(28px);
-  -webkit-backdrop-filter: saturate(200%) blur(28px);
-  border-bottom: 0.5px solid rgba(0,0,0,0.08);
-}
-.dark .ios-glass {
-  background: rgba(18,18,22,0.82);
-  border-bottom: 0.5px solid rgba(255,255,255,0.06);
-}
-
-/* --- iOS Stat Widget --- */
-.ios-widget {
+  min-height: 44px;
+  padding: 10px 16px;
+  gap: 12px;
   background: hsl(var(--card));
-  border-radius: 1.5rem;
-  padding: 1.25rem 1.25rem 1rem;
-  box-shadow: var(--shadow-2);
-  border: 0.5px solid hsl(var(--border) / 0.7);
-  transition: all 0.2s ease;
+  transition: background 0.12s ease;
+  cursor: default;
   position: relative;
-  overflow: hidden;
 }
-.ios-widget:hover { box-shadow: var(--shadow-3); transform: translateY(-1px); }
-.ios-widget::before {
+.hig-row-interactive { cursor: pointer; }
+.hig-row-interactive:active,
+.hig-row-interactive:hover { background: hsl(var(--muted) / 0.7); }
+/* Inset separator (16px left indent, matching iOS) */
+.hig-row + .hig-row::before {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  border-radius: 1.5rem 1.5rem 0 0;
-  opacity: 0.7;
+  top: 0; left: 56px; right: 0;
+  height: 0.5px;
+  background: rgba(60,60,67,0.29);
 }
-.ios-widget.blue::before   { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
-.ios-widget.green::before  { background: linear-gradient(90deg, #16a34a, #22c55e); }
-.ios-widget.amber::before  { background: linear-gradient(90deg, #d97706, #f59e0b); }
-.ios-widget.purple::before { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+.dark .hig-row + .hig-row::before { background: rgba(84,84,88,0.65); }
 
-/* --- iOS Icon Container --- */
-.ios-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.875rem;
-  flex-shrink: 0;
+/*
+  Card / Sheet
+  ─────────────
+  iOS cards have no border in light mode — just background difference
+  + very subtle shadow. In dark mode, they use elevated surfaces.
+*/
+.hig-card {
+  background: hsl(var(--card));
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
 }
-.ios-icon-sm  { width: 2rem;   height: 2rem;   border-radius: 0.625rem; }
-.ios-icon-md  { width: 2.5rem; height: 2.5rem; border-radius: 0.75rem; }
-.ios-icon-lg  { width: 3rem;   height: 3rem;   border-radius: 0.875rem; }
-.ios-icon-xl  { width: 3.5rem; height: 3.5rem; border-radius: 1rem; }
-
-/* --- iOS Pill Badge --- */
-.ios-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.2rem 0.625rem;
-  border-radius: 9999px;
-  font-size: 0.7rem;
-  font-weight: 600;
+.hig-card-section-header {
+  padding: 6px 16px 4px;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: hsl(var(--muted-foreground));
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   line-height: 1.4;
 }
 
-/* --- iOS Action Button --- */
-.ios-action-btn {
-  background: hsl(var(--muted));
-  border-radius: 1rem;
-  padding: 0.875rem 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  border: 0.5px solid hsl(var(--border) / 0.5);
-  -webkit-tap-highlight-color: transparent;
-}
-.ios-action-btn:hover  { background: hsl(var(--muted) / 0.8); transform: scale(1.02); }
-.ios-action-btn:active { transform: scale(0.96); }
+/*
+  System Icon Container
+  ──────────────────────
+  iOS app icon corners: 22.37% of width = 16px on 72pt icon.
+  Small icon containers follow same proportional rounding.
+*/
+.hig-icon-xs  { width: 28px; height: 28px; border-radius: 6px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.hig-icon-sm  { width: 32px; height: 32px; border-radius: 7px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.hig-icon-md  { width: 40px; height: 40px; border-radius: 9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.hig-icon-lg  { width: 48px; height: 48px; border-radius: 11px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.hig-icon-xl  { width: 60px; height: 60px; border-radius: 13px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+/* App icon — 22.37% rounding */
+.hig-app-icon { border-radius: 22.37%; }
 
-/* --- iOS Nav Item --- */
-.ios-nav-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.625rem 0.75rem;
-  border-radius: 0.75rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: all 0.15s ease;
+/*
+  Button Styles
+  ──────────────
+  iOS has 5 button styles:
+  1. Filled   — primary action, rounded rect, filled with tint color
+  2. Gray     — secondary, systemGray5 background
+  3. Tinted   — light tint of primary color bg
+  4. Plain    — no bg, just label
+  5. Destructive — red filled or plain
+*/
+.hig-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 6px;
+  font-size: 1.0625rem; /* 17pt — iOS default button font */
+  font-weight: 600;
+  border-radius: var(--radius-lg);
+  padding: 0 20px;
+  height: 50px; /* iOS standard button height */
+  transition: opacity 0.12s ease, transform 0.12s ease;
   cursor: pointer;
-  color: hsl(var(--muted-foreground));
-  text-decoration: none;
+  border: none; outline: none;
   -webkit-tap-highlight-color: transparent;
 }
-.ios-nav-item:hover { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
-.ios-nav-item.active {
+.hig-btn:active { transform: scale(0.97); opacity: 0.85; }
+.hig-btn-filled {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  box-shadow: 0 2px 8px hsl(var(--primary) / 0.3);
+}
+.hig-btn-filled:hover { opacity: 0.92; }
+.hig-btn-gray {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+.hig-btn-tinted {
   background: hsl(var(--primary) / 0.12);
   color: hsl(var(--primary));
-  font-weight: 600;
 }
-.dark .ios-nav-item.active { background: hsl(var(--primary) / 0.18); }
+.hig-btn-destructive {
+  background: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
+}
+/* Small variant: Callout (16pt) font, 34px height */
+.hig-btn-sm {
+  font-size: 1rem; height: 36px; padding: 0 14px;
+  border-radius: var(--radius-md);
+}
+/* Pill shape for some actions */
+.hig-btn-pill { border-radius: 99px; }
 
-/* --- iOS Input --- */
-.ios-input-wrap {
-  background: hsl(var(--muted) / 0.6);
-  border-radius: 0.75rem;
-  border: 1px solid transparent;
-  transition: all 0.15s ease;
-  overflow: hidden;
-}
-.ios-input-wrap:focus-within {
-  background: hsl(var(--card));
-  border-color: hsl(var(--primary) / 0.35);
-  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.08);
-}
-
-/* --- iOS Segmented Control --- */
-.ios-segmented {
+/*
+  Text Field / Input
+  ───────────────────
+  iOS text fields: 34pt height, 16pt corner radius,
+  systemGray6 (#F2F2F7) background (no border in light mode),
+  systemGray5 in dark mode.
+*/
+.hig-field {
   background: hsl(var(--muted));
-  border-radius: 0.625rem;
-  padding: 0.175rem;
-  display: flex;
-  gap: 0.175rem;
+  border: none;
+  border-radius: var(--radius-md);
+  height: 44px;
+  padding: 0 12px;
+  font-size: 1.0625rem;
+  color: hsl(var(--foreground));
+  width: 100%;
+  transition: background 0.15s, box-shadow 0.15s;
+  outline: none;
+  -webkit-appearance: none;
 }
-.ios-segment {
-  flex: 1;
-  text-align: center;
-  padding: 0.4rem 0.75rem;
-  border-radius: 0.5rem;
-  font-size: 0.8rem;
-  font-weight: 500;
+.hig-field:focus {
+  background: hsl(var(--card));
+  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.15), var(--shadow-sm);
+}
+.hig-field::placeholder { color: hsl(var(--muted-foreground) / 0.7); }
+
+.hig-field-wrap {
+  display: flex; align-items: center; gap: 8px;
+  background: hsl(var(--muted));
+  border-radius: var(--radius-md);
+  padding: 0 12px;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.hig-field-wrap:focus-within {
+  background: hsl(var(--card));
+  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.15), var(--shadow-sm);
+}
+.hig-field-wrap input {
+  background: transparent; border: none; outline: none;
+  flex: 1; height: 44px; font-size: 1.0625rem; color: hsl(var(--foreground));
+}
+.hig-field-wrap input::placeholder { color: hsl(var(--muted-foreground) / 0.6); }
+
+/* Search Field — iOS-style pill search */
+.hig-search {
+  background: hsl(var(--muted));
+  border-radius: 10px;
+  display: flex; align-items: center; gap: 6px;
+  padding: 0 10px;
+  height: 36px;
+}
+.hig-search input {
+  flex: 1; background: transparent; border: none; outline: none;
+  font-size: 0.9375rem; color: hsl(var(--foreground));
+}
+.hig-search input::placeholder { color: hsl(var(--muted-foreground)); }
+
+/*
+  Segmented Control
+  ──────────────────
+  iOS: systemGray6 bg, white active segment, 9px border-radius.
+  Height: 28px on standard, 32px on page control.
+*/
+.hig-segmented {
+  background: hsl(var(--muted));
+  border-radius: 9px;
+  padding: 2px;
+  display: flex;
+  gap: 2px;
+  height: 32px;
+}
+.hig-seg {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  border-radius: 7px;
+  font-size: 0.8125rem; font-weight: 500;
+  color: hsl(var(--muted-foreground));
   cursor: pointer;
   transition: all 0.15s ease;
-  color: hsl(var(--muted-foreground));
   -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  white-space: nowrap; padding: 0 8px;
 }
-.ios-segment.active {
+.hig-seg.active {
   background: hsl(var(--card));
   color: hsl(var(--foreground));
   font-weight: 600;
-  box-shadow: var(--shadow-1);
+  box-shadow: var(--shadow-sm);
 }
 
-/* --- iOS Table Row (list item style) --- */
-.ios-list-row {
-  display: flex;
-  align-items: center;
-  gap: 0.875rem;
-  padding: 0.75rem 1rem;
-  border-radius: 0.875rem;
+/*
+  List Cell / Table Row
+  ──────────────────────
+  iOS table cells: left-aligned icon 28x28 with rounded corners,
+  title in Body (17pt), subtitle in Subhead (15pt) gray, right chevron.
+*/
+.hig-cell {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px; min-height: 44px;
+  background: hsl(var(--card));
   transition: background 0.12s ease;
-  cursor: default;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
-.ios-list-row:hover { background: hsl(var(--muted) / 0.55); }
+.hig-cell:hover { background: hsl(var(--muted) / 0.6); }
+.hig-cell:active { background: hsl(var(--muted)); }
+.hig-cell-title { font-size: 1.0625rem; font-weight: 400; color: hsl(var(--foreground)); line-height: 1.3; }
+.hig-cell-subtitle { font-size: 0.9375rem; color: hsl(var(--muted-foreground)); line-height: 1.3; }
+.hig-cell-value { font-size: 1.0625rem; color: hsl(var(--muted-foreground)); margin-left: auto; flex-shrink: 0; }
 
-/* ============================================================
-   PAGE TRANSITIONS
-   ============================================================ */
+/* Inset separator within grouped section */
+.hig-grouped-section .hig-cell + .hig-cell { border-top: 0.5px solid rgba(60,60,67,0.18); }
+.dark .hig-grouped-section .hig-cell + .hig-cell { border-top: 0.5px solid rgba(84,84,88,0.55); }
 
-@keyframes iosSlideUp {
-  from { opacity: 0; transform: translateY(12px); }
+/*
+  Badge
+  ──────
+  iOS badges are small circular/pill shapes.
+  Notification badge: red circle, white text.
+  Status badge: pill shape.
+*/
+.hig-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 600; line-height: 1;
+  padding: 2px 7px; border-radius: 99px;
+  white-space: nowrap;
+}
+.hig-badge-dot {
+  width: 8px; height: 8px; border-radius: 99px;
+  display: inline-block; flex-shrink: 0;
+}
+
+/*
+  Switch / Toggle
+  ────────────────
+  iOS toggle: 31px × 51px, green when on, gray when off.
+  (We use Tailwind/shadcn but apply iOS colors via CSS vars.)
+*/
+
+/*
+  Navigation Sidebar
+  ───────────────────
+  macOS/iPadOS sidebar: systemGray6 background.
+  Selected item: filled with tintColor (systemBlue/green).
+  Row height: 32pt.
+  Font: 15pt (Subhead), no uppercase labels.
+*/
+.hig-sidebar-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 12px; border-radius: 7px;
+  min-height: 32px;
+  font-size: 0.9375rem; font-weight: 400;
+  color: hsl(var(--sidebar-foreground));
+  cursor: pointer;
+  transition: background 0.1s ease;
+  -webkit-tap-highlight-color: transparent;
+  text-decoration: none;
+}
+.hig-sidebar-item:hover { background: rgba(0,0,0,0.05); }
+.dark .hig-sidebar-item:hover { background: rgba(255,255,255,0.07); }
+.hig-sidebar-item.selected {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-weight: 600;
+}
+.hig-sidebar-item.selected .hig-sidebar-icon { opacity: 1; }
+.hig-sidebar-icon { opacity: 0.6; flex-shrink: 0; }
+.hig-sidebar-item.selected .hig-sidebar-icon { opacity: 1; }
+
+/* Sidebar section header: 11pt uppercase with letter-spacing */
+.hig-sidebar-section {
+  padding: 16px 12px 4px;
+  font-size: 0.6875rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: hsl(var(--muted-foreground));
+}
+
+/* ================================================================
+   ANIMATIONS — iOS motion spec
+   Apple uses spring animations (mass 1, stiffness 500, damping 28)
+   For CSS we approximate with cubic-bezier.
+   ================================================================ */
+
+/* Page push (like NavigationController push) */
+@keyframes hig-page-enter {
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-@keyframes iosFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+/* Modal sheet present (bottom sheet) */
+@keyframes hig-sheet-enter {
+  from { opacity: 0; transform: translateY(40px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
-@keyframes iosScale {
-  from { opacity: 0; transform: scale(0.96); }
-  to   { opacity: 1; transform: scale(1); }
+/* Alert/card pop */
+@keyframes hig-pop {
+  0%   { opacity: 0; transform: scale(0.85); }
+  70%  { opacity: 1; transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
 }
-@keyframes iosBounce {
-  0%   { transform: scale(0.96); opacity: 0; }
-  60%  { transform: scale(1.02); opacity: 1; }
-  100% { transform: scale(1); }
+/* Stagger list items */
+@keyframes hig-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.ios-page { animation: iosSlideUp 0.38s cubic-bezier(0.22,1,0.36,1) both; }
-.ios-fade { animation: iosFadeIn 0.28s ease both; }
-.ios-scale { animation: iosScale 0.3s cubic-bezier(0.34,1.56,0.64,1) both; }
+.hig-page-enter { animation: hig-page-enter 0.32s cubic-bezier(0.22,1,0.36,1) both; }
+.hig-sheet-enter { animation: hig-sheet-enter 0.38s cubic-bezier(0.22,1,0.36,1) both; }
+.hig-pop { animation: hig-pop 0.28s cubic-bezier(0.34,1.56,0.64,1) both; }
 
-/* Stagger delays */
-.ios-stagger > *:nth-child(1)  { animation-delay: 0ms; }
-.ios-stagger > *:nth-child(2)  { animation-delay: 50ms; }
-.ios-stagger > *:nth-child(3)  { animation-delay: 100ms; }
-.ios-stagger > *:nth-child(4)  { animation-delay: 150ms; }
-.ios-stagger > *:nth-child(5)  { animation-delay: 200ms; }
-.ios-stagger > *:nth-child(6)  { animation-delay: 250ms; }
-.ios-stagger > *:nth-child(7)  { animation-delay: 300ms; }
-.ios-stagger > *:nth-child(8)  { animation-delay: 350ms; }
+.hig-list > *:nth-child(1) { animation: hig-fade-up 0.28s cubic-bezier(0.22,1,0.36,1) 0ms  both; }
+.hig-list > *:nth-child(2) { animation: hig-fade-up 0.28s cubic-bezier(0.22,1,0.36,1) 40ms both; }
+.hig-list > *:nth-child(3) { animation: hig-fade-up 0.28s cubic-bezier(0.22,1,0.36,1) 80ms both; }
+.hig-list > *:nth-child(4) { animation: hig-fade-up 0.28s cubic-bezier(0.22,1,0.36,1) 120ms both; }
+.hig-list > *:nth-child(5) { animation: hig-fade-up 0.28s cubic-bezier(0.22,1,0.36,1) 160ms both; }
+.hig-list > *:nth-child(6) { animation: hig-fade-up 0.28s cubic-bezier(0.22,1,0.36,1) 200ms both; }
+.hig-list > *:nth-child(7) { animation: hig-fade-up 0.28s cubic-bezier(0.22,1,0.36,1) 240ms both; }
+.hig-list > *:nth-child(8) { animation: hig-fade-up 0.28s cubic-bezier(0.22,1,0.36,1) 280ms both; }
 
-/* Legacy compat */
-.animate-fade-up { animation: iosSlideUp 0.38s cubic-bezier(0.22,1,0.36,1) both; }
+/* compat aliases */
+.animate-fade-up { animation: hig-fade-up 0.32s cubic-bezier(0.22,1,0.36,1) both; }
 .stagger > *:nth-child(1) { animation-delay: 0ms; }
-.stagger > *:nth-child(2) { animation-delay: 50ms; }
-.stagger > *:nth-child(3) { animation-delay: 100ms; }
-.stagger > *:nth-child(4) { animation-delay: 150ms; }
-.stagger > *:nth-child(5) { animation-delay: 200ms; }
-.stagger > *:nth-child(6) { animation-delay: 250ms; }
+.stagger > *:nth-child(2) { animation-delay: 40ms; }
+.stagger > *:nth-child(3) { animation-delay: 80ms; }
+.stagger > *:nth-child(4) { animation-delay: 120ms; }
+.stagger > *:nth-child(5) { animation-delay: 160ms; }
+.stagger > *:nth-child(6) { animation-delay: 200ms; }
 
-/* ============================================================
-   SCROLLBAR — iOS minimal
-   ============================================================ */
-
+/* ================================================================
+   SCROLLBAR — macOS Safari style (barely visible)
+   ================================================================ */
 .hide-scrollbar { scrollbar-width: none; }
 .hide-scrollbar::-webkit-scrollbar { display: none; }
-* { scrollbar-width: thin; scrollbar-color: hsl(var(--muted-foreground) / 0.18) transparent; }
-*::-webkit-scrollbar { width: 4px; height: 4px; }
+* { scrollbar-width: thin; scrollbar-color: rgba(60,60,67,0.2) transparent; }
+*::-webkit-scrollbar { width: 5px; height: 5px; }
 *::-webkit-scrollbar-track { background: transparent; }
-*::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.18); border-radius: 99px; }
+*::-webkit-scrollbar-thumb { background: rgba(60,60,67,0.2); border-radius: 99px; }
+.dark *::-webkit-scrollbar-thumb { background: rgba(235,235,245,0.15); }
 
-/* ============================================================
+/* ================================================================
    UTILITY
-   ============================================================ */
-
+   ================================================================ */
 .text-balance { text-wrap: balance; }
-.shadow-1 { box-shadow: var(--shadow-1); }
-.shadow-2 { box-shadow: var(--shadow-2); }
-.shadow-3 { box-shadow: var(--shadow-3); }
-.shadow-4 { box-shadow: var(--shadow-4); }
-.bg-main-gradient { background: hsl(var(--background)); }
+
+/* iOS system color helpers */
+.text-sys-blue   { color: #007AFF; } .dark .text-sys-blue   { color: #0A84FF; }
+.text-sys-green  { color: #34C759; } .dark .text-sys-green  { color: #30D158; }
+.text-sys-red    { color: #FF3B30; } .dark .text-sys-red    { color: #FF453A; }
+.text-sys-orange { color: #FF9500; } .dark .text-sys-orange { color: #FF9F0A; }
+.text-sys-yellow { color: #FFCC00; } .dark .text-sys-yellow { color: #FFD60A; }
+.text-sys-gray   { color: #8E8E93; }
+
+.bg-sys-blue   { background: #007AFF; } .dark .bg-sys-blue   { background: #0A84FF; }
+.bg-sys-green  { background: #34C759; } .dark .bg-sys-green  { background: #30D158; }
+.bg-sys-red    { background: #FF3B30; } .dark .bg-sys-red    { background: #FF453A; }
+.bg-sys-orange { background: #FF9500; } .dark .bg-sys-orange { background: #FF9F0A; }
+.bg-sys-teal   { background: #5AC8FA; } .dark .bg-sys-teal   { background: #64D2FF; }
+.bg-sys-indigo { background: #5E5CE6; } .dark .bg-sys-indigo { background: #5E5CE6; }
+.bg-sys-purple { background: #AF52DE; } .dark .bg-sys-purple { background: #BF5AF2; }
 
 /* Toast */
-.toast-add    { background: linear-gradient(135deg,#15803d,#16a34a) !important; border:none!important; color:#fff!important; border-radius:1rem!important; }
-.toast-update { background: linear-gradient(135deg,#d97706,#f59e0b) !important; border:none!important; color:#fff!important; border-radius:1rem!important; }
-.toast-delete { background: linear-gradient(135deg,#dc2626,#ef4444) !important; border:none!important; color:#fff!important; border-radius:1rem!important; }
+.toast-add    { background: #34C759!important; border:none!important; color:#fff!important; border-radius:14px!important; }
+.toast-update { background: #FF9500!important; border:none!important; color:#fff!important; border-radius:14px!important; }
+.toast-delete { background: #FF3B30!important; border:none!important; color:#fff!important; border-radius:14px!important; }
 

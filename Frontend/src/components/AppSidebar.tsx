@@ -1,3 +1,14 @@
+/*
+  AppSidebar — Apple HIG Sidebar/Navigation pattern
+  ────────────────────────────────────────────────────
+  • systemGray6 (#F2F2F7) background
+  • Selected item: solid tint color fill, white label
+  • Row height: 32pt minimum
+  • Sidebar section headers: 11pt uppercase, gray, letter-spaced
+  • No decorative borders — separation comes from background contrast
+  • App icon: rounded rect at top, 22.37% border-radius
+*/
+
 import { LayoutDashboard, Package, ShoppingCart, FileText, BarChart3, Settings, LogOut, Sprout, BookOpen, ChevronRight } from "lucide-react"
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from "@/components/ui/sidebar"
 import { Link, useLocation, useNavigate } from "react-router-dom"
@@ -7,14 +18,14 @@ import { cn } from "@/lib/utils"
 import { useTranslation } from "react-i18next"
 import { useSidebar } from "@/components/ui/sidebar"
 
-const items = [
-  { title: "dashboard", url: "/admin/dashboard", icon: LayoutDashboard },
-  { title: "products",  url: "/admin/products",  icon: Package },
-  { title: "billing",   url: "/admin/billing",   icon: ShoppingCart },
-  { title: "khatabook", url: "/admin/khatabook", icon: BookOpen },
-  { title: "purchase",  url: "/admin/purchases", icon: FileText },
-  { title: "reports",   url: "/admin/reports",   icon: BarChart3 },
-  { title: "settings",  url: "/admin/settings",  icon: Settings },
+const NAV_ITEMS = [
+  { key: "dashboard", url: "/admin/dashboard", icon: LayoutDashboard },
+  { key: "products",  url: "/admin/products",  icon: Package },
+  { key: "billing",   url: "/admin/billing",   icon: ShoppingCart },
+  { key: "khatabook", url: "/admin/khatabook", icon: BookOpen },
+  { key: "purchase",  url: "/admin/purchases", icon: FileText },
+  { key: "reports",   url: "/admin/reports",   icon: BarChart3 },
+  { key: "settings",  url: "/admin/settings",  icon: Settings },
 ]
 
 export function AppSidebar() {
@@ -27,68 +38,84 @@ export function AppSidebar() {
 
   const handleLogout = () => {
     logout()
-    toast.success('Signed out')
-    navigate('/admin/login')
+    toast.success("Signed out")
+    navigate("/admin/login")
   }
 
-  const initial = user?.name?.charAt(0).toUpperCase() || 'A'
+  const initial = user?.name?.charAt(0).toUpperCase() || "A"
 
   return (
-    <Sidebar collapsible="icon" className="border-r-0 bg-card shadow-[1px_0_0_0_hsl(var(--border)/0.5)]">
-      {/* ── Header ── */}
-      <SidebarHeader className="px-4 py-5">
-        <div className={cn("flex items-center gap-3 overflow-hidden", collapsed && "justify-center")}>
-          <div className="ios-icon ios-icon-md bg-primary text-primary-foreground shadow-[0_4px_12px_hsl(var(--primary)/0.35)] flex-shrink-0">
-            <Sprout className="h-[18px] w-[18px]" />
+    <Sidebar
+      collapsible="icon"
+      className="border-none"
+      style={{ background: "hsl(var(--sidebar-background))" }}
+    >
+      {/* ── App Brand Header ── */}
+      <SidebarHeader className="p-4 pb-3">
+        <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
+          {/* App icon — 22.37% rounding per HIG */}
+          <div
+            className="flex-shrink-0 flex items-center justify-center"
+            style={{
+              width: 36, height: 36,
+              borderRadius: "22.37%",
+              background: "hsl(var(--primary))",
+              boxShadow: "0 2px 8px hsl(var(--primary)/.35)"
+            }}
+          >
+            <Sprout className="text-white" style={{ width: 20, height: 20 }} />
           </div>
+
           {!collapsed && (
-            <div className="flex flex-col min-w-0">
-              <span className="text-[15px] font-bold text-foreground tracking-tight truncate leading-tight">Krushi Kendra</span>
-              <span className="text-[11px] text-muted-foreground font-medium truncate leading-tight mt-0.5">
-                {user?.business?.name || 'Management'}
-              </span>
+            <div className="min-w-0">
+              <p style={{ fontSize: 15, fontWeight: 600, color: "hsl(var(--foreground))", lineHeight: 1.2, letterSpacing: "-0.01em" }}>
+                Krushi Kendra
+              </p>
+              <p style={{ fontSize: 12, color: "hsl(var(--muted-foreground))", lineHeight: 1.3 }}>
+                {user?.business?.name || "Management"}
+              </p>
             </div>
           )}
         </div>
       </SidebarHeader>
 
-      {/* ── Divider ── */}
-      <div className="h-px mx-3 bg-border/50" />
+      {/* HIG separator — 0.5px */}
+      <div style={{ height: "0.5px", background: "rgba(60,60,67,0.18)", margin: "0 12px" }} className="dark:[background:rgba(84,84,88,0.55)]" />
 
-      {/* ── Nav ── */}
-      <SidebarContent className="px-2 py-3 overflow-y-auto hide-scrollbar">
+      {/* ── Navigation ── */}
+      <SidebarContent className="px-2 py-2 overflow-y-auto hide-scrollbar">
+        {/* Section header: 11pt, uppercase, letter-spaced */}
         {!collapsed && (
-          <p className="px-3 pt-1 pb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/50">
-            {t('navigation')}
-          </p>
+          <p className="hig-sidebar-section">{t("navigation")}</p>
         )}
+
         <nav className="flex flex-col gap-0.5">
-          {items.map((item) => {
-            const isActive = location.pathname === item.url
+          {NAV_ITEMS.map((item) => {
+            const active = location.pathname === item.url
             return (
               <Link
-                key={item.title}
+                key={item.key}
                 to={item.url}
-                title={collapsed ? t(item.title) : undefined}
+                title={collapsed ? t(item.key) : undefined}
                 className={cn(
-                  "ios-nav-item group relative",
-                  collapsed && "justify-center px-2",
-                  isActive && "active"
+                  "hig-sidebar-item",
+                  active && "selected",
+                  collapsed && "justify-center px-2"
                 )}
               >
-                {/* Active indicator bar */}
-                {isActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary" />
-                )}
-                <item.icon className={cn(
-                  "h-[18px] w-[18px] flex-shrink-0 transition-colors",
-                  isActive ? "text-primary" : "text-muted-foreground/70"
-                )} />
+                <item.icon
+                  className={cn("hig-sidebar-icon flex-shrink-0")}
+                  style={{ width: 18, height: 18 }}
+                />
                 {!collapsed && (
-                  <span className="flex-1 text-[14px]">{t(item.title)}</span>
-                )}
-                {!collapsed && isActive && (
-                  <ChevronRight className="h-3.5 w-3.5 text-primary/50" />
+                  <>
+                    <span style={{ flex: 1, fontSize: 15, letterSpacing: "-0.005em" }}>
+                      {t(item.key)}
+                    </span>
+                    {active && (
+                      <ChevronRight style={{ width: 14, height: 14, opacity: 0.5 }} />
+                    )}
+                  </>
                 )}
               </Link>
             )
@@ -96,32 +123,51 @@ export function AppSidebar() {
         </nav>
       </SidebarContent>
 
-      {/* ── Footer ── */}
-      <SidebarFooter className="p-2 border-t border-border/40">
+      {/* ── User footer ── */}
+      <SidebarFooter className="p-2">
+        <div style={{ height: "0.5px", background: "rgba(60,60,67,0.18)", margin: "0 8px 8px" }} className="dark:[background:rgba(84,84,88,0.55)]" />
         <button
           onClick={handleLogout}
-          title={collapsed ? 'Sign out' : undefined}
+          title={collapsed ? "Sign out" : undefined}
           className={cn(
-            "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl",
-            "hover:bg-destructive/8 group transition-colors text-left",
+            "w-full hig-sidebar-item group",
             collapsed && "justify-center px-2"
           )}
+          style={{ minHeight: 44 }}
         >
-          {/* Avatar */}
-          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-bold flex-shrink-0 ring-2 ring-primary/10">
+          {/* User avatar */}
+          <div
+            style={{
+              width: 32, height: 32, borderRadius: "50%",
+              background: "hsl(var(--primary) / 0.12)",
+              color: "hsl(var(--primary))",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 13, fontWeight: 600, flexShrink: 0,
+              border: "1.5px solid hsl(var(--primary) / 0.2)"
+            }}
+          >
             {initial}
           </div>
+
           {!collapsed && (
             <>
-              <div className="flex flex-col min-w-0 flex-1">
-                <span className="text-[13px] font-semibold text-foreground truncate leading-tight">{user?.name}</span>
-                <span className="text-[11px] text-muted-foreground truncate leading-tight">{user?.email}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: 14, fontWeight: 500, color: "hsl(var(--foreground))", lineHeight: 1.2, letterSpacing: "-0.008em" }} className="truncate">
+                  {user?.name}
+                </p>
+                <p style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", lineHeight: 1.3 }} className="truncate">
+                  {user?.email}
+                </p>
               </div>
-              <LogOut className="h-4 w-4 text-muted-foreground/40 group-hover:text-destructive transition-colors flex-shrink-0" />
+              <LogOut
+                style={{ width: 15, height: 15, flexShrink: 0, opacity: 0.4 }}
+                className="group-hover:opacity-80 group-hover:text-red-500 transition-all"
+              />
             </>
           )}
         </button>
       </SidebarFooter>
+
       <SidebarRail />
     </Sidebar>
   )
