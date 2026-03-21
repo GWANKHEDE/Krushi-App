@@ -63,8 +63,7 @@ export function Layout() {
 
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 shrink-0 text-foreground no-underline">
-            <div className="hig-app-icon flex items-center justify-center"
-              style={{ width: 28, height: 28, background: "hsl(var(--primary))", boxShadow: "0 2px 8px hsl(var(--primary)/.28)" }}>
+            <div className="hig-app-icon layout-brand-icon flex items-center justify-center">
               <Sprout className="h-3.5 w-3.5 text-white" />
             </div>
             <span className="text-[15px] font-semibold tracking-tight truncate max-w-[180px] sm:max-w-none">
@@ -93,8 +92,7 @@ export function Layout() {
             <ThemeToggle />
             {/* Admin Login — desktop */}
             <Link to="/admin/login"
-              className="hidden md:flex items-center gap-1.5 h-8 px-3 rounded-full bg-primary text-primary-foreground text-[13px] font-semibold hover:bg-primary/90 active:scale-95 transition-all no-underline"
-              style={{ boxShadow: "0 2px 8px hsl(var(--primary)/.25)" }}>
+              className="layout-admin-btn hidden md:flex items-center gap-1.5 h-8 px-3 rounded-full bg-primary text-primary-foreground text-[13px] font-semibold hover:bg-primary/90 active:scale-95 transition-all no-underline"
               <LogIn className="h-3.5 w-3.5" />
               {t("admin_login")}
             </Link>
@@ -109,8 +107,7 @@ export function Layout() {
               <SheetContent side="right" className="w-72 p-0 bg-background border-border">
                 {/* Sheet header */}
                 <div className="flex items-center gap-2.5 px-4 py-4 border-b border-border">
-                  <div className="hig-app-icon flex items-center justify-center"
-                    style={{ width: 32, height: 32, background: "hsl(var(--primary))" }}>
+                  <div className="hig-app-icon layout-brand-icon-sheet flex items-center justify-center">
                     <Sprout className="h-4 w-4 text-white" />
                   </div>
                   <div>
@@ -138,8 +135,7 @@ export function Layout() {
                   <div className="h-px bg-border mx-1 my-2" />
                   {/* Call us */}
                   <a href={`tel:${biz.phone}`} onClick={() => setOpen(false)}
-                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[15px] font-semibold no-underline transition-colors"
-                    style={{ color: "#34C759", background: "rgba(52,199,89,0.08)" }}>
+                    className="layout-call-link flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[15px] font-semibold no-underline transition-colors"
                     <Phone className="h-[18px] w-[18px]" />
                     {biz.phone}
                   </a>
@@ -172,8 +168,7 @@ export function Layout() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <div className="hig-app-icon flex items-center justify-center"
-                  style={{ width: 26, height: 26, background: "hsl(var(--primary))" }}>
+                <div className="hig-app-icon layout-brand-icon-footer flex items-center justify-center">
                   <Sprout className="h-3 w-3 text-white" />
                 </div>
                 <span className="text-sm font-semibold text-foreground">{biz.name}</span>

@@ -459,3 +459,423 @@
 .toast-add    { background:#34C759!important; border:none!important; color:#fff!important; border-radius:14px!important; }
 .toast-update { background:#FF9500!important; border:none!important; color:#fff!important; border-radius:14px!important; }
 .toast-delete { background:#FF3B30!important; border:none!important; color:#fff!important; border-radius:14px!important; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   PUBLIC PAGE ANIMATIONS  —  iOS Human Interface Guidelines
+   ───────────────────────────────────────────────────────────────────
+   Timing reference (from Apple's UIKit defaults):
+     Page transition:   0.35s   ease-in-out
+     Modal sheet:       0.40s   spring
+     Micro-interaction: 0.18s   ease-out
+     Counter/number:    0.30s   ease-out
+
+   We use slightly longer durations (0.52–0.68s) for web scroll
+   animations because they trigger from rest, not touch gesture.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Hero sequence keyframes ── */
+@keyframes _heroFadeSlide {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+@keyframes _heroBadge {
+  from { opacity: 0; transform: translateY(-12px) scale(0.88); }
+  to   { opacity: 1; transform: translateY(0)     scale(1);    }
+}
+
+/* Hero entrance — precise stagger matching iOS SpringAnimation */
+.pub-hero-badge {
+  animation: _heroBadge 0.58s cubic-bezier(0.34, 1.56, 0.64, 1) 0.20s both;
+}
+.pub-hero-title {
+  animation: _heroFadeSlide 0.72s cubic-bezier(0.22, 1, 0.36, 1) 0.36s both;
+}
+.pub-hero-sub {
+  animation: _heroFadeSlide 0.68s cubic-bezier(0.22, 1, 0.36, 1) 0.52s both;
+}
+.pub-hero-btns {
+  animation: _heroFadeSlide 0.60s cubic-bezier(0.22, 1, 0.36, 1) 0.68s both;
+}
+
+/* ── Continuous ambient animations ── */
+@keyframes _float {
+  0%, 100% { transform: translateY(0px);  }
+  50%       { transform: translateY(-9px); }
+}
+@keyframes _floatSlow {
+  0%, 100% { transform: translateY(0px);   }
+  50%       { transform: translateY(-14px); }
+}
+@keyframes _glowPulse {
+  0%, 100% { opacity: 0.45; transform: scale(1);    }
+  50%       { opacity: 0.80; transform: scale(1.10); }
+}
+@keyframes _spinSlow {
+  to { transform: rotate(360deg); }
+}
+@keyframes _shimmer {
+  0%   { background-position: -300% center; }
+  100% { background-position:  300% center; }
+}
+@keyframes _marquee {
+  from { transform: translateX(0);    }
+  to   { transform: translateX(-50%); }
+}
+@keyframes _dotPulse {
+  0%, 80%, 100% { transform: scale(0);   opacity: 0; }
+  40%            { transform: scale(1);   opacity: 1; }
+}
+
+.pub-float       { animation: _float     5.5s ease-in-out infinite; }
+.pub-float-slow  { animation: _floatSlow 7.5s ease-in-out infinite; }
+.pub-glow-pulse  { animation: _glowPulse 4.5s ease-in-out infinite; }
+.pub-spin-slow   { animation: _spinSlow   18s linear       infinite; }
+.pub-marquee     {
+  display:   flex;
+  width:     max-content;
+  animation: _marquee 24s linear infinite;
+}
+
+/* ── Shimmer text — gradient sweeps across headline ── */
+.pub-shimmer-text {
+  background: linear-gradient(
+    100deg,
+    hsl(var(--primary))  0%,
+    hsl(var(--accent))  38%,
+    hsl(142 72% 68%)    54%,
+    hsl(var(--primary)) 72%,
+    hsl(var(--primary)) 100%
+  );
+  background-size: 250% auto;
+  -webkit-background-clip: text;
+  background-clip:         text;
+  -webkit-text-fill-color: transparent;
+  animation: _shimmer 4s linear infinite;
+}
+
+/* ── Card hover — iOS "lift" on long-press feel ──
+   translateY(-5px) + scale(1.010) = same formula Apple uses
+   for springboard icon press feedback.                       */
+.pub-card-hover {
+  transition:
+    transform  0.30s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.30s cubic-bezier(0.22, 1,    0.36, 1);
+  cursor: default;
+}
+.pub-card-hover:hover {
+  transform:  translateY(-5px) scale(1.010);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.11), 0 4px 16px rgba(0,0,0,0.07);
+}
+.pub-card-hover:active {
+  transform:  scale(0.975);
+  box-shadow: 0  4px 12px rgba(0,0,0,0.08);
+  transition-duration: 0.12s;
+}
+
+/* ── Image zoom — subtle parallax-feel on hover ── */
+.pub-img-zoom { overflow: hidden; }
+.pub-img-zoom img,
+.pub-img-zoom .img-target {
+  transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.pub-img-zoom:hover img,
+.pub-img-zoom:hover .img-target { transform: scale(1.055); }
+
+/* ── Underline grow — used under product names ── */
+.pub-underline-grow { position: relative; display: inline-block; }
+.pub-underline-grow::after {
+  content: '';
+  position: absolute;
+  bottom: -2px; left: 0;
+  width: 0; height: 2.5px;
+  background: hsl(var(--primary));
+  border-radius: 99px;
+  transition: width 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.pub-underline-grow:hover::after { width: 100%; }
+
+/* ── Button press — micro-interaction ── */
+.pub-btn-press {
+  transition:
+    transform  0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity    0.18s ease;
+}
+.pub-btn-press:hover  { transform: scale(1.035); }
+.pub-btn-press:active { transform: scale(0.960); opacity: 0.88; }
+
+/* ── Accessibility: honour reduced-motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .pub-hero-badge,
+  .pub-hero-title,
+  .pub-hero-sub,
+  .pub-hero-btns {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .pub-float,
+  .pub-float-slow,
+  .pub-glow-pulse,
+  .pub-spin-slow,
+  .pub-marquee,
+  .pub-shimmer-text {
+    animation: none !important;
+    -webkit-text-fill-color: hsl(var(--primary));
+  }
+  .pub-card-hover:hover,
+  .pub-card-hover:active,
+  .pub-img-zoom:hover img,
+  .pub-btn-press:hover,
+  .pub-btn-press:active { transform: none !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   COMPONENT CSS CLASSES — replaces all inline style= attributes
+   in public pages (Layout, Home, About, Contact, Animate)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Layout: navbar logo icon ── */
+.layout-brand-icon {
+  width: 28px; height: 28px;
+  background: hsl(var(--primary));
+  box-shadow: 0 2px 8px hsl(var(--primary) / 0.28);
+}
+.layout-brand-icon-sheet {
+  width: 32px; height: 32px;
+  background: hsl(var(--primary));
+}
+.layout-brand-icon-footer {
+  width: 26px; height: 26px;
+  background: hsl(var(--primary));
+}
+.layout-admin-btn {
+  box-shadow: 0 2px 8px hsl(var(--primary) / 0.25);
+}
+.layout-call-link {
+  color: #34C759;
+  background: rgba(52, 199, 89, 0.08);
+}
+
+/* ── Home: hero section ── */
+.home-hero-section {
+  height: 88vh;
+  min-height: 480px;
+}
+.home-hero-track {
+  display: flex;
+  height: 100%;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.home-hero-track::-webkit-scrollbar { display: none; }
+
+.home-hero-slide {
+  min-width: 100%;
+  height: 100%;
+  scroll-snap-align: start;
+  position: relative;
+  flex-shrink: 0;
+}
+.home-hero-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.05);
+  transition: transform 8s ease-out;
+}
+.home-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(0,0,0,0.82) 0%,
+    rgba(0,0,0,0.40) 55%,
+    rgba(0,0,0,0.10) 100%
+  );
+}
+.home-hero-bottom-fade {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 80px;
+  background: linear-gradient(to top, hsl(var(--background)), transparent);
+  z-index: 10;
+  pointer-events: none;
+}
+.home-dot-indicator {
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  height: 7px;
+  border-radius: 4px;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.home-dot-indicator.active {
+  width: 24px;
+  background: white;
+}
+.home-dot-indicator.inactive {
+  width: 7px;
+  background: rgba(255, 255, 255, 0.42);
+}
+.home-arrow-btn {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 0.5px solid rgba(255, 255, 255, 0.28);
+  color: white;
+  font-size: 24px;
+  font-weight: 300;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.home-arrow-btn:hover  { background: rgba(255,255,255,0.25); transform: scale(1.08); }
+.home-arrow-btn:active { transform: scale(0.92); }
+
+/* ── Home: dot-grid decorative backgrounds ── */
+.home-dot-grid-sm {
+  background-image: radial-gradient(circle at 1.5px 1.5px, white 1.5px, transparent 0);
+  background-size: 22px 22px;
+}
+.home-dot-grid-md {
+  background-image: radial-gradient(circle at 2px 2px, white 1.5px, transparent 0);
+  background-size: 26px 26px;
+}
+.home-dot-grid-lg {
+  background-image: radial-gradient(circle at 2px 2px, white 2px, transparent 0);
+  background-size: 28px 28px;
+}
+.home-dot-grid-cta {
+  background-image: radial-gradient(circle at 1.5px 1.5px, white 1.5px, transparent 0);
+  background-size: 20px 20px;
+}
+
+/* ── Home: offer banner ── */
+.home-offer-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)) 60%, #064e3b 100%);
+  color: white;
+  box-shadow: 0 20px 60px hsl(var(--primary) / 0.20);
+}
+.home-countdown-chip {
+  background-color: rgba(0, 0, 0, 0.25);
+  padding: 2px 10px;
+  border-radius: 8px;
+}
+
+/* ── Home: stats strip ── */
+.home-stats-section {
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Home: category card ── */
+.home-category-card {
+  position: relative;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  aspect-ratio: 4 / 5;
+  background: hsl(var(--muted));
+}
+.home-category-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.20) 50%, transparent 100%);
+  z-index: 10;
+}
+.home-category-body {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 1.5rem;
+  z-index: 20;
+  transform: translateY(12px);
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.home-category-card:hover .home-category-body { transform: translateY(0); }
+
+.home-category-underline {
+  height: 2px;
+  width: 0;
+  background: hsl(var(--primary));
+  border-radius: 99px;
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.home-category-card:hover .home-category-underline { width: 56px; }
+
+.home-category-count {
+  opacity: 0;
+  transition: opacity 0.3s ease 0.1s;
+}
+.home-category-card:hover .home-category-count { opacity: 1; }
+
+/* ── Home: CTA section ── */
+.home-cta-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 3rem;
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)) 55%, #064e3b 100%);
+  color: white;
+  box-shadow: 0 24px 80px hsl(var(--primary) / 0.20);
+}
+
+/* ── Home: services image card ── */
+.home-services-img-card {
+  position: relative;
+  border-radius: 2.5rem;
+  overflow: hidden;
+  border: 4px solid rgba(255,255,255,0.12);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.30);
+}
+.home-services-img-card img {
+  width: 100%;
+  object-cover: cover;
+}
+.home-services-img-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.50), transparent);
+}
+.home-floating-stat {
+  position: absolute;
+  bottom: -20px;
+  left: -20px;
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  padding: 1rem;
+  border-radius: 1rem;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+  border: 1px solid hsl(var(--border) / 0.5);
+}
+
+/* ── Animate: inline style replacements ── */
+/* FadeUp, SlideIn, ScaleIn, StaggerList use JS-driven inline styles
+   for dynamic delay — those stay. Only static wrapper styles move here. */
+.anim-wrapper {
+  will-change: transform;
+}
+
+/* ── Contact: iframe map ── */
+.contact-map-iframe {
+  border: 0;
+  display: block;
+}
+
+/* ── Loading spinner (replaces Loader2 icon on public pages) ── */
+.pub-loading-ring {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  border: 4px solid hsl(var(--primary) / 0.18);
+  border-top-color: hsl(var(--primary));
+}
