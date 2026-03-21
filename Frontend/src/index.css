@@ -459,3 +459,174 @@
 .toast-add    { background:#34C759!important; border:none!important; color:#fff!important; border-radius:14px!important; }
 .toast-update { background:#FF9500!important; border:none!important; color:#fff!important; border-radius:14px!important; }
 .toast-delete { background:#FF3B30!important; border:none!important; color:#fff!important; border-radius:14px!important; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   PUBLIC PAGE ANIMATIONS  —  iOS Human Interface Guidelines
+   ───────────────────────────────────────────────────────────────────
+   Timing reference (from Apple's UIKit defaults):
+     Page transition:   0.35s   ease-in-out
+     Modal sheet:       0.40s   spring
+     Micro-interaction: 0.18s   ease-out
+     Counter/number:    0.30s   ease-out
+
+   We use slightly longer durations (0.52–0.68s) for web scroll
+   animations because they trigger from rest, not touch gesture.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Hero sequence keyframes ── */
+@keyframes _heroFadeSlide {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+@keyframes _heroBadge {
+  from { opacity: 0; transform: translateY(-12px) scale(0.88); }
+  to   { opacity: 1; transform: translateY(0)     scale(1);    }
+}
+
+/* Hero entrance — precise stagger matching iOS SpringAnimation */
+.pub-hero-badge {
+  animation: _heroBadge 0.58s cubic-bezier(0.34, 1.56, 0.64, 1) 0.20s both;
+}
+.pub-hero-title {
+  animation: _heroFadeSlide 0.72s cubic-bezier(0.22, 1, 0.36, 1) 0.36s both;
+}
+.pub-hero-sub {
+  animation: _heroFadeSlide 0.68s cubic-bezier(0.22, 1, 0.36, 1) 0.52s both;
+}
+.pub-hero-btns {
+  animation: _heroFadeSlide 0.60s cubic-bezier(0.22, 1, 0.36, 1) 0.68s both;
+}
+
+/* ── Continuous ambient animations ── */
+@keyframes _float {
+  0%, 100% { transform: translateY(0px);  }
+  50%       { transform: translateY(-9px); }
+}
+@keyframes _floatSlow {
+  0%, 100% { transform: translateY(0px);   }
+  50%       { transform: translateY(-14px); }
+}
+@keyframes _glowPulse {
+  0%, 100% { opacity: 0.45; transform: scale(1);    }
+  50%       { opacity: 0.80; transform: scale(1.10); }
+}
+@keyframes _spinSlow {
+  to { transform: rotate(360deg); }
+}
+@keyframes _shimmer {
+  0%   { background-position: -300% center; }
+  100% { background-position:  300% center; }
+}
+@keyframes _marquee {
+  from { transform: translateX(0);    }
+  to   { transform: translateX(-50%); }
+}
+@keyframes _dotPulse {
+  0%, 80%, 100% { transform: scale(0);   opacity: 0; }
+  40%            { transform: scale(1);   opacity: 1; }
+}
+
+.pub-float       { animation: _float     5.5s ease-in-out infinite; }
+.pub-float-slow  { animation: _floatSlow 7.5s ease-in-out infinite; }
+.pub-glow-pulse  { animation: _glowPulse 4.5s ease-in-out infinite; }
+.pub-spin-slow   { animation: _spinSlow   18s linear       infinite; }
+.pub-marquee     {
+  display:   flex;
+  width:     max-content;
+  animation: _marquee 24s linear infinite;
+}
+
+/* ── Shimmer text — gradient sweeps across headline ── */
+.pub-shimmer-text {
+  background: linear-gradient(
+    100deg,
+    hsl(var(--primary))  0%,
+    hsl(var(--accent))  38%,
+    hsl(142 72% 68%)    54%,
+    hsl(var(--primary)) 72%,
+    hsl(var(--primary)) 100%
+  );
+  background-size: 250% auto;
+  -webkit-background-clip: text;
+  background-clip:         text;
+  -webkit-text-fill-color: transparent;
+  animation: _shimmer 4s linear infinite;
+}
+
+/* ── Card hover — iOS "lift" on long-press feel ──
+   translateY(-5px) + scale(1.010) = same formula Apple uses
+   for springboard icon press feedback.                       */
+.pub-card-hover {
+  transition:
+    transform  0.30s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.30s cubic-bezier(0.22, 1,    0.36, 1);
+  cursor: default;
+}
+.pub-card-hover:hover {
+  transform:  translateY(-5px) scale(1.010);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.11), 0 4px 16px rgba(0,0,0,0.07);
+}
+.pub-card-hover:active {
+  transform:  scale(0.975);
+  box-shadow: 0  4px 12px rgba(0,0,0,0.08);
+  transition-duration: 0.12s;
+}
+
+/* ── Image zoom — subtle parallax-feel on hover ── */
+.pub-img-zoom { overflow: hidden; }
+.pub-img-zoom img,
+.pub-img-zoom .img-target {
+  transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.pub-img-zoom:hover img,
+.pub-img-zoom:hover .img-target { transform: scale(1.055); }
+
+/* ── Underline grow — used under product names ── */
+.pub-underline-grow { position: relative; display: inline-block; }
+.pub-underline-grow::after {
+  content: '';
+  position: absolute;
+  bottom: -2px; left: 0;
+  width: 0; height: 2.5px;
+  background: hsl(var(--primary));
+  border-radius: 99px;
+  transition: width 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.pub-underline-grow:hover::after { width: 100%; }
+
+/* ── Button press — micro-interaction ── */
+.pub-btn-press {
+  transition:
+    transform  0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity    0.18s ease;
+}
+.pub-btn-press:hover  { transform: scale(1.035); }
+.pub-btn-press:active { transform: scale(0.960); opacity: 0.88; }
+
+/* ── Accessibility: honour reduced-motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .pub-hero-badge,
+  .pub-hero-title,
+  .pub-hero-sub,
+  .pub-hero-btns {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .pub-float,
+  .pub-float-slow,
+  .pub-glow-pulse,
+  .pub-spin-slow,
+  .pub-marquee,
+  .pub-shimmer-text {
+    animation: none !important;
+    -webkit-text-fill-color: hsl(var(--primary));
+  }
+  .pub-card-hover:hover,
+  .pub-card-hover:active,
+  .pub-img-zoom:hover img,
+  .pub-btn-press:hover,
+  .pub-btn-press:active { transform: none !important; }
+}

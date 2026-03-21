@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { FadeUp, SlideIn, ScaleIn, StaggerList } from '@/components/Animate';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -117,18 +118,130 @@ export default function Contact() {
     }
   ];
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="pub-spin-slow w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary" />
+    </div>
+  );
 
   return (
     <div className="container px-4 py-8">
       {/* Header */}
-      <div className="text-center mb-16 animate-in fade-in slide-in-from-top-4 duration-1000">
+      <FadeUp className="text-center mb-16">
+        <Badge variant="outline" className="mb-4 border-primary text-primary px-4 py-1 uppercase font-black text-[10px] tracking-widest">{t('support_center')}</Badge>
+        <h1 className="text-lg md:text-2xl font-black mb-4 tracking-tighter uppercase leading-none">{t('contact')} <span className="text-primary">{t('the_experts')}</span></h1>
+        <p className="text-muted-foreground max-w-2xl mx-auto text-sm font-bold italic uppercase tracking-wider leading-relaxed">
+          {t('contact_desc')}
+        </p>
+      </FadeUp>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        {/* Contact Information */}
+        <SlideIn direction="left">
+          <div>
+            <h2 className="text-2xl font-semibold mb-6">{t('get_in_touch')}</h2>
+
+            <StaggerList className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-12" stagger={80}>
+              {contactInfo.map((info, index) => {
+                const Icon = info.icon;
+                return (
+                  <div key={index} className="pub-card-hover rounded-[2rem] overflow-hidden bg-card border border-border/50 group">
+                    <div className="pb-3 pt-8 px-8">
+                      <div className="flex flex-col items-center text-center gap-4">
+                        <div className={`h-14 w-14 rounded-2xl ${info.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                          <Icon className="h-7 w-7" />
+                        </div>
+                        <h3 className="text-base font-black uppercase tracking-tight">{info.title}</h3>
+                      </div>
+                    </div>
+                    <div className="px-6 pb-6 text-center">
+                      {info.details.map((detail, idx) => (
+                        <p key={idx} className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground italic mb-1">{detail}</p>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </StaggerList>
+
+            {/* Why Contact Us */}
+            <FadeUp delay={200}>
+              <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Sprout className="h-5 w-5 text-primary" />
+                  <h3 className="font-bold">{t('why_contact_us')}</h3>
+                </div>
+                <div className="space-y-3">
+                  {[t('expert_guidance_selection'), t('bulk_order_discounts'), t('custom_farming_solutions'), t('technical_support')].map((item, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <div className="h-2 w-2 rounded-full bg-primary mt-2 shrink-0" />
+                      <p className="text-sm">{item}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </FadeUp>
+          </div>
+        </SlideIn>
+
+        {/* Contact Form */}
+        <SlideIn direction="right">
+          <div className="pub-card-hover rounded-2xl bg-card border border-border/50 p-7">
+            <div className="flex items-center gap-2 mb-2">
+              <MessageSquare className="h-5 w-5 text-primary" />
+              <h3 className="font-bold text-lg">{t('send_us_message')}</h3>
+            </div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-6">{t('fill_out_form')}</p>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">{t('full_name')} *</Label>
+                  <Input id="name" name="name" placeholder={t('full_name')} value={formData.name} onChange={handleInputChange} required className="rounded-xl" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">{t('phone_number')} *</Label>
+                  <Input id="phone" name="phone" placeholder="+91 98765 43210" value={formData.phone} onChange={handleInputChange} required className="rounded-xl" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">{t('email_address')}</Label>
+                <Input id="email" name="email" type="email" placeholder="your.email@example.com" value={formData.email} onChange={handleInputChange} className="rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subject">{t('subject')} *</Label>
+                <Input id="subject" name="subject" placeholder={t('subject')} value={formData.subject} onChange={handleInputChange} required className="rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="message">{t('message')} *</Label>
+                <Textarea id="message" name="message" placeholder={t('message')} rows={5} value={formData.message} onChange={handleInputChange} required className="rounded-xl resize-none" />
+              </div>
+              <Button type="submit"
+                className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold uppercase tracking-widest text-sm shadow-lg transition-all hover:scale-[1.01] hover:shadow-xl active:scale-[0.99]">
+                <Send className="h-4 w-4 mr-2" />
+                {t('send_message')}
+              </Button>
+            </form>
+          </div>
+        </SlideIn>
+      </div>
+
+      {/* Map */}
+      <FadeUp className="mt-14">
+        <h2 className="text-2xl font-semibold mb-6 text-center">{t('find_us')}</h2>
+        <div className="rounded-3xl overflow-hidden border border-border/50 shadow-lg">
+          <iframe
+            title="Krushi Seva Kendra Location"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3770.9308!2d77.0977631!3d19.051437!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bd4cf9baec8d8c1%3A0x7f5d2514a8a207c1!2s34P2%2BGG%20Penur%2C%20Maharashtra%20431511!5e0!3m2!1sen!2sin!4v1690030665432!5m2!1sen!2sin"
+            width="100%" height="320"
+            style={{ border: 0, display: 'block' }}
+            allowFullScreen={false}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+        </div>
+      </FadeUp>
+    </div>
+  );
         <Badge variant="outline" className="mb-4 border-primary text-primary px-4 py-1 uppercase font-black text-[10px] tracking-widest">{t('support_center')}</Badge>
         <h1 className="text-lg md:text-2xl font-black mb-4 tracking-tighter uppercase leading-none">{t('contact')} <span className="text-primary">{t('the_experts')}</span></h1>
         <p className="text-muted-foreground max-w-2xl mx-auto text-sm font-bold italic uppercase tracking-wider leading-relaxed">
