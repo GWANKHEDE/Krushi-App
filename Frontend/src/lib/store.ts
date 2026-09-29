@@ -89,7 +89,7 @@ const SEED_SETTINGS: BusinessSettings = {
 const SEED_BUSINESS: Business = {
     id: 'b-1',
     name: 'Wankhede Krushi Seva Kendra',
-    address: 'Gandhi Chowk, Nanded, Maharashtra - 431601',
+    address: 'Main Road, Penur, Purna, 431511',
     contactNumber: '9823332198',
     email: 'info@krushisevakendra.com',
     gstin: '27AABCW1234F1Z5',
